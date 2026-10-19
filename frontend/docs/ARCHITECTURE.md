@@ -1,6 +1,6 @@
 # Архитектура frontend
 
-Статус: постепенный переход к Clean Architecture с принципами Feature-Sliced Design. Сценарии S3 OPEN и S4 APPROVAL уже разделены на чистое ядро, адаптеры и React. Остальные экраны приведены к слоям FSD, но создание события и сессия пока используют прежний query/service-подход. Весь проект ещё не считается полностью переведённым на Clean Architecture.
+Статус: постепенный переход к Clean Architecture с принципами Feature-Sliced Design. Сценарии S3 OPEN, S4 APPROVAL и публикация комментария S5 уже разделены на чистое ядро, адаптеры и React. Остальные экраны приведены к слоям FSD, но создание события и сессия пока используют прежний query/service-подход. Весь проект ещё не считается полностью переведённым на Clean Architecture.
 
 ## Структура и направление зависимостей
 
@@ -13,6 +13,8 @@ src/
     join-event/ui/              JoinAction, useJoinEvent, TanStack query options
     review-registrations/model/  проверка ответа решения организатора
     review-registrations/ui/     список, фильтры, пагинация, форма отказа и mutation
+    event-discussion/model/     независимый publishComment и проверка публикации
+    event-discussion/ui/        список, пагинация, polling, форма и mutation
     create-event/ui/            существующая форма и её Zod-схема
   entities/
     event/                      API/query, карточка, форматирование, EventParticipation
@@ -20,6 +22,10 @@ src/
     registration/api/           HTTP-репозиторий, DTO mappers, read query options
     registration/lib/           React context для внедрения репозитория
     registration/ui/            участники и отображение статусов/ошибок
+    comment/model/              DiscussionComment, CommentPage, repository port, failures
+    comment/api/                HTTP-адаптер, runtime DTO guards, query options
+    comment/lib/                context для внедрения репозитория
+    comment/ui/                 сообщение, автор/время, отображение ошибок
     session/                    существующие session/demo query/services
   shared/                       транспорт, generated DTO, общие UI и токены
   mocks/                        MSW и локальная эмуляция backend
@@ -28,7 +34,7 @@ src/
 
 Допустимое направление слоёв: `app → pages → features → entities → shared`. Промежуточные слои можно пропускать. Модуль одного слоя не импортирует другой модуль того же слоя; несколько модулей собираются выше. `widgets/` пока не требуется и не создаётся.
 
-Обычные потребители используют публичные `index.ts` модулей. У моделей есть отдельный чистый entry point `entities/*/model/index.ts`, чтобы сценарий не импортировал React через общий barrel. Composition root явно импортирует конкретный HTTP-адаптер. Сам HTTP-адаптер не экспортируется через UI entry point регистрации.
+Обычные потребители используют публичные `index.ts` модулей. У моделей есть отдельный чистый entry point `entities/*/model/index.ts`, чтобы сценарий не импортировал React через общий barrel. Composition root явно импортирует конкретный HTTP-адаптер. Сам HTTP-адаптер не экспортируется через UI entry point регистрации или комментариев.
 
 ## S3: Clean Architecture
 
@@ -101,3 +107,11 @@ URL, сетевые пути, CSRF/cookie transport, mock persistence и виз�
 `reviewRegistration` не назначает права или места: он вызывает сервер и отклоняет ответ с чужими eventId/registrationId/participantId либо неправильным итоговым статусом. `useReviewRegistration` фиксирует viewerId и проверяет текущую сессию до объявления успеха и invalidation. Список приватных заявок имеет viewerId в query key.
 
 `RequestRow` отвечает за отображение заявки и доступную с клавиатуры RHF/Zod-форму отказа; `RegistrationRequests` — за query, фильтр, пагинацию и сообщение о сохранении. Метки статусов для организатора и участника находятся в одной карте сущности. PENDING не входит в PublicUser-список участников. HTTP polling обновляет статус у заявителя без перезагрузки и обновляет публичные участники/численность после решения. Отдельная реализация для MSW не внедряется в production-код.
+
+## S5: обсуждение встречи
+
+`pages/event` собирает EventDiscussion и передаёт идентификатор личного организатора через props. Сущности comment и event не импортируют друг друга. `DiscussionComment` и `CommentPage` — собственные модели, не дубликаты wire DTO: author содержит только id/displayName, publishedAt преобразован из createdAt, visibility — из status. Текст скрытого сообщения удаляется уже в адаптере.
+
+`CommentRepository` имеет list/publish. HTTP-реализация выбирается в `app/providers.tsx` и внедряется через DiscussionServices; без provider нет скрытого fallback. Runtime Zod guards сверены с generated Comment/PagedComments. Ошибки HTTP преобразуются в CommentFailure, Abort сохраняется отменой. Чистый publishComment проверяет длину текста и соответствие ответа событию/автору/тексту/видимости; сервер остаётся источником прав и статуса.
+
+EventDiscussion управляет серверной пагинацией, polling и invalidation; PublishCommentForm связывает RHF/Zod с use case и блокировкой повторной отправки. ViewerId включён в query key, поскольку администратор может получать скрытые сообщения. Поздний ответ предыдущего аккаунта не очищает ввод и не объявляет успех в новой сессии. MSW перехватывает тот же транспорт и хранит данные в `dvizh.mock.comments.v1`; отдельный production mock repository не добавлен. ESLint запрещает импорт конкретного адаптера из feature; негативный тест проверяет эту границу.

@@ -15,3 +15,6 @@ export type PublicUser = Schemas["PublicUser"];
 export type ApiErrorBody = Schemas["ApiError"];
 export type TeamStatus = Schemas["TeamStatus"];
 export type Page<T> = Omit<Schemas["PagedEvents"], "items"> & { items: T[] };
+
+export type CommentDto = Schemas["Comment"];
+export type CommentCreate = Schemas["CommentCreate"];

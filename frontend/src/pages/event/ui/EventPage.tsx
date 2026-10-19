@@ -1,3 +1,4 @@
+import { EventDiscussion } from "../../../features/event-discussion";
 import { RegistrationRequests } from "../../../features/review-registrations";
 import { isUuid } from "../../../shared/lib/identifiers";
 import { toEventParticipation } from "../../../entities/event";
@@ -97,6 +98,14 @@ export function EventPage() {
             />
           )}
           <Participants eventId={event.id} />
+          <EventDiscussion
+            key={event.id}
+            eventId={event.id}
+            published={event.status === "PUBLISHED"}
+            organizerUserId={
+              event.organizer.type === "USER" ? event.organizer.id : undefined
+            }
+          />
         </div>
         <aside className="detail-summary">
           <h2>Встречаемся здесь</h2>

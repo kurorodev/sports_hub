@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import { handlers, resetMockSession } from "../mocks/handlers";
 import { setCsrfToken } from "../shared/api/client";
 import { resetMockDatabase } from "../mocks/database";
+import { resetMockComments } from "../mocks/comments";
 
 export const server = setupServer(...handlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -13,6 +14,7 @@ afterEach(() => {
   server.resetHandlers();
   resetMockSession();
   resetMockDatabase();
+  resetMockComments();
   setCsrfToken();
 });
 afterAll(() => server.close());

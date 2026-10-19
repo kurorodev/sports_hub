@@ -32,7 +32,7 @@ export const boundaries = {
         "Slices on the {{layer}} layer must be composed from a higher layer, not imported into one another.",
       core: "Domain/application models may only import pure model modules; React, HTTP, DTOs and adapters stay outside.",
       adapter:
-        "Choose the concrete registration repository in app/, then inject its interface.",
+        "Choose the concrete repository in app/, then inject its interface.",
       support: "Production modules must not depend on tests or mocks.",
     },
   },
@@ -79,11 +79,11 @@ export const boundaries = {
         });
       }
       if (
-        to.relative.startsWith(
-          "entities/registration/api/http-registration-repository",
+        /^entities\/(registration|comment)\/api\/http-[^/]+-repository/.test(
+          to.relative,
         ) &&
         from.layer !== "app" &&
-        !(from.layer === "entities" && from.slice === "registration")
+        !(from.layer === "entities" && from.slice === to.slice)
       ) {
         context.report({ node, messageId: "adapter" });
       }

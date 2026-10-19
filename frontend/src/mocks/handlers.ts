@@ -12,6 +12,7 @@ import {
 } from "./database";
 import { apiConfig } from "../shared/api/client";
 import { createEventSchema } from "../shared/api/event-schema";
+import { getComments, saveComment } from "./comments";
 
 function json(body: unknown, init?: ResponseInit) {
   if (body && typeof body === "object" && "code" in body)
@@ -41,6 +42,95 @@ const notFound = () =>
   json({ code: "NOT_FOUND", message: "Не найдено" }, { status: 404 });
 
 export const handlers = [
+  http.get(`${api}/events/:eventId/comments`, ({ params, request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    const event = getEvents(session?.user.id).find(
+      (item) => item.id === params.eventId,
+    );
+    if (!event) return notFound();
+    const admin = session?.systemRoles.includes("ADMIN");
+    if (
+      event.status !== "PUBLISHED" &&
+      !event.viewerIsOrganizer &&
+      !(event.status !== "DRAFT" && event.viewerRegistrationStatus) &&
+      !admin
+    )
+      return notFound();
+    const p = new URL(request.url).searchParams;
+    const page = Math.max(0, Math.floor(Number(p.get("page")) || 0));
+    const size = Math.min(
+      100,
+      Math.max(1, Math.floor(Number(p.get("size")) || 10)),
+    );
+    const items = getComments()
+      .filter(
+        (item) =>
+          item.eventId === event.id && (admin || item.status === "VISIBLE"),
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(a.createdAt) - Date.parse(b.createdAt) ||
+          a.id.localeCompare(b.id),
+      );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.post(`${api}/events/:eventId/comments`, async ({ params, request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+      return json(
+        { code: "FORBIDDEN", message: "Сессия изменилась" },
+        { status: 403 },
+      );
+    const event = getEvents(session.user.id).find(
+      (item) => item.id === params.eventId,
+    );
+    if (!event) return notFound();
+    if (
+      event.status !== "PUBLISHED" &&
+      !event.viewerIsOrganizer &&
+      !(event.status !== "DRAFT" && event.viewerRegistrationStatus) &&
+      !session.systemRoles.includes("ADMIN")
+    )
+      return notFound();
+    if (event.status !== "PUBLISHED")
+      return json(
+        { code: "EVENT_NOT_AVAILABLE", message: "Обсуждение закрыто" },
+        { status: 409 },
+      );
+    const parsed = z
+      .object({
+        text: z
+          .string()
+          .min(1)
+          .max(2000)
+          .refine((value) => value.trim().length > 0),
+      })
+      .strict()
+      .safeParse(await request.json().catch(() => null));
+    if (!parsed.success)
+      return json(
+        {
+          code: "VALIDATION_ERROR",
+          message: "Проверьте сообщение",
+          details: [{ field: "text", message: "От 1 до 2000 символов" }],
+        },
+        { status: 400 },
+      );
+    return json(saveComment(event.id, session.user, parsed.data.text), {
+      status: 201,
+    });
+  }),
   http.get(`${api}/demo/accounts`, () => json(accounts)),
   http.post(`${api}/demo/session`, async ({ request }) => {
     const body: unknown = await request.json();

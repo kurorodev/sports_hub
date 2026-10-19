@@ -1729,3 +1729,113 @@ input[type="radio"] {
     width: 100%;
   }
 }
+
+/* Public event discussion. Long messages stay inside the event column. */
+.discussion-panel {
+  margin-block: var(--space-6);
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+  scroll-margin-top: var(--space-6);
+  min-width: 0;
+}
+.discussion-heading,
+.comment-heading,
+.discussion-submit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.discussion-heading {
+  justify-content: space-between;
+  align-items: start;
+}
+.discussion-heading h2 {
+  margin-bottom: var(--space-2);
+}
+.discussion-count {
+  margin-block: var(--space-5) var(--space-3);
+  font-size: 14px;
+  color: var(--color-ink-muted);
+}
+.comment-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+.comment-card {
+  padding-block: var(--space-4);
+  border-bottom: 1px solid var(--color-outline);
+  min-width: 0;
+}
+.comment-heading strong {
+  overflow-wrap: anywhere;
+}
+.comment-heading time {
+  color: var(--color-ink-muted);
+  font-size: 12px;
+}
+.comment-organizer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-ink-muted);
+  font-size: 12px;
+}
+.comment-text {
+  margin-top: var(--space-3);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.comment-hidden {
+  color: var(--color-ink-muted);
+}
+.discussion-empty {
+  padding-block: var(--space-6);
+  color: var(--color-ink-muted);
+  display: grid;
+  gap: var(--space-3);
+}
+.discussion-form,
+.discussion-login {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-outline);
+}
+.discussion-form textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+.discussion-submit {
+  justify-content: space-between;
+  margin-top: var(--space-4);
+}
+.discussion-submit .join-note {
+  flex: 1 1 160px;
+}
+.discussion-submit .button {
+  flex-shrink: 0;
+}
+.discussion-login {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+}
+.discussion-success {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-control);
+}
+@media (max-width: 420px) {
+  .discussion-panel {
+    padding: var(--space-4);
+  }
+  .discussion-heading > .button,
+  .discussion-submit .button,
+  .discussion-login .button {
+    width: 100%;
+  }
+}
