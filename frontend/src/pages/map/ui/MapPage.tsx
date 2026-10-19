@@ -5,6 +5,7 @@ import { useMapParams } from "./use-map-params";
 import { MapPin, ArrowUpRight, X } from "lucide-react";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
+import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
 import {
   listOnlyFilters,
   readMapView,
@@ -188,18 +189,16 @@ export function MapPage() {
         <MapSearch onSelect={setCenter} />
         <div className="form-field">
           <label htmlFor="map-sport">Вид спорта на карте</label>
-          <select
+          <SearchableSelect
             id="map-sport"
             value={sportId}
-            onChange={(event) => setParam("sportId", event.target.value)}
-          >
-            <option value="">Все виды спорта</option>
-            {sports.data?.map((sport) => (
-              <option key={sport.id} value={sport.id}>
-                {sport.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { id: "", name: "Все виды спорта" },
+              ...(sports.data ?? []),
+            ]}
+            onChange={(value) => setParam("sportId", value)}
+            disabled={sports.isPending}
+          />
         </div>
         <details
           className="map-date-filters"

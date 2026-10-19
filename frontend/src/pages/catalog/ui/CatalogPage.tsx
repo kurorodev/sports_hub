@@ -15,6 +15,7 @@ import { errorMessage } from "../../../shared/api/client";
 import { EmptyState, ErrorState, Skeletons } from "../../../shared/ui/Feedback";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
+import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -176,20 +177,16 @@ export function CatalogPage() {
               <div className="filter-fields">
                 <div className="form-field">
                   <label htmlFor="catalog-sport">Категория спорта</label>
-                  <select
+                  <SearchableSelect
                     id="catalog-sport"
                     value={params.get("sportId") ?? ""}
-                    onChange={(event) =>
-                      setFilter("sportId", event.target.value)
-                    }
-                  >
-                    <option value="">Все виды спорта</option>
-                    {(sports.data ?? []).map((sport) => (
-                      <option key={sport.id} value={sport.id}>
-                        {sport.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { id: "", name: "Все виды спорта" },
+                      ...(sports.data ?? []),
+                    ]}
+                    onChange={(value) => setFilter("sportId", value)}
+                    disabled={sports.isPending}
+                  />
                 </div>
                 <DateRangeFields
                   from={params.get("from") ?? ""}
