@@ -18,6 +18,7 @@ import {
 import { apiConfig } from "../shared/api/client";
 import { createEventSchema } from "../shared/api/event-schema";
 import { getComments, saveComment } from "./comments";
+import { mapHandlers } from "./maps";
 
 function json(body: unknown, init?: ResponseInit) {
   if (body && typeof body === "object" && "code" in body)
@@ -47,6 +48,7 @@ const notFound = () =>
   json({ code: "NOT_FOUND", message: "Не найдено" }, { status: 404 });
 
 export const handlers = [
+  ...mapHandlers(api, () => makeSession(savedAccount() ?? "")),
   http.get(`${api}/me/organizations`, () => {
     const session = makeSession(savedAccount() ?? "");
     if (!session)

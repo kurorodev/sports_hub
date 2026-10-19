@@ -14,6 +14,12 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { path: "/", element: <CatalogPage /> },
+      {
+        path: "/map",
+        lazy: async () => ({
+          Component: (await import("../pages/map")).MapPage,
+        }),
+      },
       { path: "/events/new", element: <CreateEventPage /> },
       { path: "/events/:eventId", element: <EventPage /> },
       { path: "/login", element: <LoginPage /> },

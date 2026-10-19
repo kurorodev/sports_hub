@@ -798,6 +798,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/geo/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Подсказки адресов
+         * @description Серверный Geoapify. Без ключа или при ошибке поставщика — 503. Ручной ввод адреса остаётся доступен.
+         */
+        get: operations["suggestLocations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/geo/reverse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Адрес по координатам
+         * @description Если адрес не найден, location=null. Ответ сохраняет выбранные координаты.
+         */
+        get: operations["reverseLocation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/map/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Мероприятия в окне карты
+         * @description Только PUBLISHED с обеими координатами, startsAt >= now и from. Сортировка startsAt ASC, id ASC. truncated требует приближения карты.
+         */
+        get: operations["getMapEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/map/venues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Площадки в окне карты
+         * @description Публично. Последние оценки каждого пользователя за 90 минут, верхняя медиана. Ровно на границе срока — UNKNOWN. История и авторы не публикуются.
+         */
+        get: operations["getMapVenues"];
+        put?: never;
+        /**
+         * Добавить спортивную площадку
+         * @description Сессия и X-CSRF-Token. Не более 3 площадок/час. Совпадающее нормализованное имя ближе 30 м — 409.
+         */
+        post: operations["createMapVenue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/map/venues/{venueId}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Оценить загруженность
+         * @description Сессия и X-CSRF-Token. Оценка субъективная, peopleCount не определяет цвет. Повтор от одного пользователя на площадку раз в 10 минут; 429 + Retry-After. Оценка актуальна 90 минут.
+         */
+        post: operations["reportVenueOccupancy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -841,7 +945,7 @@ export interface components {
         /** @enum {string} */
         MatchReason: "FAVORITE_SPORT" | "SUITABLE_LEVEL" | "PREFERRED_TIME" | "AVAILABLE_SPOTS";
         /** @enum {string} */
-        ErrorCode: "VALIDATION_ERROR" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "ALREADY_REGISTERED" | "EVENT_NOT_AVAILABLE" | "EVENT_FULL" | "INVALID_STATUS_TRANSITION" | "ORGANIZATION_NOT_APPROVED" | "NOT_EVENT_ORGANIZER" | "NOT_CONVERSATION_MEMBER" | "NOT_A_REFEREE" | "ALREADY_VERIFIED" | "RATE_LIMITED" | "INTERNAL_ERROR";
+        ErrorCode: "VALIDATION_ERROR" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "ALREADY_REGISTERED" | "EVENT_NOT_AVAILABLE" | "EVENT_FULL" | "INVALID_STATUS_TRANSITION" | "ORGANIZATION_NOT_APPROVED" | "NOT_EVENT_ORGANIZER" | "NOT_CONVERSATION_MEMBER" | "NOT_A_REFEREE" | "ALREADY_VERIFIED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "SERVICE_UNAVAILABLE";
         ErrorField: {
             /** @example startsAt */
             field: string;
@@ -1290,6 +1394,70 @@ export interface components {
             total: number;
             totalPages: number;
         };
+        GeoSuggestion: {
+            id: string;
+            label: string;
+            city: string;
+            address: string;
+            /** Format: double */
+            latitude: number;
+            /** Format: double */
+            longitude: number;
+        };
+        GeoSuggestions: {
+            items: components["schemas"]["GeoSuggestion"][];
+        };
+        GeoReverseResponse: {
+            location: components["schemas"]["Location"] | null;
+        };
+        VenueLocation: {
+            city: string;
+            address: string;
+            /** Format: double */
+            latitude: number;
+            /** Format: double */
+            longitude: number;
+        };
+        /** @enum {string} */
+        OccupancyLevel: "LOW" | "MEDIUM" | "HIGH" | "UNKNOWN";
+        /** @enum {string} */
+        ReportedOccupancyLevel: "LOW" | "MEDIUM" | "HIGH";
+        VenueOccupancy: {
+            level: components["schemas"]["OccupancyLevel"];
+            /** Format: date-time */
+            lastReportedAt: string | null;
+            /** Format: date-time */
+            validUntil: string | null;
+            reportsCount: number;
+        };
+        VenueMapItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: uuid */
+            sportId: string | null;
+            sportName: string | null;
+            location: components["schemas"]["VenueLocation"];
+            occupancy: components["schemas"]["VenueOccupancy"];
+        };
+        VenueCreate: {
+            name: string;
+            /** Format: uuid */
+            sportId?: string | null;
+            location: components["schemas"]["VenueLocation"];
+        };
+        OccupancyReportCreate: {
+            level: components["schemas"]["ReportedOccupancyLevel"];
+            peopleCount?: number | null;
+        };
+        MapEventsResponse: {
+            items: components["schemas"]["EventCard"][];
+            truncated: boolean;
+        };
+        MapVenuesResponse: {
+            items: components["schemas"]["VenueMapItem"][];
+            truncated: boolean;
+        };
     };
     responses: {
         /** @description Неверные данные запроса */
@@ -1425,6 +1593,15 @@ export interface components {
                  *       "requestId": "req-demo-001"
                  *     }
                  */
+                "application/json": components["schemas"]["ApiError"];
+            };
+        };
+        /** @description Геокодер временно недоступен */
+        503: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
                 "application/json": components["schemas"]["ApiError"];
             };
         };
@@ -2944,6 +3121,181 @@ export interface operations {
             404: components["responses"]["404"];
             409: components["responses"]["409"];
             500: components["responses"]["500"];
+        };
+    };
+    suggestLocations: {
+        parameters: {
+            query: {
+                q: string;
+                city?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успешный ответ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoSuggestions"];
+                };
+            };
+            400: components["responses"]["400"];
+            429: components["responses"]["429"];
+            503: components["responses"]["503"];
+        };
+    };
+    reverseLocation: {
+        parameters: {
+            query: {
+                latitude: number;
+                longitude: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успешный ответ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoReverseResponse"];
+                };
+            };
+            400: components["responses"]["400"];
+            429: components["responses"]["429"];
+            503: components["responses"]["503"];
+        };
+    };
+    getMapEvents: {
+        parameters: {
+            query: {
+                /** @description west,south,east,north. Валидные координаты, min < max. Охват не более 10° по каждой оси; пересечение 180° не поддерживается. */
+                bbox: string;
+                sportId?: string;
+                limit?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успешный ответ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapEventsResponse"];
+                };
+            };
+            400: components["responses"]["400"];
+            429: components["responses"]["429"];
+            503: components["responses"]["503"];
+        };
+    };
+    getMapVenues: {
+        parameters: {
+            query: {
+                /** @description west,south,east,north. Валидные координаты, min < max. Охват не более 10° по каждой оси; пересечение 180° не поддерживается. */
+                bbox: string;
+                sportId?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успешный ответ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapVenuesResponse"];
+                };
+            };
+            400: components["responses"]["400"];
+            429: components["responses"]["429"];
+            503: components["responses"]["503"];
+        };
+    };
+    createMapVenue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueCreate"];
+            };
+        };
+        responses: {
+            /** @description Успешный ответ */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueMapItem"];
+                };
+            };
+            400: components["responses"]["400"];
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+            409: components["responses"]["409"];
+            429: components["responses"]["429"];
+            503: components["responses"]["503"];
+        };
+    };
+    reportVenueOccupancy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OccupancyReportCreate"];
+            };
+        };
+        responses: {
+            /** @description Успешный ответ */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueMapItem"];
+                };
+            };
+            400: components["responses"]["400"];
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+            409: components["responses"]["409"];
+            429: components["responses"]["429"];
+            503: components["responses"]["503"];
         };
     };
 }

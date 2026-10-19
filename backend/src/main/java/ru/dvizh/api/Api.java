@@ -25,7 +25,21 @@ public final class Api {
     public enum ConversationType { DIRECT, COMMUNITY }
     public enum MembershipStatus { ACTIVE, LEFT }
     public enum MatchReason { FAVORITE_SPORT, SUITABLE_LEVEL, PREFERRED_TIME, AVAILABLE_SPOTS }
-    public enum ErrorCode { VALIDATION_ERROR, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, ALREADY_REGISTERED, EVENT_NOT_AVAILABLE, EVENT_FULL, INVALID_STATUS_TRANSITION, ORGANIZATION_NOT_APPROVED, NOT_EVENT_ORGANIZER, NOT_CONVERSATION_MEMBER, NOT_A_REFEREE, ALREADY_VERIFIED, RATE_LIMITED, INTERNAL_ERROR }
+    public enum ErrorCode { VALIDATION_ERROR, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, ALREADY_REGISTERED, EVENT_NOT_AVAILABLE, EVENT_FULL, INVALID_STATUS_TRANSITION, ORGANIZATION_NOT_APPROVED, NOT_EVENT_ORGANIZER, NOT_CONVERSATION_MEMBER, NOT_A_REFEREE, ALREADY_VERIFIED, RATE_LIMITED, INTERNAL_ERROR, SERVICE_UNAVAILABLE }
+    public enum OccupancyLevel { LOW, MEDIUM, HIGH, UNKNOWN }
+    public enum ReportedOccupancyLevel { LOW, MEDIUM, HIGH }
+    public record GeoSuggestion(String id, String label, String city, String address, double latitude, double longitude) {}
+    public record GeoSuggestions(List<GeoSuggestion> items) {}
+    public record GeoReverseResponse(Location location) {}
+    public record VenueLocation(@NotBlank @Size(max=120) String city, @NotBlank @Size(max=300) String address,
+        @NotNull @DecimalMin("-90") @DecimalMax("90") Double latitude,
+        @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude) {}
+    public record VenueOccupancy(OccupancyLevel level, Instant lastReportedAt, Instant validUntil, int reportsCount) {}
+    public record VenueMapItem(UUID id, String name, UUID sportId, String sportName, VenueLocation location, VenueOccupancy occupancy) {}
+    public record VenueCreate(@NotBlank @Size(min=3,max=120) String name, UUID sportId, @NotNull @Valid VenueLocation location) {}
+    public record OccupancyReportCreate(@NotNull ReportedOccupancyLevel level, @Min(0) @Max(1000) Integer peopleCount) {}
+    public record MapEventsResponse(List<EventCard> items, boolean truncated) {}
+    public record MapVenuesResponse(List<VenueMapItem> items, boolean truncated) {}
     public record ErrorField(@NotNull String field, @NotNull String message) {}
     public record ApiError(@NotNull @Valid ErrorCode code, @NotNull String message, @Valid List<ErrorField> details, @NotNull String requestId) {}
     public record PublicUser(@NotNull UUID id, @NotNull String nickname, @NotNull String displayName, String avatarUrl, @NotNull @Valid List<SportsRole> sportsRoles, @NotNull @Valid Rank rank, @NotNull @Min(0) Integer ratingPoints) {}

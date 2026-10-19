@@ -28,6 +28,7 @@ export function Layout() {
               Активности
             </NavLink>
             <NavLink to="/events/new">Создать</NavLink>
+            <NavLink to="/map">Карта</NavLink>
             <NavLink to="/organizations">Организации</NavLink>
             {session.data ? (
               <NavLink to="/organization">Организация</NavLink>

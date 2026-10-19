@@ -74,7 +74,11 @@ export function toEventInput(
 
 export const serverFieldNames: Record<
   string,
-  keyof EventFormValues | "location.city" | "location.address"
+  | keyof EventFormValues
+  | "location.city"
+  | "location.address"
+  | "location.latitude"
+  | "location.longitude"
 > = {
   title: "title",
   description: "description",
@@ -85,6 +89,8 @@ export const serverFieldNames: Record<
   startsAt: "date",
   "location.city": "location.city",
   "location.address": "location.address",
+  "location.latitude": "location.latitude",
+  "location.longitude": "location.longitude",
   skillLevel: "skillLevel",
   eventKind: "eventKind",
   joinMode: "joinMode",

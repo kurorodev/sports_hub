@@ -20,7 +20,7 @@ public class DemoSeed implements ApplicationRunner {
     public static UUID id(String key){return UUID.nameUUIDFromBytes(("dvizh:"+key).getBytes(StandardCharsets.UTF_8));}
     private <T extends BaseEntity> T save(T e,String key){e.id=id(key);e.createdAt=clock.instant();e.updatedAt=e.createdAt;return db.add(e);}
     @Override @Transactional public void run(ApplicationArguments args) {
-        if(db.count(UserEntity.class,"e.demoAccount is not null",Map.of())>0)return;
+        if(db.count(UserEntity.class,"e.demoAccount is not null",Map.of())>0){seedMap();return;}
         var a=user("athlete-a","Алексей Спортов",false,Api.SportsRole.ATHLETE);
         var b=user("athlete-b","Мария Беговая",false,Api.SportsRole.ATHLETE);
         var c=user("athlete-c","Ирина Новая",false,Api.SportsRole.ATHLETE);
@@ -68,7 +68,21 @@ public class DemoSeed implements ApplicationRunner {
         membership("membership-representative",club,approved);membership("membership-athlete",club,a);
         var community=new ConversationEntity();community.type=Api.ConversationType.COMMUNITY;community.organizationId=club.id;community.title="Беседа клуба «Темп»";save(community,"conversation-community");
         message("message-community",community,approved,"Добро пожаловать в клуб!");
-        db.flush();
+        seedMap();db.flush();
+    }
+    private void seedMap() {
+        // Reference point: https://www.wikidata.org/wiki/Q4365616 (53°11'44.02 N, 50°6'3.68 E).
+        // These are explicitly fictional sports objects around a real square, not a directory of real venues.
+        var owner=db.first(UserEntity.class,"e.demoAccount=:account",Map.of("account","coach"));
+        if(owner.isEmpty())return;
+        for(int i=0;i<4;i++) {
+            String key="map-venue-"+i;
+            if(db.count(VenueEntity.class,"e.id=:id",Map.of("id",id(key)))>0)continue;
+            var v=new VenueEntity();v.name="Демо-площадка № "+(i+1)+" (условный объект)";v.normalizedName=v.name.toLowerCase(Locale.ROOT);
+            v.city="Самара";v.address="площадь Куйбышева · демонстрационная точка";v.latitude=53.195561+(i%2)*0.001;v.longitude=50.101022+(i/2)*0.001;v.createdBy=owner.get().id;
+            save(v,key);
+            if(i<3){var r=new VenueOccupancyReportEntity();r.venueId=v.id;r.userId=owner.get().id;r.level=Api.ReportedOccupancyLevel.values()[i];save(r,key+"-report");}
+        }
     }
     private UserEntity user(String account,String name,boolean admin,Api.SportsRole... roles){var u=new UserEntity();u.nickname=account;u.normalizedNickname=account;u.displayName=name;u.admin=admin;u.demoAccount=account;u.city="Красноярск";u.sportsRoles.addAll(List.of(roles));return save(u,"user-"+account);}
     private SportEntity sport(String key,String name){var s=new SportEntity();s.name=name;s.normalizedName=name.toLowerCase(Locale.ROOT);return save(s,"sport-"+key);}

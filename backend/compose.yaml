@@ -21,6 +21,7 @@ services:
       DB_USER: ${DB_USER:-dvizh}
       DB_PASSWORD: ${DB_PASSWORD:-dvizh_local}
       DEMO_ENABLED: ${DEMO_ENABLED:-true}
+      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
     ports:

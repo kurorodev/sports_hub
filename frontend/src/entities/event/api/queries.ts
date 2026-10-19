@@ -7,7 +7,23 @@ import type {
   TeamStatus,
   Page,
   Sport,
+  MapEventsResponse,
 } from "../../../shared/api/types";
+export const mapEventsQuery = (
+  bbox: string,
+  sportId: string,
+  viewerId?: string,
+) =>
+  queryOptions({
+    queryKey: ["map", "events", bbox, sportId, viewerId ?? "guest"],
+    queryFn: ({ signal }) =>
+      request<MapEventsResponse>(
+        `/map/events?${new URLSearchParams({ bbox, ...(sportId ? { sportId } : {}), limit: "300" })}`,
+        { signal },
+      ),
+    enabled: Boolean(bbox),
+    retry: false,
+  });
 import type { CreateEventInput } from "../../../shared/api/event-schema";
 
 export const sportsQuery = queryOptions({

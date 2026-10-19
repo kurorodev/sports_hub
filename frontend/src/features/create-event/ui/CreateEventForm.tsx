@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, Lightbulb } from "lucide-react";
 import { sessionQuery } from "../../../entities/session";
 import { ApiError, errorMessage } from "../../../shared/api/client";
 import type { Session, Sport } from "../../../shared/api/types";
+import { LocationPicker } from "../../../shared/ui/LocationPicker";
 import { FormField } from "../../../shared/ui/FormField";
 import { createEvent, sportsQuery } from "../../../entities/event";
 import {
@@ -68,6 +69,7 @@ export function CreateEventForm({
         return;
       await Promise.all([
         client.invalidateQueries({ queryKey: ["events"] }),
+        client.invalidateQueries({ queryKey: ["map", "events"] }),
         client.invalidateQueries({ queryKey: sportsQuery.queryKey }),
       ]);
       navigate(`/events/${event.id}`, { state: { created: true } });
@@ -219,41 +221,22 @@ export function CreateEventForm({
             <legend>
               <span>02</span>Где и когда
             </legend>
-            <div className="form-two-columns">
-              <FormField
-                id="event-city"
-                label="Город"
-                error={errors.location?.city?.message}
-              >
-                <input
-                  {...accessibility(
-                    "event-city",
-                    errors.location?.city?.message,
-                  )}
-                  {...form.register("location.city")}
-                  autoComplete="address-level2"
-                  placeholder="Ваш город"
-                  maxLength={120}
-                  required
+            <Controller
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <LocationPicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  errors={{
+                    city: errors.location?.city?.message,
+                    address: errors.location?.address?.message,
+                    latitude: errors.location?.latitude?.message,
+                    longitude: errors.location?.longitude?.message,
+                  }}
                 />
-              </FormField>
-              <FormField
-                id="event-address"
-                label="Место встречи"
-                error={errors.location?.address?.message}
-              >
-                <input
-                  {...accessibility(
-                    "event-address",
-                    errors.location?.address?.message,
-                  )}
-                  {...form.register("location.address")}
-                  placeholder="Адрес и точка сбора"
-                  maxLength={300}
-                  required
-                />
-              </FormField>
-            </div>
+              )}
+            />
             <div className="form-two-columns">
               <FormField
                 id="event-date"

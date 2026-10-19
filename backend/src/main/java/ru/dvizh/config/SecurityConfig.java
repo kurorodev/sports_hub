@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS,"/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST,"/api/v1/demo/session").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET,
-                    "/api/v1/health", "/api/v1/demo/accounts", "/api/v1/sports", "/api/v1/users/**",
+                    "/api/v1/health", "/api/v1/demo/accounts", "/api/v1/sports", "/api/v1/users/**", "/api/v1/map/**", "/api/v1/geo/**",
                     "/api/v1/events", "/api/v1/events/*", "/api/v1/events/*/participants", "/api/v1/events/*/comments", "/api/v1/events/*/team",
                     "/api/v1/organizations", "/api/v1/organizations/*", "/api/v1/organizations/*/events").permitAll()
                 .anyRequest().authenticated())

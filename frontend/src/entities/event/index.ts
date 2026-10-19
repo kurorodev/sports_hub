@@ -3,6 +3,7 @@ export {
   eventQuery,
   sportsQuery,
   createEvent,
+  mapEventsQuery,
 } from "./api/queries";
 export { toEventParticipation } from "./api/participation-mapper";
 export {

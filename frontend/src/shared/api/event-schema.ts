@@ -16,6 +16,8 @@ export const eventFieldsSchema = z.object({
   location: z.object({
     city: z.string().trim().min(1, "Укажите город").max(120),
     address: z.string().trim().min(1, "Укажите место встречи").max(300),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
   }),
   skillLevel: z.enum([
     "ANY",

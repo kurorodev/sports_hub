@@ -2012,3 +2012,306 @@ input[type="radio"] {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Maps share the existing form, card and status tokens. */
+.geo-map {
+  position: relative;
+  width: 100%;
+  margin: 16px 0;
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  isolation: isolate;
+}
+.geo-map .leaflet-container {
+  height: clamp(340px, 55vh, 620px);
+  width: 100%;
+  font-family: inherit;
+  color: var(--color-ink);
+  background: var(--color-surface-alt);
+}
+.geo-map.compact .leaflet-container {
+  height: 300px;
+}
+.leaflet-container .leaflet-popup-content {
+  max-width: min(290px, 65vw);
+  margin: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.leaflet-popup-content h3 {
+  font-size: 18px;
+}
+.leaflet-container .leaflet-popup-content p {
+  margin: 8px 0;
+}
+.leaflet-popup-content .button {
+  margin-top: 10px;
+  color: var(--color-ink);
+}
+.map-pin {
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--color-surface);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px #0005;
+  font-size: 19px;
+  font-weight: 800;
+}
+.map-pin-event {
+  background: var(--color-info);
+  color: white;
+  border-radius: 9px;
+}
+.occupancy-low {
+  --occupancy-color: var(--color-success);
+}
+.occupancy-medium {
+  --occupancy-color: var(--color-warning);
+}
+.occupancy-high {
+  --occupancy-color: var(--color-danger);
+}
+.occupancy-unknown {
+  --occupancy-color: var(--color-ink-muted);
+}
+.map-pin-venue {
+  background: var(--occupancy-color);
+  color: white;
+  font-size: 13px;
+}
+.map-location-control {
+  position: absolute;
+  bottom: 28px;
+  left: 10px;
+  z-index: 500;
+  max-width: calc(100% - 20px);
+}
+.map-location-control button,
+.map-location-control p {
+  background: var(--color-surface);
+  padding: 8px 12px;
+  border: 1px solid var(--color-outline);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #0002;
+  font-size: 12px;
+}
+.map-tile-warning {
+  padding: 8px 12px;
+  background: var(--color-warning-bg);
+  font-size: 13px;
+}
+.location-picker {
+  min-width: 0;
+}
+.location-autocomplete,
+.map-search {
+  position: relative;
+  min-width: 0;
+}
+.location-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.location-suggestions,
+.map-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  z-index: 600;
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px #0002;
+  overflow-wrap: anywhere;
+}
+.location-suggestions ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.location-suggestions li,
+.location-suggestions p,
+.map-search-results button,
+.map-search-results p {
+  padding: 10px 14px;
+  text-align: left;
+  width: 100%;
+}
+.location-suggestions li {
+  cursor: pointer;
+}
+.location-suggestions li:hover,
+.location-suggestions li[aria-selected="true"],
+.map-search-results button:hover {
+  background: var(--color-surface-alt);
+}
+.map-page {
+  padding: 36px 0;
+}
+.map-heading {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.map-heading h1 {
+  margin: 8px 0;
+}
+.map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  padding: 20px;
+  margin: 20px 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+}
+.map-toolbar > .form-field,
+.map-toolbar > .map-search {
+  flex: 1 1 210px;
+}
+.map-toolbar .form-field {
+  margin: 0;
+}
+.map-layers {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  display: grid;
+  gap: 8px;
+}
+.map-layers legend {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.map-layers label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.map-layers input,
+.occupancy-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-ink);
+}
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  font-size: 13px;
+  margin: 12px 0;
+}
+.map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--occupancy-color);
+}
+.map-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+.map-results section {
+  min-width: 0;
+}
+.map-results h2 {
+  margin-bottom: 16px;
+}
+.map-result {
+  padding: 22px;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+.map-result p {
+  margin-top: 8px;
+}
+.map-result .button {
+  margin-top: 12px;
+}
+.occupancy-status {
+  color: var(--occupancy-color);
+  font-weight: 800;
+}
+.map-action-panel {
+  padding: clamp(16px, 4vw, 32px);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  margin: 20px 0;
+}
+.map-action-panel > button {
+  margin-bottom: 16px;
+}
+.venue-form fieldset,
+.occupancy-form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.venue-form legend,
+.occupancy-form legend {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+.occupancy-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.occupancy-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border: 2px solid var(--occupancy-color);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.occupancy-form .button,
+.venue-form .button {
+  margin-top: 12px;
+}
+@media (max-width: 600px) {
+  .map-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .map-toolbar {
+    padding: 16px;
+    gap: 12px;
+  }
+  .map-toolbar > .form-field,
+  .map-toolbar > .map-search {
+    flex-basis: 100%;
+  }
+  .map-legend {
+    font-size: 12px;
+    gap: 8px 12px;
+  }
+  .location-actions .button {
+    font-size: 13px;
+    padding-inline: 12px;
+  }
+}

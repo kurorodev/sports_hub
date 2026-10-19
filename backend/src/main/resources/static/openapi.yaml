@@ -24,6 +24,8 @@ tags:
 - name: Team Builder
 - name: Ratings
 - name: Messaging
+- name: Geo
+- name: Map
 security:
 - cookieAuth: []
 paths:
@@ -1767,6 +1769,274 @@ paths:
         schema:
           type: string
       x-phase: P2
+  /geo/suggest:
+    get:
+      tags:
+      - Geo
+      operationId: suggestLocations
+      summary: Подсказки адресов
+      description: Серверный Geoapify. Без ключа или при ошибке поставщика — 503.
+        Ручной ввод адреса остаётся доступен.
+      x-phase: P2
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeoSuggestions'
+        '400':
+          $ref: '#/components/responses/400'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 160
+      - name: city
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 120
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+      security: []
+  /geo/reverse:
+    get:
+      tags:
+      - Geo
+      operationId: reverseLocation
+      summary: Адрес по координатам
+      description: Если адрес не найден, location=null. Ответ сохраняет выбранные
+        координаты.
+      x-phase: P2
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeoReverseResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+      parameters:
+      - name: latitude
+        in: query
+        required: true
+        schema:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+      - name: longitude
+        in: query
+        required: true
+        schema:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+      security: []
+  /map/events:
+    get:
+      tags:
+      - Map
+      operationId: getMapEvents
+      summary: Мероприятия в окне карты
+      description: Только PUBLISHED с обеими координатами, startsAt >= now и from.
+        Сортировка startsAt ASC, id ASC. truncated требует приближения карты.
+      x-phase: P2
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapEventsResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+      parameters:
+      - name: bbox
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 49.8,53.0,50.4,53.5
+        description: west,south,east,north. Валидные координаты, min < max. Охват
+          не более 10° по каждой оси; пересечение 180° не поддерживается.
+      - name: sportId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 300
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      security: []
+  /map/venues:
+    get:
+      tags:
+      - Map
+      operationId: getMapVenues
+      summary: Площадки в окне карты
+      description: Публично. Последние оценки каждого пользователя за 90 минут, верхняя
+        медиана. Ровно на границе срока — UNKNOWN. История и авторы не публикуются.
+      x-phase: P2
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapVenuesResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+      parameters:
+      - name: bbox
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 49.8,53.0,50.4,53.5
+        description: west,south,east,north. Валидные координаты, min < max. Охват
+          не более 10° по каждой оси; пересечение 180° не поддерживается.
+      - name: sportId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 300
+      security: []
+    post:
+      tags:
+      - Map
+      operationId: createMapVenue
+      summary: Добавить спортивную площадку
+      description: Сессия и X-CSRF-Token. Не более 3 площадок/час. Совпадающее нормализованное
+        имя ближе 30 м — 409.
+      x-phase: P2
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueMapItem'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenueCreate'
+  /map/venues/{venueId}/reports:
+    post:
+      tags:
+      - Map
+      operationId: reportVenueOccupancy
+      summary: Оценить загруженность
+      description: Сессия и X-CSRF-Token. Оценка субъективная, peopleCount не определяет
+        цвет. Повтор от одного пользователя на площадку раз в 10 минут; 429 + Retry-After.
+        Оценка актуальна 90 минут.
+      x-phase: P2
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueMapItem'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+      parameters:
+      - name: venueId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OccupancyReportCreate'
 components:
   securitySchemes:
     cookieAuth:
@@ -1867,6 +2137,12 @@ components:
             requestId: req-demo-001
     NoContent:
       description: Операция выполнена (без тела)
+    '503':
+      description: Геокодер временно недоступен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
   schemas:
     SystemRole:
       type: string
@@ -1987,6 +2263,7 @@ components:
       - ALREADY_VERIFIED
       - RATE_LIMITED
       - INTERNAL_ERROR
+      - SERVICE_UNAVAILABLE
     ErrorField:
       type: object
       properties:
@@ -3241,3 +3518,194 @@ components:
       - size
       - total
       - totalPages
+    GeoSuggestion:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        city:
+          type: string
+          minLength: 1
+          maxLength: 120
+        address:
+          type: string
+          minLength: 1
+          maxLength: 300
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+      required:
+      - id
+      - label
+      - city
+      - address
+      - latitude
+      - longitude
+    GeoSuggestions:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeoSuggestion'
+      required:
+      - items
+    GeoReverseResponse:
+      type: object
+      properties:
+        location:
+          allOf:
+          - $ref: '#/components/schemas/Location'
+          nullable: true
+      required:
+      - location
+    VenueLocation:
+      type: object
+      properties:
+        city:
+          type: string
+          minLength: 1
+          maxLength: 120
+        address:
+          type: string
+          minLength: 1
+          maxLength: 300
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+      required:
+      - city
+      - address
+      - latitude
+      - longitude
+      additionalProperties: false
+    OccupancyLevel:
+      type: string
+      enum:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - UNKNOWN
+    ReportedOccupancyLevel:
+      type: string
+      enum:
+      - LOW
+      - MEDIUM
+      - HIGH
+    VenueOccupancy:
+      type: object
+      properties:
+        level:
+          $ref: '#/components/schemas/OccupancyLevel'
+        lastReportedAt:
+          type: string
+          format: date-time
+          nullable: true
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
+        reportsCount:
+          type: integer
+          minimum: 0
+      required:
+      - level
+      - lastReportedAt
+      - validUntil
+      - reportsCount
+    VenueMapItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sportId:
+          type: string
+          format: uuid
+          nullable: true
+        sportName:
+          type: string
+          nullable: true
+        location:
+          $ref: '#/components/schemas/VenueLocation'
+        occupancy:
+          $ref: '#/components/schemas/VenueOccupancy'
+      required:
+      - id
+      - name
+      - sportId
+      - sportName
+      - location
+      - occupancy
+    VenueCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 120
+        sportId:
+          type: string
+          format: uuid
+          nullable: true
+        location:
+          $ref: '#/components/schemas/VenueLocation'
+      required:
+      - name
+      - location
+      additionalProperties: false
+    OccupancyReportCreate:
+      type: object
+      properties:
+        level:
+          $ref: '#/components/schemas/ReportedOccupancyLevel'
+        peopleCount:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          nullable: true
+      required:
+      - level
+      additionalProperties: false
+    MapEventsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventCard'
+        truncated:
+          type: boolean
+      required:
+      - items
+      - truncated
+    MapVenuesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VenueMapItem'
+        truncated:
+          type: boolean
+      required:
+      - items
+      - truncated

@@ -7,6 +7,7 @@ import { setCsrfToken } from "../shared/api/client";
 import { resetMockOrganizations } from "../mocks/organizations";
 import { resetMockDatabase } from "../mocks/database";
 import { resetMockComments } from "../mocks/comments";
+import { resetMockMaps } from "../mocks/maps";
 
 export const server = setupServer(...handlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -17,6 +18,7 @@ afterEach(() => {
   resetMockDatabase();
   resetMockOrganizations();
   resetMockComments();
+  resetMockMaps();
   setCsrfToken();
 });
 afterAll(() => server.close());

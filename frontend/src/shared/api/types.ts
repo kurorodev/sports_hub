@@ -1,6 +1,16 @@
 /** Wire types generated from the shared Java API contract. Do not duplicate DTOs here. */
 import type { components } from "./generated/schema";
 type Schemas = components["schemas"];
+export type Location = Schemas["Location"];
+export type GeoSuggestion = Schemas["GeoSuggestion"];
+export type GeoSuggestions = Schemas["GeoSuggestions"];
+export type GeoReverseResponse = Schemas["GeoReverseResponse"];
+export type VenueMapItem = Schemas["VenueMapItem"];
+export type VenueCreate = Schemas["VenueCreate"];
+export type OccupancyLevel = Schemas["OccupancyLevel"];
+export type OccupancyReportCreate = Schemas["OccupancyReportCreate"];
+export type MapEventsResponse = Schemas["MapEventsResponse"];
+export type MapVenuesResponse = Schemas["MapVenuesResponse"];
 export type SystemRole = Schemas["SystemRole"];
 export type DemoAccount = Schemas["DemoAccount"];
 export type Session = Schemas["Session"];
