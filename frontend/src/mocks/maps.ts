@@ -1,3 +1,4 @@
+import { withinDistance, distanceParamError } from "../shared/lib/distance";
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
 import { getEvents, getSports, mockId } from "./database";
@@ -275,6 +276,8 @@ export function mapHandlers(
       const window = windowParams(request);
       if (!window)
         return fail(400, "Недопустимый bbox или limit. Приблизьте карту");
+      if (distanceParamError(window.params))
+        return fail(400, "Некорректные параметры расстояния");
       const from = window.params.get("from"),
         to = window.params.get("to");
       if (
@@ -292,6 +295,7 @@ export function mapHandlers(
             (!to || Date.parse(event.startsAt) <= Date.parse(to)) &&
             hasPoint(event.location) &&
             window.contains(event.location) &&
+            withinDistance(event.location, window.params) &&
             (!window.sport || event.sport.id === window.sport),
         )
         .sort(

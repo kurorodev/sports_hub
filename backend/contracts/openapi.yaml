@@ -1195,6 +1195,31 @@ paths:
         '500':
           $ref: '#/components/responses/500'
       parameters:
+      - name: originLatitude
+        in: query
+        required: false
+        description: Текущая широта пользователя. Передаётся вместе с originLongitude и radiusMeters.
+        schema:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+      - name: originLongitude
+        in: query
+        required: false
+        description: Текущая долгота пользователя; только для фильтра расстояния.
+        schema:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+      - name: radiusMeters
+        in: query
+        required: false
+        description: Расстояние по прямой до точки мероприятия. Все три геопараметра обязательны вместе. Без координат мероприятия исключаются; применяется до пагинации через AND с остальными фильтрами.
+        schema:
+          type: integer
+          enum: [100, 200, 500, 1000, 2000, 3000, 5000]
       - name: q
         in: query
         required: false
@@ -2758,6 +2783,31 @@ paths:
         '503':
           $ref: '#/components/responses/503'
       parameters:
+      - name: originLatitude
+        in: query
+        required: false
+        description: Текущая широта пользователя. Передаётся вместе с originLongitude и radiusMeters.
+        schema:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+      - name: originLongitude
+        in: query
+        required: false
+        description: Текущая долгота пользователя; только для фильтра расстояния.
+        schema:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+      - name: radiusMeters
+        in: query
+        required: false
+        description: Расстояние по прямой до точки мероприятия. Все три геопараметра обязательны вместе. Без координат мероприятия исключаются; применяется до пагинации через AND с остальными фильтрами.
+        schema:
+          type: integer
+          enum: [100, 200, 500, 1000, 2000, 3000, 5000]
       - name: bbox
         in: query
         required: true

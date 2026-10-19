@@ -1,3 +1,5 @@
+import { useCurrentLocation } from "../../../shared/lib/current-location-context";
+import { DistanceFilter } from "../../../shared/ui/DistanceFilter";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -33,6 +35,15 @@ export function MapPage() {
   const [bbox, setBbox] = useState("");
   const [params, setParams] = useMapParams();
   const view = readMapView(params);
+  const { position } = useCurrentLocation();
+  const radius = params.get("radiusMeters") ?? "";
+  const needsLocation = Boolean(radius) && !position;
+  const radiusZoom = (value: string) => {
+    const meters = Number(value);
+    return meters > 0 && meters <= 5000
+      ? Math.max(8, Math.min(17, Math.floor(17 - Math.log2(meters / 100))))
+      : 17;
+  };
   const sportId = params.get("sportId") ?? "";
   const showEvents = params.get("events") !== "off";
   const showVenues = params.get("venues") !== "off";
@@ -51,7 +62,12 @@ export function MapPage() {
     .map(([, label]) => label);
   const setParam = (key: string, value: string) =>
     setParams((current) => {
-      const next = new URLSearchParams(current);
+      let next = new URLSearchParams(current);
+      if (key === "radiusMeters") {
+        next.delete("page");
+        if (value && position)
+          next = writeMapView(next, { ...position, zoom: radiusZoom(value) });
+      }
       if (value) next.set(key, value);
       else next.delete(key);
       return next;
@@ -126,18 +142,29 @@ export function MapPage() {
     if (creating || reporting) panel.current?.focus();
   }, [creating, reporting]);
   const events = useQuery({
-    ...mapEventsQuery(bbox, sportId, session.data?.user.id, {
-      from: params.get("from") ?? undefined,
-      to: params.get("to") ?? undefined,
-    }),
+    ...mapEventsQuery(
+      bbox,
+      sportId,
+      session.data?.user.id,
+      {
+        from: params.get("from") ?? undefined,
+        to: params.get("to") ?? undefined,
+      },
+      radius ? { radius, origin: position } : undefined,
+    ),
     enabled:
-      Boolean(bbox) && showEvents && !session.isPending && !session.isError,
+      Boolean(bbox) &&
+      showEvents &&
+      !needsLocation &&
+      !session.isPending &&
+      !session.isError,
   });
   const venues = useQuery({
     ...venuesQuery(bbox, sportId),
     enabled: Boolean(bbox) && showVenues,
   });
-  const eventItems = showEvents ? (events.data?.items ?? []) : [];
+  const eventItems =
+    showEvents && !needsLocation ? (events.data?.items ?? []) : [];
   const venueItems = showVenues ? (venues.data?.items ?? []) : [];
   const selectedVenue = venueItems.find((venue) => venue.id === reporting);
   const selectedEvent = eventItems.find(
@@ -176,9 +203,9 @@ export function MapPage() {
       <ActivityViewSwitch view="map" params={params} />
       {unsupported.length > 0 && (
         <p className="notice map-filter-notice">
-          На карте действуют вид спорта, даты и видимая область. Только в
-          списке: {unsupported.join(", ")}. Эти условия сохранены для возврата в
-          список.
+          На карте действуют вид спорта, даты, расстояние до мероприятий и
+          видимая область. Только в списке: {unsupported.join(", ")}. Эти
+          условия сохранены для возврата в список.
         </p>
       )}
       <p className="field-hint">
@@ -186,6 +213,10 @@ export function MapPage() {
         или переместите карту.
       </p>
       <div className="map-toolbar">
+        <DistanceFilter
+          value={radius}
+          onChange={(value) => setParam("radiusMeters", value)}
+        />
         <MapSearch onSelect={setCenter} />
         <div className="form-field">
           <label htmlFor="map-sport">Вид спорта на карте</label>
@@ -267,8 +298,8 @@ export function MapPage() {
       </p>
       <div className="map-explorer">
         <GeoMap
-          center={view}
-          zoom={view?.zoom ?? 17}
+          center={view ?? (radius && position ? position : undefined)}
+          zoom={view?.zoom ?? (radius ? radiusZoom(radius) : 17)}
           onBounds={setBbox}
           onView={rememberView}
         >
@@ -428,7 +459,12 @@ export function MapPage() {
             <h2>
               Мероприятия <span className="muted">{eventItems.length}</span>
             </h2>
-            {events.isError ? (
+            {needsLocation ? (
+              <p role="status">
+                Включите геолокацию, чтобы найти мероприятия в выбранном
+                радиусе.
+              </p>
+            ) : events.isError ? (
               <ErrorState
                 error={events.error}
                 retry={() => void events.refetch()}

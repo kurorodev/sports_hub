@@ -1,3 +1,4 @@
+import { withinDistance, distanceParamError } from "../shared/lib/distance";
 import {
   notificationHandlers,
   notify,
@@ -973,10 +974,19 @@ export const handlers = [
   }),
   http.get(`${api}/events`, ({ request }) => {
     const p = new URL(request.url).searchParams;
+    if (distanceParamError(p))
+      return json(
+        {
+          code: "VALIDATION_ERROR",
+          message: "Некорректные параметры расстояния",
+        },
+        { status: 400 },
+      );
     const q = (p.get("q") ?? "").trim().toLocaleLowerCase("ru");
     let items = getEvents(makeSession(savedAccount() ?? "")?.user.id).filter(
       (event) =>
         event.status === "PUBLISHED" &&
+        withinDistance(event.location, p) &&
         (!q ||
           `${event.title} ${event.description} ${event.customSportName ?? ""}`
             .toLocaleLowerCase("ru")

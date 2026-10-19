@@ -1,3 +1,5 @@
+import { useCurrentLocation } from "../../../shared/lib/current-location-context";
+import { DistanceFilter } from "../../../shared/ui/DistanceFilter";
 import { registrationPresentation } from "../../../entities/registration";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
@@ -19,7 +21,9 @@ import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
-  const query = useQuery(eventsQuery(params));
+  const { position } = useCurrentLocation();
+  const needsLocation = params.has("radiusMeters") && !position;
+  const query = useQuery(eventsQuery(params, position));
   const sports = useQuery(sportsQuery);
   const sportOptions = [
     { id: "", name: "Все виды спорта" },
@@ -51,6 +55,7 @@ export function CatalogPage() {
     "joinMode",
     "hasSpots",
     "includePast",
+    "radiusMeters",
   ].filter((key) => params.has(key)).length;
   return (
     <>
@@ -175,6 +180,10 @@ export function CatalogPage() {
                 )}
               </summary>
               <div className="filter-fields">
+                <DistanceFilter
+                  value={params.get("radiusMeters") ?? ""}
+                  onChange={(value) => setFilter("radiusMeters", value)}
+                />
                 <div className="form-field">
                   <label htmlFor="catalog-sport">Категория спорта</label>
                   <SearchableSelect
@@ -269,6 +278,8 @@ export function CatalogPage() {
                   <>
                     Найдено активностей: <strong>{query.data.total}</strong>
                   </>
+                ) : needsLocation ? (
+                  "Укажите геопозицию для поиска рядом"
                 ) : (
                   "Ищем активности…"
                 )}
@@ -279,12 +290,17 @@ export function CatalogPage() {
                   value={params.get("sort") ?? "startsAt,asc"}
                   onChange={(event) => setFilter("sort", event.target.value)}
                 >
-                  <option value="startsAt,asc">Сначала ближайшие</option>
-                  <option value="startsAt,desc">Сначала поздние</option>
+                  <option value="startsAt,asc">Дата: сначала ранние</option>
+                  <option value="startsAt,desc">Дата: сначала поздние</option>
                 </select>
               </label>
             </div>
-            {query.isPending ? (
+            {needsLocation ? (
+              <p className="notice" role="status">
+                Включите геолокацию в фильтре «Рядом со мной», чтобы найти
+                мероприятия в выбранном радиусе.
+              </p>
+            ) : query.isPending ? (
               <Skeletons />
             ) : query.isError ? (
               <ErrorState

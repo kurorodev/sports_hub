@@ -3223,6 +3223,12 @@ export interface operations {
     getEvents: {
         parameters: {
             query?: {
+                /** @description Текущая широта пользователя. Передаётся вместе с originLongitude и radiusMeters. */
+                originLatitude?: number;
+                /** @description Текущая долгота пользователя; только для фильтра расстояния. */
+                originLongitude?: number;
+                /** @description Расстояние по прямой до точки мероприятия. Все три геопараметра обязательны вместе. Без координат мероприятия исключаются; применяется до пагинации через AND с остальными фильтрами. */
+                radiusMeters?: 100 | 200 | 500 | 1000 | 2000 | 3000 | 5000;
                 /** @description Подстрока в названии, описании или спорте; без учета регистра */
                 q?: string;
                 sportId?: string;
@@ -4515,6 +4521,12 @@ export interface operations {
     getMapEvents: {
         parameters: {
             query: {
+                /** @description Текущая широта пользователя. Передаётся вместе с originLongitude и radiusMeters. */
+                originLatitude?: number;
+                /** @description Текущая долгота пользователя; только для фильтра расстояния. */
+                originLongitude?: number;
+                /** @description Расстояние по прямой до точки мероприятия. Все три геопараметра обязательны вместе. Без координат мероприятия исключаются; применяется до пагинации через AND с остальными фильтрами. */
+                radiusMeters?: 100 | 200 | 500 | 1000 | 2000 | 3000 | 5000;
                 /** @description west,south,east,north. Валидные координаты, min < max. Охват не более 10° по каждой оси; пересечение 180° не поддерживается. */
                 bbox: string;
                 sportId?: string;
