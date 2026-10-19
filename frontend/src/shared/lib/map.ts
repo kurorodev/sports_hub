@@ -5,6 +5,9 @@ export const demoCenter: Point = {
   latitude: 53.196061,
   longitude: 50.101522,
 };
+export function toMapCoordinates(point: Point): [number, number] {
+  return [point.longitude, point.latitude];
+}
 export function hasPoint(location: Location): location is Location & Point {
   return (
     typeof location.latitude === "number" &&

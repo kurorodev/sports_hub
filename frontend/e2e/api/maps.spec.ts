@@ -11,7 +11,7 @@ async function login(page: Page) {
 }
 async function manualPoint(page: Page) {
   await page.getByRole("button", { name: "Указать на карте" }).click();
-  await page.locator(".location-picker .leaflet-container").click();
+  await page.locator(".location-picker .map-canvas").click();
   // This suite runs with the provider disabled; only geocoding degrades, Java stays real.
   await expect(
     page.getByText(/Поиск адресов недоступен. Заполните город/),
@@ -25,7 +25,7 @@ async function manualPoint(page: Page) {
 test.beforeEach(async ({ page }) => {
   await page
     .context()
-    .route("https://tile.openstreetmap.org/**", (route) => route.abort());
+    .route("https://tiles.openfreemap.org/**", (route) => route.abort());
 });
 test("Java map: disabled geocoder keeps event creation with a pin working", async ({
   page,
@@ -64,7 +64,7 @@ test("Java map: disabled geocoder keeps event creation with a pin working", asyn
   await page.getByLabel("Площадки", { exact: true }).uncheck();
   await page.getByTitle(`Мероприятие: ${title}`, { exact: true }).click();
   await page
-    .locator(".leaflet-popup")
+    .locator(".maplibregl-popup")
     .getByRole("link", { name: "Подробнее" })
     .click();
   await expect(page).toHaveURL(detail);
@@ -126,7 +126,7 @@ test("Java map: returning after join refreshes counts and moderation removes the
     const viewer = await context.newPage();
     await viewer
       .context()
-      .route("https://tile.openstreetmap.org/**", (route) => route.abort());
+      .route("https://tiles.openfreemap.org/**", (route) => route.abort());
     await signInAs(viewer, "athlete-b");
     await viewer.goto(
       `/map?lat=53.19556&lng=50.10102&zoom=17&eventId=${event.id}&venues=off`,

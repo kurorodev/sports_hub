@@ -1,9 +1,7 @@
-import { Marker, Popup, Tooltip } from "react-leaflet";
-import { divIcon } from "leaflet";
 import { Link, useLocation } from "react-router-dom";
 import type { EventCardDto, VenueMapItem } from "../../../shared/api/types";
 import { hasPoint } from "../../../shared/lib/map";
-import { pointIcon } from "../../../shared/lib/map-icons";
+import { GeoMarker } from "../../../shared/ui/GeoMarker";
 import {
   eventDate,
   eventTimezone,
@@ -14,18 +12,6 @@ import {
   occupancyPresentation,
   VenueSummary,
 } from "../../../entities/venue";
-
-const venueIcons = Object.fromEntries(
-  Object.entries(occupancyPresentation).map(([level, presentation]) => [
-    level,
-    divIcon({
-      className: `map-pin map-pin-venue occupancy-${presentation.tone}`,
-      html: "<span aria-hidden='true'>●</span>",
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
-    }),
-  ]),
-);
 
 export function MapEventSummary({ event }: { event: EventCardDto }) {
   const location = useLocation();
@@ -72,38 +58,41 @@ export function MapMarkers({
       {events
         .filter((event) => hasPoint(event.location))
         .map((event) => (
-          <Marker
+          <GeoMarker
             key={event.id}
-            position={[event.location.latitude!, event.location.longitude!]}
-            icon={pointIcon}
+            point={{
+              latitude: event.location.latitude!,
+              longitude: event.location.longitude!,
+            }}
             title={`Мероприятие: ${event.title}`}
-            alt={`Мероприятие: ${event.title}`}
-            eventHandlers={{ click: () => onSelect("event", event.id) }}
+            onSelect={() => onSelect("event", event.id)}
+            tooltip={
+              <>
+                {event.title} · {event.sport.name} · {eventDate(event.startsAt)}{" "}
+                {eventTimezone(event.startsAt)} · {event.location.address} ·{" "}
+                {participantCount(event.confirmedCount, event.maxParticipants)}
+              </>
+            }
           >
-            <Tooltip>
-              {event.title} · {event.sport.name} · {eventDate(event.startsAt)}{" "}
-              {eventTimezone(event.startsAt)} · {event.location.address} ·{" "}
-              {participantCount(event.confirmedCount, event.maxParticipants)}
-            </Tooltip>
-            <Popup>
-              <MapEventSummary event={event} />
-            </Popup>
-          </Marker>
+            <MapEventSummary event={event} />
+          </GeoMarker>
         ))}
-      {venues.map((venue) => (
-        <Marker
-          key={venue.id}
-          position={[venue.location.latitude, venue.location.longitude]}
-          icon={venueIcons[currentOccupancy(venue, now)]}
-          title={`Площадка: ${venue.name} — ${occupancyPresentation[currentOccupancy(venue, now)].label}`}
-          alt={`Площадка: ${venue.name}`}
-          eventHandlers={{ click: () => onSelect("venue", venue.id) }}
-        >
-          <Tooltip>
-            {venue.name} ·{" "}
-            {occupancyPresentation[currentOccupancy(venue, now)].label}
-          </Tooltip>
-          <Popup>
+      {venues.map((venue) => {
+        const presentation =
+          occupancyPresentation[currentOccupancy(venue, now)];
+        return (
+          <GeoMarker
+            key={venue.id}
+            point={venue.location}
+            tone={presentation.tone}
+            title={`Площадка: ${venue.name} — ${presentation.label}`}
+            tooltip={
+              <>
+                {venue.name} · {presentation.label}
+              </>
+            }
+            onSelect={() => onSelect("venue", venue.id)}
+          >
             <VenueSummary venue={venue} now={now} />
             <button
               type="button"
@@ -112,9 +101,9 @@ export function MapMarkers({
             >
               Оценить загруженность
             </button>
-          </Popup>
-        </Marker>
-      ))}
+          </GeoMarker>
+        );
+      })}
     </>
   );
 }

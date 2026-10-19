@@ -8,6 +8,14 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:5174",
     serviceWorkers: "block",
     trace: "retain-on-failure",
+    // MapLibre needs WebGL; headless CI uses Chromium's software renderer.
+    launchOptions: {
+      args: [
+        "--use-gl=angle",
+        "--use-angle=swiftshader",
+        "--enable-unsafe-swiftshader",
+      ],
+    },
   },
   projects: [{ name: "chromium-java", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

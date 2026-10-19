@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-19T12:00:00Z"));
   await page
     .context()
-    .route("https://tile.openstreetmap.org/**", (route) => route.abort());
+    .route("https://tiles.openfreemap.org/**", (route) => route.abort());
 });
 for (const width of [320, 375, 768, 1024, 1440]) {
   test(`catalog filters, selected object, location and return survive at ${width}px`, async ({

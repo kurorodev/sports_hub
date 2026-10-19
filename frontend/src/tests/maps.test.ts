@@ -6,7 +6,7 @@ import type {
   MapVenuesResponse,
   MapEventsResponse,
 } from "../shared/api/types";
-import { boundsToBbox, unpin } from "../shared/lib/map";
+import { boundsToBbox, toMapCoordinates, unpin } from "../shared/lib/map";
 import { currentOccupancy, observationTime } from "../entities/venue";
 import { demoSuggestion } from "../mocks/maps";
 import { mockId } from "../mocks/database";
@@ -42,6 +42,9 @@ async function report(venueId: string, level = "LOW", peopleCount = 5) {
 
 describe("map coordinates and occupancy", () => {
   it("serializes west,south,east,north and clears both coordinates on text edits", () => {
+    expect(toMapCoordinates({ latitude: 53.2, longitude: 50.1 })).toEqual([
+      50.1, 53.2,
+    ]);
     expect(
       boundsToBbox({
         getWest: () => 49.8,

@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   // Browser checks exercise our map and markers without depending on a public tile server.
   await page
     .context()
-    .route("https://tile.openstreetmap.org/**", (route) => route.abort());
+    .route("https://tiles.openfreemap.org/**", (route) => route.abort());
 });
 async function login(page: Page) {
   await page.goto("/login");
@@ -39,7 +39,7 @@ for (const width of [375, 1440]) {
       .fill("Собираемся вместе, знакомимся и играем в баскетбол.");
     await selectLocation(page);
     // Picking a point invokes reverse geocoding; the selected coordinates survive POST and GET.
-    await page.locator(".location-picker .leaflet-container").click();
+    await page.locator(".location-picker .map-canvas").click();
     await expect(
       page.getByRole("combobox", { name: "Место встречи" }),
     ).toHaveValue("площадь Куйбышева");
@@ -64,11 +64,11 @@ for (const width of [375, 1440]) {
     const marker = page.getByTitle(`Мероприятие: ${title}`, { exact: true });
     await expect(marker).toBeVisible();
     await marker.focus();
-    await expect(page.locator(".leaflet-tooltip")).toContainText(title);
+    await expect(page.locator(".map-marker-tooltip")).toContainText(title);
     await marker.click();
-    await expect(page.locator(".leaflet-popup")).toContainText(title);
+    await expect(page.locator(".maplibregl-popup")).toContainText(title);
     await page
-      .locator(".leaflet-popup")
+      .locator(".maplibregl-popup")
       .getByRole("link", { name: "Подробнее" })
       .click();
     await expect(page).toHaveURL(detailUrl);
@@ -163,3 +163,60 @@ for (const width of [320, 375, 768, 1024, 1440]) {
     await expect(page).toHaveURL("/map");
   });
 }
+
+test("panning and zoom keep viewport, list filters and layers after reload", async ({
+  page,
+}) => {
+  await page.goto(
+    "/map?lat=53.19556&lng=50.10102&zoom=17&venues=off&city=Самара",
+  );
+  const canvas = page.locator("canvas.maplibregl-canvas");
+  await expect(canvas).toBeVisible();
+  await expect(page.getByText(/Подложка карты недоступна/)).toBeVisible();
+  await canvas.scrollIntoViewIfNeeded();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(
+    box.x + box.width / 2 + 80,
+    box.y + box.height / 2 + 40,
+    { steps: 10 },
+  );
+  await page.mouse.up();
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get("lng"))
+    .not.toBe("50.10102");
+  await page.getByRole("button", { name: "Приблизить", exact: true }).click();
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get("zoom"))
+    .toBe("18");
+  const params = new URL(page.url()).searchParams;
+  expect(params.get("venues")).toBe("off");
+  expect(params.get("city")).toBe("Самара");
+  const url = page.url();
+  await page.reload();
+  await expect(canvas).toBeVisible();
+  await expect(page).toHaveURL(url);
+  await expect(page.getByLabel("Площадки", { exact: true })).not.toBeChecked();
+});
+
+test("selected point moves with keyboard and keeps actual coordinates through reverse geocoding", async ({
+  page,
+}) => {
+  await login(page);
+  await page.goto("/events/new");
+  await selectLocation(page);
+  const pin = page.getByTitle("Выбранная точка", { exact: true });
+  await pin.focus();
+  const reversed = page.waitForResponse((response) =>
+    response.url().includes("/api/v1/geo/reverse?"),
+  );
+  await pin.press("Shift+ArrowRight");
+  const url = new URL((await reversed).url());
+  expect(Number(url.searchParams.get("longitude"))).toBeGreaterThan(50.101022);
+  expect(Number(url.searchParams.get("latitude"))).toBeCloseTo(53.195561, 5);
+  await expect(
+    page.getByText("Адрес точки найден", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(/Точка:/)).not.toContainText("50.10102");
+});
