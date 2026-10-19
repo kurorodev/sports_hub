@@ -436,6 +436,7 @@ describe("moderation UI", () => {
     await login("admin");
     mount(<AdminComments viewerId={mockId("admin")} />);
     const user = userEvent.setup();
+    await screen.findByText("Найдено комментариев: 14");
     await user.type(
       screen.getByRole("combobox", { name: "Пользователь" }),
       "@u",
@@ -447,6 +448,11 @@ describe("moderation UI", () => {
     );
     await user.click(screen.getByLabelText("Последние 10 комментариев"));
     await user.click(screen.getByLabelText("За последние 24 часа"));
+    expect(screen.getByText("Найдено комментариев: 14")).toBeVisible();
+    expect(
+      screen.getByText("Есть изменения. Нажмите «Применить фильтры»."),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Применить фильтры" }));
     await waitFor(() =>
       expect(screen.getByText("Найдено комментариев: 10")).toBeVisible(),
     );
@@ -504,12 +510,15 @@ describe("moderation UI", () => {
     await screen.findByRole("option", { name: /Яркая тренировка/ });
     await user.click(eventSearch);
     await user.keyboard("{ArrowDown}{Enter}");
+    await user.click(screen.getByRole("button", { name: "Применить фильтры" }));
     await waitFor(() =>
       expect(screen.getByText("Найдено комментариев: 1")).toBeVisible(),
     );
     await user.click(
       screen.getByRole("button", { name: "Сбросить: Пользователь" }),
     );
+    expect(screen.getByText("Найдено комментариев: 1")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Применить фильтры" }));
     await waitFor(() =>
       expect(screen.getByText("Найдено комментариев: 2")).toBeVisible(),
     );

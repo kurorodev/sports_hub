@@ -59,6 +59,7 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
         комментариям.
       </p>
       <AdminCommentFilters
+        key={JSON.stringify([eventId, authorId, latest, last24Hours])}
         viewerId={viewerId}
         eventId={eventId}
         authorId={authorId}
@@ -67,7 +68,6 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
         onChange={filter}
         onRefresh={() => void query.refetch()}
         refreshing={query.isFetching}
-        valid={valid}
       />
       {!valid ? (
         <p id="moderation-event-id-error" role="alert" className="field-error">

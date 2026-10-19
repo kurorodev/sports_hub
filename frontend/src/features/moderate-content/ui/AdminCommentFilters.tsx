@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Clock3, ListFilter, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { Check, Clock3, ListFilter, SlidersHorizontal } from "lucide-react";
 import {
   moderationEventsQuery,
   useModerationRepository,
@@ -13,14 +13,13 @@ import { CommentFilterSearch } from "./CommentFilterSearch";
 
 export function AdminCommentFilters({
   viewerId,
-  eventId,
-  authorId,
-  latest,
-  last24Hours,
+  eventId: appliedEventId,
+  authorId: appliedAuthorId,
+  latest: appliedLatest,
+  last24Hours: appliedLast24Hours,
   onChange,
   onRefresh,
   refreshing,
-  valid,
 }: {
   viewerId: string;
   eventId: string;
@@ -30,9 +29,26 @@ export function AdminCommentFilters({
   onChange: (changes: Record<string, string>) => void;
   onRefresh: () => void;
   refreshing: boolean;
-  valid: boolean;
 }) {
   const repo = useModerationRepository();
+  const [draft, setDraft] = useState({
+    eventId: appliedEventId,
+    authorId: appliedAuthorId,
+    latest: appliedLatest ? "true" : "",
+    last24Hours: appliedLast24Hours ? "true" : "",
+  });
+  const { eventId, authorId } = draft;
+  const latest = draft.latest === "true";
+  const last24Hours = draft.last24Hours === "true";
+  const dirty =
+    eventId !== appliedEventId ||
+    authorId !== appliedAuthorId ||
+    latest !== appliedLatest ||
+    last24Hours !== appliedLast24Hours;
+  const valid =
+    (!eventId || isUuid(eventId)) && (!authorId || isUuid(authorId));
+  const edit = (changes: Record<string, string>) =>
+    setDraft((current) => ({ ...current, ...changes }));
   const [userSearch, setUserSearch] = useState("");
   const [eventSearch, setEventSearch] = useState("");
   const [eventPage, setEventPage] = useState(0);
@@ -107,7 +123,7 @@ export function AdminCommentFilters({
               : undefined
           }
           allLabel="Все пользователи"
-          onSelect={(id) => onChange({ authorId: id })}
+          onSelect={(id) => edit({ authorId: id })}
           loading={validPrefix && users.isFetching}
           emptyMessage={
             !prefix
@@ -136,7 +152,7 @@ export function AdminCommentFilters({
           selectedId={eventId}
           selectedLabel={chosenEvent?.title}
           allLabel="Все мероприятия"
-          onSelect={(id) => onChange({ eventId: id })}
+          onSelect={(id) => edit({ eventId: id })}
           loading={events.isFetching}
           emptyMessage="Мероприятия не найдены. Попробуйте другую часть названия."
           error={events.isError}
@@ -179,7 +195,7 @@ export function AdminCommentFilters({
             type="checkbox"
             checked={latest}
             onChange={(event) =>
-              onChange({ latest: event.target.checked ? "true" : "" })
+              edit({ latest: event.target.checked ? "true" : "" })
             }
           />
           <ListFilter size={18} aria-hidden="true" />
@@ -192,7 +208,7 @@ export function AdminCommentFilters({
             type="checkbox"
             checked={last24Hours}
             onChange={(event) =>
-              onChange({ last24Hours: event.target.checked ? "true" : "" })
+              edit({ last24Hours: event.target.checked ? "true" : "" })
             }
           />
           <Clock3 size={18} aria-hidden="true" />
@@ -200,7 +216,14 @@ export function AdminCommentFilters({
         </label>
       </div>
       <div className="comment-filter-footer">
-        <p>Фильтры применяются сразу. Оба ограничения можно включить вместе.</p>
+        <p
+          className={dirty ? "comment-filter-pending" : undefined}
+          aria-live="polite"
+        >
+          {dirty
+            ? "Есть изменения. Нажмите «Применить фильтры»."
+            : "Выберите условия и нажмите «Применить фильтры»."}
+        </p>
         <div className="comment-filter-actions">
           <button
             type="button"
@@ -209,6 +232,12 @@ export function AdminCommentFilters({
               setUserSearch("");
               setEventSearch("");
               setEventPage(0);
+              setDraft({
+                eventId: "",
+                authorId: "",
+                latest: "",
+                last24Hours: "",
+              });
               onChange({
                 eventId: "",
                 authorId: "",
@@ -223,10 +252,13 @@ export function AdminCommentFilters({
             type="button"
             className="button primary"
             disabled={refreshing || !valid}
-            onClick={onRefresh}
+            onClick={() => {
+              if (dirty) onChange(draft);
+              else onRefresh();
+            }}
           >
-            <RefreshCw size={17} aria-hidden="true" />
-            Обновить комментарии
+            <Check size={17} aria-hidden="true" />
+            Применить фильтры
           </button>
         </div>
       </div>

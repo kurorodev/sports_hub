@@ -53,6 +53,8 @@ for (const width of [320, 375, 768, 1440]) {
       fullPage: true,
     });
     await eventOption.click();
+    await expect(page).not.toHaveURL(/eventId=/);
+    await page.getByRole("button", { name: "Применить фильтры" }).click();
     await expect(page.getByText("Найдено комментариев: 13")).toBeVisible();
     await expect(
       page.getByText(
@@ -66,12 +68,16 @@ for (const width of [320, 375, 768, 1440]) {
     });
     await expect(authorOption).toBeVisible();
     await authorOption.click();
-    await expect(page.getByText("Найдено комментариев: 12")).toBeVisible();
+    await expect(page.getByText("Найдено комментариев: 13")).toBeVisible();
+    await expect(page).not.toHaveURL(/authorId=/);
     // Both settings may be changed immediately, without losing the preceding URL update.
     await page.getByLabel("Последние 10 комментариев").click();
     await page.getByLabel("За последние 24 часа").click();
     await expect(page.getByLabel("Последние 10 комментариев")).toBeChecked();
     await expect(page.getByLabel("За последние 24 часа")).toBeChecked();
+    await expect(page.getByText("Найдено комментариев: 13")).toBeVisible();
+    await expect(page).not.toHaveURL(/latest=/);
+    await page.getByRole("button", { name: "Применить фильтры" }).click();
     await expect(page.getByText("Найдено комментариев: 10")).toBeVisible();
     await expect(page.locator(".moderation-text")).toHaveCount(10);
     await expect(page.locator(".moderation-text").first()).toHaveText(
@@ -123,6 +129,10 @@ for (const width of [320, 375, 768, 1440]) {
       ).toBeLessThanOrEqual(1);
     }
     await page.getByRole("button", { name: "Сбросить: Пользователь" }).click();
+    await expect(
+      page.getByText("Сообщение другого автора", { exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Применить фильтры" }).click();
     await expect(
       page.getByText("Сообщение другого автора", { exact: true }),
     ).toBeVisible();
