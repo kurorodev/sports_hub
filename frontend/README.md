@@ -39,6 +39,8 @@ npm run test:e2e:api # Java + PostgreSQL; CORS-настройка — в docs/DE
 
 ## Документация
 
+Доступ с других устройств по Wi‑Fi и развёртывание Nginx/Docker: [DEPLOYMENT.md](docs/DEPLOYMENT.md). API-ключ задаётся один раз на сервере и работает для всех посетителей.
+
 Все фронтенд-документы собраны в [docs/README.md](docs/README.md):
 
 - [Разработка](docs/DEVELOPMENT.md) — окружение, env, mock/real, сборка и команды проверок.

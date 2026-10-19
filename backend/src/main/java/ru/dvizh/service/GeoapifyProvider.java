@@ -16,7 +16,7 @@ public class GeoapifyProvider implements GeocodingProvider {
     private final HttpClient client;
     @org.springframework.beans.factory.annotation.Autowired
     public GeoapifyProvider(@Value("${app.geoapify-api-key:}") String key,ObjectMapper mapper){this(key,mapper,HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build());}
-    GeoapifyProvider(String key,ObjectMapper mapper,HttpClient client){this.key=key;this.mapper=mapper;this.client=client;}
+    GeoapifyProvider(String key,ObjectMapper mapper,HttpClient client){this.key=key.trim();this.mapper=mapper;this.client=client;}
     static Problem unavailable(){return new Problem(503,Api.ErrorCode.SERVICE_UNAVAILABLE,"Поиск адресов временно недоступен. Укажите адрес вручную или выберите точку на карте");}
     private JsonNode fetch(String path,String parameters) {
         if(key.isBlank())throw unavailable();
@@ -32,8 +32,12 @@ public class GeoapifyProvider implements GeocodingProvider {
     }
     public List<Api.GeoSuggestion> suggest(String query,String city,int limit) {
         String text=city==null||city.isBlank()?query:city+", "+query;
+        String parameters="text="+encode(text)+"&limit="+limit;
+        var rows=fetch("autocomplete",parameters);
+        // Autocomplete has less coverage than full geocoding for some Russian streets.
+        if(rows.isEmpty())rows=fetch("search",parameters);
         List<Api.GeoSuggestion> result=new ArrayList<>();
-        for(var row:fetch("autocomplete","text="+encode(text)+"&limit="+limit)) {
+        for(var row:rows) {
             var loc=location(row,null,null);
             if(loc!=null)result.add(new Api.GeoSuggestion(row.path("place_id").asText(loc.latitude()+","+loc.longitude()),row.path("formatted").asText(loc.city()+", "+loc.address()),loc.city(),loc.address(),loc.latitude(),loc.longitude()));
         }

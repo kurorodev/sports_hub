@@ -1,0 +1,14 @@
+# Use together with compose.yaml; paths resolve relative to backend/.
+services:
+  backend:
+    environment:
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+  web:
+    build: ../frontend
+    environment:
+      PUBLIC_SCHEME: ${PUBLIC_SCHEME:-http}
+    ports:
+      - "${WEB_BIND:-0.0.0.0}:${WEB_PORT:-8090}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

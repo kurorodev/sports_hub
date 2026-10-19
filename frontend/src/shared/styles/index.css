@@ -2247,6 +2247,10 @@ input[type="radio"] {
   margin: 0;
   padding: 0;
 }
+.location-suggestions {
+  position: static;
+  margin-top: 8px;
+}
 .location-suggestions li,
 .location-suggestions p,
 .map-search-results button,
