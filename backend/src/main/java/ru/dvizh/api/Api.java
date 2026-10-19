@@ -3,6 +3,7 @@ package ru.dvizh.api;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
@@ -48,6 +49,14 @@ public final class Api {
     public record ProfilePatch(@NotBlank @Size(min = 3, max = 40) String nickname, @NotBlank @Size(min = 1, max = 100) String displayName, @Size(max = 80) String firstName, @Size(max = 80) String lastName, @Size(max = 1000) String bio, String avatarUrl, @Size(max = 100) String city, @Valid List<SportsRole> sportsRoles, @Valid List<SportsPreference> sportsPreferences, String preferredTime) {}
     public record DemoAccount(@NotNull String id, @NotNull String label, @NotNull @Valid List<SystemRole> systemRoles, @NotNull @Valid List<SportsRole> sportsRoles) {}
     public record DemoLoginRequest(@NotNull String accountId) {}
+    public record DemoRegistrationRequest(
+        @JsonDeserialize(using=StrictStringDeserializer.class) @NotBlank @Size(min=3,max=40) String nickname,
+        @JsonDeserialize(using=StrictStringDeserializer.class) @NotBlank @Size(min=1,max=100) String displayName) {
+        public DemoRegistrationRequest {
+            nickname=nickname==null?null:nickname.strip();
+            displayName=displayName==null?null:displayName.strip();
+        }
+    }
     public record Session(@NotNull @Valid UserProfile user, @NotNull @Valid List<SystemRole> systemRoles, @NotNull @Valid List<UUID> manageableOrganizationIds, @NotNull String csrfToken, @NotNull Boolean demo) {}
     public record Sport(@NotNull UUID id, @NotNull String name, @NotNull Boolean isCustom) {}
     public record Location(@NotNull @NotBlank @Size(min = 1, max = 120) String city, @NotNull @NotBlank @Size(min = 1, max = 300) String address, @DecimalMin("-90") @DecimalMax("90") Double latitude, @DecimalMin("-180") @DecimalMax("180") Double longitude) {}

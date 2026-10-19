@@ -28,10 +28,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Доступные тестовые аккаунты */
+        /**
+         * Доступные тестовые аккаунты
+         * @description Все доступные демоаккаунты, включая созданные через POST /demo/accounts. Без скрытого ограничения в 100 записей. Доступно только при включённом деморежиме; идентификатор accountId стабилен при смене nickname.
+         */
         get: operations["getDemoAccounts"];
         put?: never;
-        post?: never;
+        /**
+         * Зарегистрировать нового демопользователя и войти
+         * @description Создаёт отдельного пользователя в БД без пароля, только при DEMO_ENABLED=true. Начальные права USER, рейтинг 0, без одобренных организаций. Поля обрезаются по краям до проверки длины; nickname уникален без учёта регистра. После успешного сохранения инвалидирует предыдущую сессию этого браузера, устанавливает новую HttpOnly-cookie SPORT_SESSION и возвращает Session с новым csrfToken. Регистрация доступна гостю без CSRF; последующие бизнес-запросы требуют X-CSRF-Token. Повтор запроса после успешного создания возвращает 409, а не вход в существующий аккаунт. Новый аккаунт доступен в GET /demo/accounts для повторного входа через POST /demo/session.
+         */
+        post: operations["postDemoAccount"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1016,6 +1023,16 @@ export interface components {
             systemRoles: components["schemas"]["SystemRole"][];
             sportsRoles: components["schemas"]["SportsRole"][];
         };
+        /** @description Поля обрезаются по краям до проверки длины. Системные права, UUID и demoAccount назначает сервер. */
+        DemoRegistrationRequest: {
+            /**
+             * @description Уникальный без учёта регистра никнейм
+             * @example novice-runner
+             */
+            nickname: string;
+            /** @example Новый участник */
+            displayName: string;
+        };
         DemoLoginRequest: {
             /** @example athlete-a */
             accountId: string;
@@ -1659,6 +1676,37 @@ export interface operations {
                     "application/json": components["schemas"]["DemoAccount"][];
                 };
             };
+            404: components["responses"]["404"];
+            500: components["responses"]["500"];
+        };
+    };
+    postDemoAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemoRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Пользователь сохранён и новая демосессия установлена */
+            201: {
+                headers: {
+                    /** @description Новый HttpOnly cookie SPORT_SESSION */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            400: components["responses"]["400"];
+            404: components["responses"]["404"];
+            409: components["responses"]["409"];
             500: components["responses"]["500"];
         };
     };

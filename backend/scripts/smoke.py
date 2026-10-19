@@ -52,6 +52,30 @@ def main():
     label = uuid4().hex[:10]
     starts = (datetime.now(timezone.utc) + timedelta(days=10)).isoformat()
 
+    signup = Client(args.base)
+    signup_name = f'new-user-{label}'
+    session = signup.call('POST', '/demo/accounts', {'nickname': signup_name, 'displayName': signup_name}, 201)
+    signup.csrf, signup.user = session['csrfToken'], session['user']['id']
+    assert session['systemRoles'] == ['USER'] and session['user']['ratingPoints'] == 0
+    assert signup.call('GET', '/session')['user']['id'] == signup.user
+    signup.call('PATCH', '/me/profile', {'bio': 'Проверка регистрации и повторного входа'})
+    account = next(item['id'] for item in public.call('GET', '/demo/accounts') if item['label'] == signup_name)
+    signup.call('DELETE', '/demo/session', expected=204)
+    restored = Client(args.base, account)
+    assert restored.user == signup.user
+    assert restored.call('GET', '/me/profile')['bio'] == 'Проверка регистрации и повторного входа'
+    public.call('POST', '/demo/accounts', {'nickname': signup_name.upper(), 'displayName': 'Дубликат'}, 409)
+    created_by_signup = restored.call('POST', '/events', {
+        'title': f'Signup smoke {label}', 'description': 'Событие нового зарегистрированного пользователя',
+        'sport': {'customName': f'Новый спорт {label}'}, 'startsAt': starts,
+        'location': {'city': 'Самара', 'address': 'Спортивная площадка'},
+        'requirements': 'Удобная одежда и вода', 'joinMode': 'OPEN',
+        'organizer': {'type': 'USER', 'id': restored.user},
+    }, 201)
+    assert a.call('GET', f'/events/{created_by_signup["id"]}')['requirements'] == 'Удобная одежда и вода'
+    assert a.call('GET', f'/users/{restored.user}')['nickname'] == signup_name
+    print('Регистрация OK: новый USER, сессия/CSRF, повторный вход, защита от дубля, создание события')
+
     def event(mode, organizer=None):
         return owner.call('POST', '/events', {
             'title': f'Smoke {mode} {label}',
