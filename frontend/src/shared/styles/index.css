@@ -1524,6 +1524,9 @@ input[type="radio"] {
 .join-feedback > p {
   margin-top: var(--space-3);
 }
+.join-feedback > .join-note:first-child {
+  transform: translateY(-8px);
+}
 .join-note {
   color: var(--color-ink-muted);
   font-size: 13px;
