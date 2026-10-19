@@ -18,6 +18,7 @@ import {
 } from "./database";
 import { getComments } from "./comments";
 import { notify } from "./notifications";
+import { createMockVenue } from "./maps";
 
 const key = "dvizh.mock.support.v1";
 let memory: { tickets: SupportTicket[]; messages: SupportMessage[] } = {
@@ -175,6 +176,51 @@ export function supportHandlers(
     );
   }
   return [
+    http.post(
+      `${api}/support/tickets/:id/venue`,
+      async ({ request, params }) => {
+        const s = auth(request, true);
+        if (s instanceof Response) return s;
+        if (!admin(s)) return error(403, "Только администратор");
+        const input = await request.json().catch(() => null);
+        const data = read();
+        const t = ticket(data, String(params.id), s);
+        if (!t) return error(404, "Обращение не найдено");
+        if (t.category !== "VENUE_SUGGESTION")
+          return error(400, "Нужно предложение площадки");
+        if (t.publishedVenueId) return HttpResponse.json(t);
+        const venue = createMockVenue(input, s, true);
+        if (venue instanceof Response) return venue;
+        t.publishedVenueId = venue.id;
+        t.status = "RESOLVED";
+        t.assignedTo = s.user;
+        t.updatedAt = new Date().toISOString();
+        t.venueCity = venue.location.city;
+        t.venueAddress = venue.location.address;
+        t.venueLatitude = venue.location.latitude;
+        t.venueLongitude = venue.location.longitude;
+        data.messages.push({
+          id: crypto.randomUUID(),
+          ticketId: t.id,
+          author: s.user,
+          fromSupport: true,
+          kind: "STATUS",
+          text: `Площадка «${venue.name}» добавлена в список доступных площадок. Обращение решено.`,
+          createdAt: t.updatedAt,
+        });
+        persist(data);
+        notify(
+          t.author.id,
+          "SUPPORT_STATUS",
+          "Ваша площадка добавлена",
+          t.title,
+          null,
+          `/support/${t.id}`,
+          `support-venue:${t.id}`,
+        );
+        return HttpResponse.json(t);
+      },
+    ),
     http.get(`${api}/support/tickets`, ({ request }) => list(request, false)),
     http.get(`${api}/admin/support/tickets`, ({ request }) =>
       list(request, true),

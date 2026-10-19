@@ -65,6 +65,7 @@ export interface SupportTicket {
   venueAddress: string | null;
   venueLatitude?: number | null;
   venueLongitude?: number | null;
+  publishedVenueId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -102,6 +103,7 @@ export interface SupportFilters {
   page: number;
 }
 export interface SupportRepository {
+  publishVenue(id: string, input: SupportVenueCreate): Promise<SupportTicket>;
   list(
     queue: boolean,
     filters: SupportFilters,
@@ -119,4 +121,14 @@ export interface SupportRepository {
     id: string,
     input: { status?: SupportStatus; priority?: SupportPriority },
   ): Promise<SupportTicket>;
+}
+export interface SupportVenueCreate {
+  name: string;
+  sportId?: string;
+  location: {
+    city: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
 }

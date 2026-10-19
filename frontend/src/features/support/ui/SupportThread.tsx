@@ -24,6 +24,7 @@ import { ErrorState } from "../../../shared/ui/Feedback";
 import { relativeTime } from "../../../shared/lib/relative-time";
 import { useNow } from "../../../shared/lib/use-now";
 import { hasPoint } from "../../../shared/lib/map";
+import { ApproveVenueForm } from "./ApproveVenueForm";
 const GeoMap = lazy(() =>
   import("../../../shared/ui/GeoMap").then((module) => ({
     default: module.GeoMap,
@@ -207,9 +208,25 @@ export function SupportThread({
                   </>
                 )}
                 <span className="field-hint">
-                  Площадка появится на карте после проверки и добавления
-                  администратором.
+                  {t.publishedVenueId
+                    ? "Площадка добавлена в список доступных площадок."
+                    : "Площадка появится на карте после проверки и добавления администратором."}
                 </span>
+                {t.publishedVenueId && (
+                  <Link
+                    className="button primary"
+                    to={`/map?venueId=${t.publishedVenueId}&lat=${t.venueLatitude}&lng=${t.venueLongitude}&zoom=16&events=0`}
+                  >
+                    Открыть добавленную площадку
+                  </Link>
+                )}
+                {admin && !t.publishedVenueId && (
+                  <ApproveVenueForm
+                    ticket={t}
+                    viewerId={viewerId}
+                    onPublished={refresh}
+                  />
+                )}
               </div>
             )}
             {t.commentId && (
@@ -450,6 +467,9 @@ function TicketControls({
         {pending ? "Сохраняем…" : "Сохранить изменения"}
       </button>
       <p className="field-hint">
+        {ticket.category === "VENUE_SUGGESTION" &&
+          !ticket.publishedVenueId &&
+          "Смена статуса не добавляет площадку. Для одобрения используйте «Добавить площадку и решить обращение» выше. "}
         При ответе или изменении вы назначаетесь специалистом по обращению.
       </p>
     </form>

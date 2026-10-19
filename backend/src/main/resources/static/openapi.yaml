@@ -31,6 +31,81 @@ tags:
 security:
 - cookieAuth: []
 paths:
+  /support/tickets/{ticketId}/venue:
+    post:
+      tags:
+      - Support
+      operationId: publishSupportVenue
+      summary: 'ADMIN: добавить площадку и решить обращение; повтор возвращает ту же
+        площадку'
+      x-phase: P1
+      parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Обращение со ссылкой на созданную площадку
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicket'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenueCreate'
   /support/tickets:
     get:
       tags:
@@ -3020,6 +3095,10 @@ components:
     SupportTicket:
       type: object
       properties:
+        publishedVenueId:
+          type: string
+          format: uuid
+          nullable: true
         id:
           type: string
           format: uuid

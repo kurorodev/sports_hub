@@ -323,65 +323,13 @@ export function mapHandlers(
     http.post(`${api}/map/venues`, async ({ request }) => {
       const session = authorize(request);
       if (session instanceof Response) return session;
-      const parsed = createSchema.safeParse(
+      const result = createMockVenue(
         await request.json().catch(() => null),
+        session,
       );
-      if (!parsed.success)
-        return fail(400, "Проверьте название, адрес и координаты");
-      const input = parsed.data;
-      const sport = input.sportId
-        ? getSports().find((s) => s.id === input.sportId)
-        : null;
-      if (input.sportId && !sport) return fail(404, "Вид спорта не найден");
-      const store = read();
-      if (
-        store.venues.filter(
-          (venue) =>
-            venue.createdBy === session.user.id &&
-            Date.parse(venue.createdAt) > Date.now() - 3600_000,
-        ).length >= 3
-      )
-        return fail(429, "Можно добавить не более 3 площадок за час");
-      const normalize = (s: string) =>
-        s.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru");
-      if (
-        venueItems().some(
-          (venue) =>
-            normalize(venue.name) === normalize(input.name) &&
-            Math.hypot(
-              (venue.location.latitude - input.location.latitude) * 111_195,
-              (venue.location.longitude - input.location.longitude) *
-                111_195 *
-                Math.cos((input.location.latitude * Math.PI) / 180),
-            ) < 30,
-        )
-      )
-        return fail(409, "Такая площадка уже есть рядом");
-      const venue: VenueMapItem = {
-        id: crypto.randomUUID(),
-        name: input.name,
-        sportId: input.sportId ?? null,
-        sportName: sport?.name ?? null,
-        location: input.location,
-        occupancy: {
-          level: "UNKNOWN",
-          lastReportedAt: null,
-          validUntil: null,
-          reportsCount: 0,
-        },
-      };
-      save({
-        ...store,
-        venues: [
-          ...store.venues,
-          {
-            ...venue,
-            createdBy: session.user.id,
-            createdAt: new Date(Date.now()).toISOString(),
-          },
-        ],
-      });
-      return HttpResponse.json(venue, { status: 201 });
+      return result instanceof Response
+        ? result
+        : HttpResponse.json(result, { status: 201 });
     }),
     http.post(
       `${api}/map/venues/:venueId/reports`,
@@ -425,4 +373,71 @@ export function mapHandlers(
       },
     ),
   ];
+}
+
+export function createMockVenue(
+  raw: unknown,
+  session: Session,
+  reviewed = false,
+) {
+  if (reviewed && !session.systemRoles.includes("ADMIN"))
+    return fail(403, "Только администратор");
+  const parsed = createSchema.safeParse(raw);
+  if (!parsed.success)
+    return fail(400, "Проверьте название, адрес и координаты");
+  const input = parsed.data;
+  const sport = input.sportId
+    ? getSports().find((s) => s.id === input.sportId)
+    : null;
+  if (input.sportId && !sport) return fail(404, "Вид спорта не найден");
+  const store = read();
+  if (
+    !reviewed &&
+    store.venues.filter(
+      (venue) =>
+        venue.createdBy === session.user.id &&
+        Date.parse(venue.createdAt) > Date.now() - 3600_000,
+    ).length >= 3
+  )
+    return fail(429, "Можно добавить не более 3 площадок за час");
+  const normalize = (s: string) =>
+    s.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru");
+  if (
+    venueItems().some(
+      (venue) =>
+        normalize(venue.name) === normalize(input.name) &&
+        Math.hypot(
+          (venue.location.latitude - input.location.latitude) * 111_195,
+          (venue.location.longitude - input.location.longitude) *
+            111_195 *
+            Math.cos((input.location.latitude * Math.PI) / 180),
+        ) < 30,
+    )
+  )
+    return fail(409, "Такая площадка уже есть рядом");
+  const venue: VenueMapItem = {
+    id: crypto.randomUUID(),
+    name: input.name,
+    sportId: input.sportId ?? null,
+    sportName: sport?.name ?? null,
+    location: input.location,
+    occupancy: {
+      level: "UNKNOWN",
+      lastReportedAt: null,
+      validUntil: null,
+      reportsCount: 0,
+    },
+  };
+  save({
+    ...store,
+    venues: [
+      ...store.venues,
+      {
+        ...venue,
+        createdBy: session.user.id,
+        createdAt: new Date(Date.now()).toISOString(),
+      },
+    ],
+  });
+  return venue;
 }

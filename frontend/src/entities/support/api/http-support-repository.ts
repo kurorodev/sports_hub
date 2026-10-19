@@ -30,6 +30,7 @@ const ticket = z.object({
   venueAddress: z.string().nullable(),
   venueLatitude: z.number().min(-90).max(90).nullish(),
   venueLongitude: z.number().min(-180).max(180).nullish(),
+  publishedVenueId: z.string().uuid().nullish(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
@@ -57,6 +58,17 @@ export function createHttpSupportRepository(
   http: HttpClient,
 ): SupportRepository {
   return {
+    async publishVenue(id, input) {
+      const result = ticket.parse(
+        await http(`${path(id)}/venue`, {
+          method: "POST",
+          body: JSON.stringify(input),
+        }),
+      );
+      if (result.id !== id || !result.publishedVenueId)
+        throw new Error("Unexpected published venue");
+      return result;
+    },
     async list(queue, filters, signal) {
       const params = new URLSearchParams({
         page: String(filters.page),

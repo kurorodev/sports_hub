@@ -15,8 +15,9 @@ public class SupportService {
     private final Views views;
     private final NotificationService notifications;
     private final Clock clock;
-    public SupportService(Store db,Access access,Views views,NotificationService notifications,Clock clock) {
-        this.db=db;this.access=access;this.views=views;this.notifications=notifications;this.clock=clock;
+    private final SportsMapService maps;
+    public SupportService(Store db,Access access,Views views,NotificationService notifications,Clock clock,SportsMapService maps) {
+        this.db=db;this.access=access;this.views=views;this.notifications=notifications;this.clock=clock;this.maps=maps;
     }
     public PageResult<SupportApi.Ticket> list(boolean admin,String q,SupportApi.Status status,SupportApi.Category category,int page,int size) {
         int offset=PageResult.offset(page,size);var user=access.user();if(admin)access.requireAdmin();
@@ -38,6 +39,19 @@ public class SupportService {
         return ticket;
     }
     public SupportApi.Ticket get(UUID id){return dto(accessible(id,false));}
+    @Transactional public SupportApi.Ticket publishVenue(UUID id,Api.VenueCreate input) {
+        access.requireAdmin();var t=accessible(id,true);var user=access.user();
+        if(t.category!=SupportApi.Category.VENUE_SUGGESTION)throw Problem.invalid("Добавить площадку можно только из её предложения");
+        // The ticket lock makes retries and simultaneous reviews of this proposal idempotent.
+        if(t.publishedVenueId!=null)return dto(t);
+        var venue=maps.createReviewed(input);
+        String previous=t.venueCity+", "+t.venueAddress+" ("+t.venueLatitude+", "+t.venueLongitude+")";
+        t.publishedVenueId=venue.id();t.status=SupportApi.Status.RESOLVED;t.assignedTo=user.id;t.updatedAt=clock.instant();
+        t.venueCity=venue.location().city();t.venueAddress=venue.location().address();t.venueLatitude=venue.location().latitude();t.venueLongitude=venue.location().longitude();
+        addMessage(t,user,SupportApi.MessageKind.STATUS,"Площадка «"+venue.name()+"» добавлена в список доступных площадок. Обращение решено. Адрес: "+t.venueCity+", "+t.venueAddress+". Исходное предложение: "+previous);
+        notifications.send(t.authorId,Api.NotificationType.SUPPORT_STATUS,"Ваша площадка добавлена",t.title,null,href(t),"support-venue:"+t.id);
+        return dto(t);
+    }
     @Transactional public SupportApi.Ticket create(SupportApi.Create input) {
         var user=db.lock(UserEntity.class,access.user().id);
         if(db.count(SupportTicketEntity.class,"e.authorId=:user and e.createdAt>:since",Map.of("user",user.id,"since",clock.instant().minusSeconds(3600)))>=10)
@@ -112,6 +126,6 @@ public class SupportService {
     private boolean terminal(SupportApi.Status status){return status==SupportApi.Status.CLOSED || status==SupportApi.Status.RESOLVED;}
     private String statusLabel(SupportApi.Status status){return switch(status){case OPEN->"Открыто";case IN_PROGRESS->"В работе";case WAITING_USER->"Ожидаем вашего ответа";case RESOLVED->"Решено";case CLOSED->"Закрыто";};}
     private String priorityLabel(SupportApi.Priority priority){return switch(priority){case NORMAL->"Обычный";case HIGH->"Высокий";case URGENT->"Срочный";};}
-    private SupportApi.Ticket dto(SupportTicketEntity t){return new SupportApi.Ticket(t.id,views.user(t.authorId),t.assignedTo==null?null:views.user(t.assignedTo),t.category,t.status,t.priority,t.title,t.description,t.commentId,t.eventId,t.commentText,t.commentAuthor,t.reportReason,t.venueCity,t.venueAddress,t.venueLatitude,t.venueLongitude,t.createdAt,t.updatedAt);}
+    private SupportApi.Ticket dto(SupportTicketEntity t){return new SupportApi.Ticket(t.id,views.user(t.authorId),t.assignedTo==null?null:views.user(t.assignedTo),t.category,t.status,t.priority,t.title,t.description,t.commentId,t.eventId,t.commentText,t.commentAuthor,t.reportReason,t.venueCity,t.venueAddress,t.venueLatitude,t.venueLongitude,t.publishedVenueId,t.createdAt,t.updatedAt);}
     private SupportApi.Message messageDto(SupportMessageEntity m){return new SupportApi.Message(m.id,m.ticketId,views.user(m.authorId),m.fromSupport,m.kind,m.text,m.createdAt);}
 }

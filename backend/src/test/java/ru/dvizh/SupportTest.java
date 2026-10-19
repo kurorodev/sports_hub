@@ -95,4 +95,32 @@ class SupportTest extends ApiTestSupport {
         body.put("venueLatitude",91.0);call(a,"POST","/support/tickets",body,400);
         call(a,"POST","/support/tickets",Map.of("category","HELP","title","Нужна помощь","description","Подробное описание вопроса","venueLatitude",53.0,"venueLongitude",50.0),400);
     }
+    @Test void adminApprovalCreatesPublicVenueAndResolvesClosedTicketExactlyOnce() throws Exception {
+        var user=login("athlete-a");var admin=login("admin");
+        var suggestion=Map.of("category","VENUE_SUGGESTION","title","Площадка поддержки "+UUID.randomUUID(),"description","Предлагаю добавить новую площадку для спорта","venueCity","Самара","venueAddress","Парк");
+        String id=json(call(user,"POST","/support/tickets",suggestion,201)).path("id").asText();
+        var input=Map.of("name",suggestion.get("title"),"location",Map.of("city","Самара","address","Парк, центральный вход","latitude",53.1,"longitude",50.1));
+        call(user,"POST","/support/tickets/"+id+"/venue",input,403);
+        call(admin,"PATCH","/support/tickets/"+id,Map.of("status","CLOSED"),200);
+        assertThat(getJson(user,"/support/tickets/"+id).path("publishedVenueId").isNull()).isTrue();
+        var published=json(call(admin,"POST","/support/tickets/"+id+"/venue",input,200));
+        String venueId=published.path("publishedVenueId").asText();assertThat(published.path("status").asText()).isEqualTo("RESOLVED");
+        assertThat(getJson(null,"/map/venues?bbox=50,53,51,54").toString()).contains(venueId);
+        long count=db.count(VenueEntity.class,"",Map.of());
+        assertThat(json(call(admin,"POST","/support/tickets/"+id+"/venue",input,200)).path("publishedVenueId").asText()).isEqualTo(venueId);
+        assertThat(db.count(VenueEntity.class,"",Map.of())).isEqualTo(count);
+        assertThat(getJson(user,"/me/notifications").toString()).contains("Ваша площадка добавлена");
+        call(user,"PATCH","/support/tickets/"+id,Map.of("status","OPEN"),200);
+        call(admin,"POST","/support/tickets/"+id+"/venue",input,200);assertThat(db.count(VenueEntity.class,"",Map.of())).isEqualTo(count);
+        String help=ticket(user);call(admin,"POST","/support/tickets/"+help+"/venue",input,400);
+    }
+    @Test void failedVenueApprovalLeavesTicketAndMapUnchanged() throws Exception {
+        var user=login("athlete-a");var admin=login("admin");
+        String id=json(call(user,"POST","/support/tickets",Map.of("category","VENUE_SUGGESTION","title","Новое место спорта","description","Новая площадка для занятий спортом","venueCity","Самара","venueAddress","Парк"),201)).path("id").asText();
+        long count=db.count(VenueEntity.class,"",Map.of());
+        call(admin,"POST","/support/tickets/"+id+"/venue",Map.of("name","Площадка","location",Map.of("city","Самара","address","Парк")),400);
+        call(admin,"POST","/support/tickets/"+id+"/venue",Map.of("name","Площадка","sportId",UUID.randomUUID().toString(),"location",Map.of("city","Самара","address","Парк","latitude",53.1,"longitude",50.1)),404);
+        assertThat(db.count(VenueEntity.class,"",Map.of())).isEqualTo(count);
+        var ticket=getJson(user,"/support/tickets/"+id);assertThat(ticket.path("status").asText()).isEqualTo("OPEN");assertThat(ticket.path("publishedVenueId").isNull()).isTrue();
+    }
 }

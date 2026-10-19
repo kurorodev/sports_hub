@@ -44,6 +44,45 @@ async function mount(ui: React.ReactNode) {
 }
 
 describe("support", () => {
+  it("publishes a closed venue suggestion once, with admin permission and a public map link", async () => {
+    await login();
+    const ticket = await repo.create({
+      ...input,
+      category: "VENUE_SUGGESTION",
+      venueCity: "Самара",
+      venueAddress: "Парк 42",
+    });
+    const venue = {
+      name: "Площадка из поддержки",
+      location: {
+        city: "Самара",
+        address: "Парк 42",
+        latitude: 53.25,
+        longitude: 50.2,
+      },
+    };
+    await expect(repo.publishVenue(ticket.id, venue)).rejects.toMatchObject({
+      status: 403,
+    });
+    await login("admin");
+    await repo.update(ticket.id, { status: "CLOSED" });
+    const result = await repo.publishVenue(ticket.id, venue);
+    expect(result.status).toBe("RESOLVED");
+    expect(result.publishedVenueId).toBeTruthy();
+    expect((await repo.publishVenue(ticket.id, venue)).publishedVenueId).toBe(
+      result.publishedVenueId,
+    );
+    const map = await request<{ items: { id: string; name: string }[] }>(
+      "/map/venues?bbox=49.8,53.0,50.4,53.5",
+    );
+    expect(map.items.filter((v) => v.id === result.publishedVenueId)).toEqual([
+      expect.objectContaining({ name: venue.name }),
+    ]);
+    await login();
+    expect((await repo.get(ticket.id)).publishedVenueId).toBe(
+      result.publishedVenueId,
+    );
+  });
   it("keeps tickets private, notifies admin, replies and persists the thread", async () => {
     const author = await login();
     const t = await repo.create(input);

@@ -3274,6 +3274,9 @@ input[type="radio"] {
 .support-form { padding: var(--space-6); border: 1px solid var(--color-outline); background: var(--color-surface); border-radius: var(--radius-card); }
 .support-form-columns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-4); }
 .support-location { border: 0; padding: 0; margin: 0 0 var(--space-5); min-width: 0; }
+.support-venue-approval { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-outline); }
+.support-venue-approval .form-field { font-size: 14px; font-weight: 700; }
+.support-venue-approval input, .support-venue-approval select { font-weight: 400; }
 .support-thread-page { padding-block: var(--space-8); }
 .support-thread-heading { margin-block: var(--space-6); }
 .support-thread-heading h1 { overflow-wrap: anywhere; }

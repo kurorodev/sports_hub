@@ -23,7 +23,7 @@ public final class SupportApi {
     public record Reply(@NotBlank @Size(min=1,max=5000) String text) { public Reply {text=clean(text);} }
     public record Ticket(UUID id,Api.PublicUser author,Api.PublicUser assignedTo,Category category,Status status,Priority priority,
         String title,String description,UUID commentId,UUID eventId,String commentText,String commentAuthor,
-        ReportReason reportReason,String venueCity,String venueAddress,Double venueLatitude,Double venueLongitude,Instant createdAt,Instant updatedAt) {}
+        ReportReason reportReason,String venueCity,String venueAddress,Double venueLatitude,Double venueLongitude,UUID publishedVenueId,Instant createdAt,Instant updatedAt) {}
     public record Message(UUID id,UUID ticketId,Api.PublicUser author,boolean fromSupport,MessageKind kind,String text,Instant createdAt) {}
     private static String clean(String text){return text==null?null:text.strip();}
 }

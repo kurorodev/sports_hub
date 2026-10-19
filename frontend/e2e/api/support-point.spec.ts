@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
-test("Java support: optional venue pin survives manual address, reload and admin view", async ({
+test("Java support: venue pin persists and admin publishes an already closed suggestion", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 1000 });
@@ -65,10 +65,58 @@ test("Java support: optional venue pin survives manual address, reload and admin
   await page
     .getByRole("button", { name: "Показать площадку на карте", exact: true })
     .click();
-  await expect(page.locator(".support-quote .map-canvas")).toBeVisible();
+  await expect(
+    page.locator(".support-quote .map-canvas").first(),
+  ).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await page
+    .getByRole("combobox", { name: "Изменить статус", exact: true })
+    .selectOption("CLOSED");
+  await page
+    .getByRole("button", { name: "Сохранить изменения", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Открыть повторно", exact: true }),
+  ).toBeVisible();
+  const published = page.waitForResponse(
+    (r) =>
+      r.url().endsWith(`/support/tickets/${ticket.id}/venue`) &&
+      r.request().method() === "POST",
+  );
+  await page
+    .getByRole("button", {
+      name: "Добавить площадку и решить обращение",
+      exact: true,
+    })
+    .click();
+  const approval = await published;
+  expect(approval.status()).toBe(200);
+  const resolved = await approval.json();
+  expect(resolved.status).toBe("RESOLVED");
+  expect(resolved.publishedVenueId).toBeTruthy();
+  await page
+    .getByRole("link", { name: "Открыть добавленную площадку", exact: true })
+    .click();
+  await expect(
+    page
+      .getByRole("complementary", { name: "Выбранный объект" })
+      .getByRole("heading", { name: ticket.title }),
+  ).toBeVisible();
+  await signInAs(page, "athlete-c");
+  await page.goto(`/support/${ticket.id}`);
+  await expect(
+    page.getByRole("link", {
+      name: "Открыть добавленную площадку",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Площадка добавлена в список доступных площадок.", {
+      exact: true,
+    }),
+  ).toBeVisible();
 });

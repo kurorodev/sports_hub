@@ -23,4 +23,5 @@ public class SupportTicketEntity extends BaseEntity {
     @Column(length=300) public String venueAddress;
     public Double venueLatitude;
     public Double venueLongitude;
+    public UUID publishedVenueId;
 }
