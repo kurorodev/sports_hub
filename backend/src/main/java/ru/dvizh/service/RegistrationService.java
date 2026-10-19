@@ -10,8 +10,8 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional(readOnly=true)
 public class RegistrationService {
-    private final Store db;private final Access access;private final Views view;private final Clock clock;
-    public RegistrationService(Store db,Access access,Views view,Clock clock){this.db=db;this.access=access;this.view=view;this.clock=clock;}
+    private final Store db;private final Access access;private final Views view;private final Clock clock;private final NotificationService notifications;
+    public RegistrationService(Store db,Access access,Views view,Clock clock,NotificationService notifications){this.db=db;this.access=access;this.view=view;this.clock=clock;this.notifications=notifications;}
     public void available(EventEntity e) {
         if(e.status!=Api.EventStatus.PUBLISHED || !e.startsAt.isAfter(clock.instant()))
             throw Problem.conflict(Api.ErrorCode.EVENT_NOT_AVAILABLE,"Запись недоступна: событие не опубликовано или уже началось");
@@ -33,7 +33,7 @@ public class RegistrationService {
         r.status=waitlist?Api.RegistrationStatus.WAITLISTED:e.joinMode==Api.JoinMode.OPEN?Api.RegistrationStatus.CONFIRMED:Api.RegistrationStatus.PENDING;
         if(existing.isEmpty())db.add(r);
         if(r.status==Api.RegistrationStatus.CONFIRMED)participation(e,r);
-        db.flush();return view.registration(r);
+        notifications.registration(e,r,true);db.flush();return view.registration(r);
     }
     @Transactional public Api.Registration decide(UUID eventId,UUID registrationId,Api.RegistrationDecisionRequest request) {
         var e=db.lock(EventEntity.class,eventId);access.requireOwner(e);available(e);
@@ -42,7 +42,7 @@ public class RegistrationService {
         if(e.joinMode!=Api.JoinMode.APPROVAL || r.status!=Api.RegistrationStatus.PENDING)throw Problem.transition();
         if(request.decision()==Api.Decision.APPROVE){capacity(e);r.status=Api.RegistrationStatus.CONFIRMED;participation(e,r);}
         else r.status=Api.RegistrationStatus.REJECTED;
-        r.decisionReason=request.reason();r.decidedBy=access.user().id;r.decidedAt=clock.instant();r.updatedAt=r.decidedAt;return view.registration(r);
+        r.decisionReason=request.reason();r.decidedBy=access.user().id;r.decidedAt=clock.instant();r.updatedAt=r.decidedAt;notifications.registration(e,r,false);return view.registration(r);
     }
     @Transactional public Api.Registration cancel(UUID eventId,boolean waitlistOnly) {
         var e=db.lock(EventEntity.class,eventId);var u=access.user();
@@ -56,10 +56,10 @@ public class RegistrationService {
         db.flush();
         if(occupied && e.joinMode==Api.JoinMode.OPEN && e.status==Api.EventStatus.PUBLISHED) {
             db.list(RegistrationEntity.class,"e.eventId=:event and e.status=:status",Map.of("event",eventId,"status",Api.RegistrationStatus.WAITLISTED),"e.updatedAt asc,e.id asc",0,1).stream().findFirst().ifPresent(next -> {
-                next.status=Api.RegistrationStatus.CONFIRMED;next.updatedAt=clock.instant();next.decidedAt=clock.instant();participation(e,next);
+                next.status=Api.RegistrationStatus.CONFIRMED;next.updatedAt=clock.instant();next.decidedAt=clock.instant();participation(e,next);notifications.registration(e,next,false);
             });
         }
-        return view.registration(r);
+        notifications.registration(e,r,false);return view.registration(r);
     }
     private void participation(EventEntity e,RegistrationEntity r) {
         if(e.eventKind!=Api.EventKind.COMPETITION)return;

@@ -1,3 +1,5 @@
+import { createHttpNotificationRepository } from "../entities/notification/api/http-notification-repository";
+import { NotificationRepositoryProvider } from "../entities/notification";
 import { createHttpProfileRepository } from "../entities/profile/api/http-profile-repository";
 import { ProfileRepositoryProvider } from "../entities/profile";
 import type { ProfileRepository } from "../entities/profile/model";
@@ -17,6 +19,7 @@ import { RegistrationRepositoryProvider } from "../entities/registration";
 import type { RegistrationRepository } from "../entities/registration/model";
 import { request } from "../shared/api/client";
 
+const notificationRepository = createHttpNotificationRepository(request);
 const profileRepository = createHttpProfileRepository(request);
 export function ProfileServices({
   children,
@@ -103,18 +106,20 @@ export function ApplicationProviders({ children }: { children: ReactNode }) {
       }),
   );
   return (
-    <ProfileServices>
-      <ModerationServices>
-        <OrganizationServices>
-          <DiscussionServices>
-            <RegistrationServices>
-              <QueryClientProvider client={client}>
-                {children}
-              </QueryClientProvider>
-            </RegistrationServices>
-          </DiscussionServices>
-        </OrganizationServices>
-      </ModerationServices>
-    </ProfileServices>
+    <NotificationRepositoryProvider repository={notificationRepository}>
+      <ProfileServices>
+        <ModerationServices>
+          <OrganizationServices>
+            <DiscussionServices>
+              <RegistrationServices>
+                <QueryClientProvider client={client}>
+                  {children}
+                </QueryClientProvider>
+              </RegistrationServices>
+            </DiscussionServices>
+          </OrganizationServices>
+        </ModerationServices>
+      </ProfileServices>
+    </NotificationRepositoryProvider>
   );
 }

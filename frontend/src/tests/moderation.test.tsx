@@ -122,7 +122,7 @@ describe("S6 stateful mocks", () => {
     const unpublished = await unpublish(e.id);
     expect(unpublished).toMatchObject({
       status: "UNPUBLISHED",
-      moderationReason: "Неподходящие условия встречи",
+      moderationReason: null,
       confirmedCount: 1,
     });
     expect(
@@ -270,8 +270,11 @@ describe("moderation UI", () => {
         await pending;
       });
       expect(
-        await screen.findByText("Неподходящие условия встречи"),
+        await screen.findByText("Запись закрыта · Снято с публикации"),
       ).toBeVisible();
+      expect(
+        screen.queryByText("Неподходящие условия встречи"),
+      ).not.toBeInTheDocument();
       expect(reads).toBe(1);
       expect(
         client.getQueryData(["events", "detail", e.id, "guest"]),
@@ -380,7 +383,7 @@ describe("moderation UI", () => {
     );
     expect(
       await screen.findByRole("article", { name: `Мероприятие: ${e.title}` }),
-    ).toHaveTextContent("Неподходящее описание");
+    ).not.toHaveTextContent("Неподходящее описание");
   });
   it("shows hidden status in admin only, retains other messages and validates event UUID", async () => {
     const e = await event();
@@ -441,7 +444,9 @@ describe("moderation UI", () => {
     expect(
       await screen.findByText("Запись закрыта · Снято с публикации"),
     ).toBeVisible();
-    expect(screen.getByText("Неподходящие условия встречи")).toBeVisible();
+    expect(
+      screen.queryByText("Неподходящие условия встречи"),
+    ).not.toBeInTheDocument();
     expect(await screen.findByText("Вы участвуете")).toBeVisible();
     expect(
       screen.queryByRole("button", { name: "Присоединиться" }),

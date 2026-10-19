@@ -174,10 +174,22 @@ for (const width of [375, 768, 1440]) {
         }),
       ).toBeVisible({ timeout: 15000 });
       await expect(
+        page.getByText("Запись закрыта · Снято с публикации", { exact: true }),
+      ).toBeVisible({ timeout: 15000 });
+      await expect(
         page.getByText("Условия Java-встречи требуют уточнения.", {
           exact: true,
         }),
-      ).toBeVisible({ timeout: 15000 });
+      ).toHaveCount(0);
+      await page.getByRole("button", { name: /^Уведомления/ }).click();
+      await expect(
+        page
+          .getByRole("dialog", { name: "Уведомления" })
+          .locator(".notification-reason")
+          .filter({ hasText: "Условия Java-встречи требуют уточнения." })
+          .last(),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
       await expect(
         participant.getByText("Вы участвуете", { exact: true }),
       ).toBeVisible();
@@ -192,7 +204,7 @@ for (const width of [375, 768, 1440]) {
         participant.getByText("Условия Java-встречи требуют уточнения.", {
           exact: true,
         }),
-      ).toBeVisible();
+      ).toHaveCount(0);
       expect(
         (
           await (

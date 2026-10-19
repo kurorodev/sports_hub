@@ -1,3 +1,4 @@
+import { resetMockNotifications } from "../mocks/notifications";
 import { resetMockProfiles } from "../mocks/profiles";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
@@ -17,6 +18,7 @@ afterEach(() => {
   cleanup();
   server.resetHandlers();
   resetMockSession();
+  resetMockNotifications();
   resetMockProfiles();
   resetMockDatabase();
   resetMockOrganizations();

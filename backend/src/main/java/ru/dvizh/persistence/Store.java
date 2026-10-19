@@ -22,7 +22,13 @@ public class Store {
         return entity;
     }
     public <T extends BaseEntity> T add(T entity) { em.persist(entity); return entity; }
+    /** A candidate query may have cached an older version before another transaction acquired the lock. */
+    public <T> T refreshLocked(T entity) { em.flush();em.refresh(entity,LockModeType.PESSIMISTIC_WRITE);return entity; }
     public void flush() { em.flush(); }
+    public int execute(String jpql,Map<String,?> params) {
+        em.flush();var query=em.createQuery(jpql);params.forEach(query::setParameter);
+        int changed=query.executeUpdate();em.clear();return changed;
+    }
     public <T> List<T> list(Class<T> type, String condition, Map<String,?> params, String order, int offset, int limit) {
         var q = em.createQuery("select e from " + type.getSimpleName() + " e" + where(condition) + " order by " + order, type);
         params.forEach(q::setParameter);

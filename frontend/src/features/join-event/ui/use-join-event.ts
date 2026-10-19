@@ -27,6 +27,7 @@ export function useJoinEvent(eventId: string, joinMode: "OPEN" | "APPROVAL") {
     Promise.all([
       client.invalidateQueries({ queryKey: ["events"] }),
       client.invalidateQueries({ queryKey: ["map", "events"] }),
+      client.invalidateQueries({ queryKey: ["notifications"] }),
       client.invalidateQueries({
         queryKey: registrationKeys.event(targetEventId),
       }),

@@ -82,7 +82,7 @@ class CoreScenariosTest extends ApiTestSupport {
         call(admin,"POST","/admin/events/"+event+"/unpublish",Map.of("reason","Площадка закрыта"),200);
         assertThat(getJson(null,"/events").path("items").toString()).doesNotContain(event);
         call(b,"POST","/events/"+event+"/registrations",Map.of(),409);call(b,"GET","/events/"+event,null,404);
-        assertThat(getJson(a,"/events/"+event).path("moderationReason").asText()).isEqualTo("Площадка закрыта");
+        assertThat(getJson(a,"/events/"+event).path("moderationReason").isNull()).isTrue();
         assertThat(getJson(owner,"/me/events").path("items").toString()).contains(event);
         call(owner,"POST","/events/"+event+"/publish",null,409);
     }

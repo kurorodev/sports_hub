@@ -524,7 +524,7 @@ export function getEvents(viewerId?: string): EventPreview[] {
       ...(moderation
         ? {
             status: "UNPUBLISHED" as const,
-            moderationReason: moderation.reason,
+            moderationReason: null,
             updatedAt: moderation.at,
           }
         : {}),
