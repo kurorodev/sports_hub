@@ -21,10 +21,12 @@ export function EventDiscussion({
   eventId,
   published,
   organizerUserId,
+  onReport,
 }: {
   eventId: string;
   published: boolean;
   organizerUserId?: string;
+  onReport?: (comment: DiscussionComment) => void;
 }) {
   const repository = useCommentRepository();
   const session = useQuery(sessionQuery);
@@ -113,6 +115,17 @@ export function EventDiscussion({
                   <CommentCard
                     comment={comment}
                     organizerUserId={organizerUserId}
+                    action={
+                      onReport && comment.visibility !== "hidden" ? (
+                        <button
+                          className="comment-report-button"
+                          onClick={() => onReport(comment)}
+                          type="button"
+                        >
+                          Пожаловаться
+                        </button>
+                      ) : undefined
+                    }
                   />
                 </li>
               ))}

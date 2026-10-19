@@ -10,17 +10,19 @@ export function sessionReturn(
   const mapReturn = safeMapReturn(state);
   const eventId = params.get("eventId") ?? "";
   const to =
-    next === "profile"
-      ? "/profile"
-      : next === "map"
-        ? (mapReturn ?? "/map")
-        : next === "organization"
-          ? "/organization"
-          : next === "create-event"
-            ? "/events/new"
-            : ["join-event", "event-discussion"].includes(next ?? "") &&
-                /^[\w-]{1,100}$/.test(eventId)
-              ? `/events/${encodeURIComponent(eventId)}${next === "event-discussion" ? "#event-discussion" : ""}`
-              : fallback;
+    next === "support"
+      ? "/support"
+      : next === "profile"
+        ? "/profile"
+        : next === "map"
+          ? (mapReturn ?? "/map")
+          : next === "organization"
+            ? "/organization"
+            : next === "create-event"
+              ? "/events/new"
+              : ["join-event", "event-discussion"].includes(next ?? "") &&
+                  /^[\w-]{1,100}$/.test(eventId)
+                ? `/events/${encodeURIComponent(eventId)}${next === "event-discussion" ? "#event-discussion" : ""}`
+                : fallback;
   return { to, state: mapReturn ? { mapReturn } : undefined };
 }

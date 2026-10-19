@@ -1,5 +1,7 @@
 # Архитектура frontend
 
+Поддержка: `entities/support/model` содержит чистую модель и порт; HTTP-адаптер проверяет DTO и соответствие ID. Реализация внедряется через SupportProvider в app/providers. `features/support` собирает формы, ленту, приватную переписку и жалобу; `pages/support` проверяет сессию и собирает маршруты. EventPage передаёт callback жалобы в EventDiscussion и открывает ReportCommentDialog, не связывая соседние feature slices импортами. Кэш разделён по viewerId, очищается общим session transition; поздний успех не навигирует другую сессию. MSW работает на сетевой границе в mocks/support. [Протокол и ограничения](../../backend/docs/support.md).
+
 Статус: постепенный переход к Clean Architecture с принципами Feature-Sliced Design. Сценарии S3 OPEN, S4 APPROVAL, публикация комментария S5, создание/решение заявки S2 и модерация S6 уже разделены на чистое ядро, адаптеры и React. Остальные экраны приведены к слоям FSD, но создание события и сессия пока используют прежний query/service-подход. Весь проект ещё не считается полностью переведённым на Clean Architecture.
 
 ## Структура и направление зависимостей

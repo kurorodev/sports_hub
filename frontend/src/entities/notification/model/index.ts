@@ -8,6 +8,9 @@ export const notificationKinds = [
   "EVENT_UPDATED",
   "EVENT_STARTING",
   "MENTION",
+  "SUPPORT_NEW",
+  "SUPPORT_REPLY",
+  "SUPPORT_STATUS",
 ] as const;
 export interface Notification {
   id: string;

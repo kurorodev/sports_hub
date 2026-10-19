@@ -36,6 +36,7 @@ import { hashMockPassword, verifyMockPassword } from "./passwords";
 import { signupSchema } from "../shared/api/signup-schema";
 import { getComments, saveComment, hideComment } from "./comments";
 import { mapHandlers } from "./maps";
+import { supportHandlers } from "./support";
 
 function json(body: unknown, init?: ResponseInit) {
   if (body && typeof body === "object" && "code" in body)
@@ -83,6 +84,7 @@ const moderationSchema = z
   .strict();
 
 export const handlers = [
+  ...supportHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...notificationHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...mapHandlers(api, () => makeSession(savedAccount() ?? "")),
   http.get(`${api}/admin/events`, ({ request }) => {

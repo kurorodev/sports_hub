@@ -10,7 +10,9 @@ const notificationSchema = z.object({
   reason: z.string().nullable(),
   href: z
     .string()
-    .regex(/^\/(events\/[0-9a-fA-F-]{36}|organization)$/)
+    .regex(
+      /^\/(events\/[0-9a-fA-F-]{36}|organization|support\/[0-9a-fA-F-]{36})$/,
+    )
     .nullable(),
   createdAt: z.string().datetime({ offset: true }),
   readAt: z.string().datetime({ offset: true }).nullable(),

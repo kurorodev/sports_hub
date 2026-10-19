@@ -1,4 +1,5 @@
 import { resetMockNotifications } from "../mocks/notifications";
+import { resetMockSupport } from "../mocks/support";
 import { resetMockProfiles } from "../mocks/profiles";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
@@ -15,6 +16,7 @@ import { resetMockMaps } from "../mocks/maps";
 export const server = setupServer(...handlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
+  resetMockSupport();
   cleanup();
   server.resetHandlers();
   resetMockSession();

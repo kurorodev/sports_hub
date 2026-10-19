@@ -63,6 +63,7 @@ export function WorkspacePage({ kind }: { kind: "admin" | "organization" }) {
       {kind === "admin" ? (
         <>
           <nav className="admin-sections" aria-label="Разделы модерации">
+            <Link to="/support?view=queue">Поддержка</Link>
             <Link
               to="/admin"
               aria-current={

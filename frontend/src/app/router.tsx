@@ -10,6 +10,7 @@ import { LoginPage } from "../pages/login";
 import { WorkspacePage } from "../pages/workspace";
 import { NotFound } from "../shared/ui/Feedback";
 import { RouteError } from "./RouteError";
+import { SupportPage } from "../pages/support";
 export const router = createBrowserRouter([
   {
     element: <Layout />,
@@ -27,6 +28,9 @@ export const router = createBrowserRouter([
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
       { path: "/profile", element: <ProfilePage own /> },
+      { path: "/support", element: <SupportPage /> },
+      { path: "/support/new", element: <SupportPage create /> },
+      { path: "/support/:ticketId", element: <SupportPage /> },
       { path: "/users/:userId", element: <ProfilePage /> },
       { path: "/organizations", element: <OrganizationsPage /> },
       { path: "/organizations/:organizationId", element: <OrganizationPage /> },

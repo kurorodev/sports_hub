@@ -27,9 +27,540 @@ tags:
 - name: Geo
 - name: Map
 - name: Notifications
+- name: Support
 security:
 - cookieAuth: []
 paths:
+  /support/tickets:
+    get:
+      tags:
+      - Support
+      operationId: getMySupportTickets
+      summary: Свои обращения
+      x-phase: P1
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 160
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SupportStatus'
+      - name: category
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SupportCategory'
+      responses:
+        '200':
+          description: Свои обращения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicketPage'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    post:
+      tags:
+      - Support
+      operationId: createSupportTicket
+      summary: Создать обращение; до 10 в час
+      x-phase: P1
+      parameters:
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: Создать обращение; до 10 в час
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicket'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportCreate'
+  /admin/support/tickets:
+    get:
+      tags:
+      - Support
+      operationId: getAdminSupportTickets
+      summary: Очередь обращений; только ADMIN
+      x-phase: P1
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 160
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SupportStatus'
+      - name: category
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SupportCategory'
+      responses:
+        '200':
+          description: Очередь обращений; только ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicketPage'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /support/tickets/{ticketId}:
+    get:
+      tags:
+      - Support
+      operationId: getSupportTicket
+      summary: Обращение автора или администратора
+      x-phase: P1
+      parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Обращение автора или администратора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicket'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    patch:
+      tags:
+      - Support
+      operationId: updateSupportTicket
+      summary: Автор закрывает/открывает повторно; ADMIN меняет статус и приоритет
+      x-phase: P1
+      parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Автор закрывает/открывает повторно; ADMIN меняет статус и приоритет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicket'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportUpdate'
+  /support/tickets/{ticketId}/messages:
+    get:
+      tags:
+      - Support
+      operationId: getSupportMessages
+      summary: Переписка; новые первыми
+      x-phase: P1
+      parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      responses:
+        '200':
+          description: Переписка; новые первыми
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportMessagePage'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    post:
+      tags:
+      - Support
+      operationId: replySupportTicket
+      summary: Ответить в активное обращение
+      x-phase: P1
+      parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: Ответить в активное обращение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportMessage'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportReply'
   /me/notifications:
     get:
       tags:
@@ -2394,6 +2925,237 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
   schemas:
+    SupportCategory:
+      type: string
+      enum:
+      - HELP
+      - BUG
+      - IDEA
+      - VENUE_SUGGESTION
+      - COMMENT_REPORT
+    SupportStatus:
+      type: string
+      enum:
+      - OPEN
+      - IN_PROGRESS
+      - WAITING_USER
+      - RESOLVED
+      - CLOSED
+    SupportPriority:
+      type: string
+      enum:
+      - NORMAL
+      - HIGH
+      - URGENT
+    SupportReportReason:
+      type: string
+      enum:
+      - SPAM
+      - ABUSE
+      - UNSAFE
+      - OTHER
+    SupportCreate:
+      type: object
+      properties:
+        category:
+          $ref: '#/components/schemas/SupportCategory'
+        title:
+          type: string
+          minLength: 3
+          maxLength: 160
+        description:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        commentId:
+          type: string
+          format: uuid
+        reportReason:
+          $ref: '#/components/schemas/SupportReportReason'
+        venueCity:
+          type: string
+          minLength: 1
+          maxLength: 120
+        venueAddress:
+          type: string
+          minLength: 1
+          maxLength: 300
+      required:
+      - category
+      - title
+      - description
+      additionalProperties: false
+    SupportUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/SupportStatus'
+        priority:
+          $ref: '#/components/schemas/SupportPriority'
+      required: []
+      minProperties: 1
+      additionalProperties: false
+    SupportReply:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 5000
+      required:
+      - text
+      additionalProperties: false
+    SupportTicket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        author:
+          $ref: '#/components/schemas/PublicUser'
+        assignedTo:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          nullable: true
+        category:
+          $ref: '#/components/schemas/SupportCategory'
+        status:
+          $ref: '#/components/schemas/SupportStatus'
+        priority:
+          $ref: '#/components/schemas/SupportPriority'
+        title:
+          type: string
+        description:
+          type: string
+        commentId:
+          type: string
+          format: uuid
+          nullable: true
+        eventId:
+          type: string
+          format: uuid
+          nullable: true
+        commentText:
+          type: string
+          nullable: true
+        commentAuthor:
+          type: string
+          nullable: true
+        reportReason:
+          allOf:
+          - $ref: '#/components/schemas/SupportReportReason'
+          nullable: true
+        venueCity:
+          type: string
+          nullable: true
+        venueAddress:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - author
+      - assignedTo
+      - category
+      - status
+      - priority
+      - title
+      - description
+      - commentId
+      - eventId
+      - commentText
+      - commentAuthor
+      - reportReason
+      - venueCity
+      - venueAddress
+      - createdAt
+      - updatedAt
+    SupportMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticketId:
+          type: string
+          format: uuid
+        author:
+          $ref: '#/components/schemas/PublicUser'
+        fromSupport:
+          type: boolean
+        kind:
+          type: string
+          enum:
+          - MESSAGE
+          - STATUS
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - ticketId
+      - author
+      - fromSupport
+      - kind
+      - text
+      - createdAt
+    SupportTicketPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportTicket'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - page
+      - size
+      - total
+      - totalPages
+    SupportMessagePage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportMessage'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - page
+      - size
+      - total
+      - totalPages
     NotificationType:
       type: string
       enum:
@@ -2406,6 +3168,9 @@ components:
       - EVENT_UPDATED
       - EVENT_STARTING
       - MENTION
+      - SUPPORT_NEW
+      - SUPPORT_REPLY
+      - SUPPORT_STATUS
     Notification:
       type: object
       properties:
@@ -2428,7 +3193,7 @@ components:
         href:
           type: string
           nullable: true
-          pattern: ^/(events/[0-9a-fA-F-]{36}|organization)$
+          pattern: ^/(events/[0-9a-fA-F-]{36}|organization|support/[0-9a-fA-F-]{36})$
         createdAt:
           type: string
           format: date-time

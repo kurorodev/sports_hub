@@ -18,7 +18,10 @@ import { createHttpRegistrationRepository } from "../entities/registration/api/h
 import { RegistrationRepositoryProvider } from "../entities/registration";
 import type { RegistrationRepository } from "../entities/registration/model";
 import { request } from "../shared/api/client";
+import { createHttpSupportRepository } from "../entities/support/api/http-support-repository";
+import { SupportProvider } from "../entities/support";
 
+const supportRepository = createHttpSupportRepository(request);
 const notificationRepository = createHttpNotificationRepository(request);
 const profileRepository = createHttpProfileRepository(request);
 export function ProfileServices({
@@ -106,20 +109,22 @@ export function ApplicationProviders({ children }: { children: ReactNode }) {
       }),
   );
   return (
-    <NotificationRepositoryProvider repository={notificationRepository}>
-      <ProfileServices>
-        <ModerationServices>
-          <OrganizationServices>
-            <DiscussionServices>
-              <RegistrationServices>
-                <QueryClientProvider client={client}>
-                  {children}
-                </QueryClientProvider>
-              </RegistrationServices>
-            </DiscussionServices>
-          </OrganizationServices>
-        </ModerationServices>
-      </ProfileServices>
-    </NotificationRepositoryProvider>
+    <SupportProvider repository={supportRepository}>
+      <NotificationRepositoryProvider repository={notificationRepository}>
+        <ProfileServices>
+          <ModerationServices>
+            <OrganizationServices>
+              <DiscussionServices>
+                <RegistrationServices>
+                  <QueryClientProvider client={client}>
+                    {children}
+                  </QueryClientProvider>
+                </RegistrationServices>
+              </DiscussionServices>
+            </OrganizationServices>
+          </ModerationServices>
+        </ProfileServices>
+      </NotificationRepositoryProvider>
+    </SupportProvider>
   );
 }
