@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useMapParams } from "./use-map-params";
 import { MapPin, ArrowUpRight, X } from "lucide-react";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
+import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import {
   listOnlyFilters,
   readMapView,
@@ -205,23 +206,11 @@ export function MapPage() {
         >
           <summary>Даты встреч (UTC)</summary>
           <div>
-            <label className="form-field">
-              Дата от (UTC)
-              <input
-                type="date"
-                value={params.get("from") ?? ""}
-                onChange={(event) => setParam("from", event.target.value)}
-              />
-            </label>
-            <label className="form-field">
-              Дата до (UTC)
-              <input
-                type="date"
-                min={params.get("from") ?? undefined}
-                value={params.get("to") ?? ""}
-                onChange={(event) => setParam("to", event.target.value)}
-              />
-            </label>
+            <DateRangeFields
+              from={params.get("from") ?? ""}
+              to={params.get("to") ?? ""}
+              onChange={setParam}
+            />
           </div>
         </details>
         <fieldset className="map-layers">

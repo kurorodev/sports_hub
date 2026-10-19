@@ -98,6 +98,10 @@ test("guest returns to creation after demo login and invalid date stays in form"
   await page.getByRole("button", { name: "Войти в аккаунт" }).click();
   await expect(page).toHaveURL("/events/new");
   await fillEvent(page, "Встреча в прошлом", "Петанк");
+  await expect(page.getByLabel("Дата", { exact: true })).toHaveAttribute(
+    "min",
+    "2026-10-19",
+  );
   await page.getByLabel("Дата", { exact: true }).fill("2026-10-18");
   await page.getByRole("button", { name: "Опубликовать встречу" }).click();
   await expect(page.getByText("Выберите будущую дату и время")).toBeVisible();
@@ -105,6 +109,23 @@ test("guest returns to creation after demo login and invalid date stays in form"
   await expect(page.getByLabel("Название встречи")).toHaveValue(
     "Встреча в прошлом",
   );
+});
+
+test("creation calendar follows the event timezone across midnight", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-10-18T21:30:00Z"));
+  await signIn(page, "Александр");
+  await page.goto("/events/new");
+  const date = page.getByLabel("Дата", { exact: true });
+  const timezone = page.getByLabel("Часовой пояс места встречи", {
+    exact: true,
+  });
+  await expect(date).toHaveAttribute("min", "2026-10-19");
+  await timezone.selectOption("+02:00");
+  await expect(date).toHaveAttribute("min", "2026-10-18");
+  await timezone.selectOption("+07:00");
+  await expect(date).toHaveAttribute("min", "2026-10-19");
 });
 
 for (const width of [320, 375, 768, 1024, 1440]) {

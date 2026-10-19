@@ -8,6 +8,7 @@ import { ApiError, errorMessage } from "../../../shared/api/client";
 import type { Session, Sport } from "../../../shared/api/types";
 import { LocationPicker } from "../../../shared/ui/LocationPicker";
 import { FormField } from "../../../shared/ui/FormField";
+import { useCurrentDate } from "../../../shared/hooks/use-current-date";
 import { createEvent, sportsQuery } from "../../../entities/event";
 import {
   customSportValue,
@@ -51,6 +52,11 @@ export function CreateEventForm({
   });
   const sportChoice = useWatch({ control: form.control, name: "sportChoice" });
   const joinMode = useWatch({ control: form.control, name: "joinMode" });
+  const timezoneOffset = useWatch({
+    control: form.control,
+    name: "timezoneOffset",
+  });
+  const today = useCurrentDate(timezoneOffset);
   const mutation = useMutation({
     mutationFn: (values: EventFormValues) => {
       if (
@@ -245,8 +251,11 @@ export function CreateEventForm({
               >
                 <input
                   {...accessibility("event-date", errors.date?.message)}
-                  {...form.register("date")}
+                  {...form.register("date", {
+                    onChange: () => void form.trigger("date"),
+                  })}
                   type="date"
+                  min={today}
                   required
                 />
               </FormField>

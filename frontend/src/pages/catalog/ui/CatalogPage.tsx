@@ -14,6 +14,7 @@ import { EventCard } from "../../../entities/event";
 import { errorMessage } from "../../../shared/api/client";
 import { EmptyState, ErrorState, Skeletons } from "../../../shared/ui/Feedback";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
+import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -164,23 +165,11 @@ export function CatalogPage() {
                 )}
               </summary>
               <div className="filter-fields">
-                <label>
-                  Дата от (UTC)
-                  <input
-                    type="date"
-                    value={params.get("from") ?? ""}
-                    onChange={(event) => setFilter("from", event.target.value)}
-                  />
-                </label>
-                <label>
-                  Дата до (UTC)
-                  <input
-                    type="date"
-                    min={params.get("from") ?? undefined}
-                    value={params.get("to") ?? ""}
-                    onChange={(event) => setFilter("to", event.target.value)}
-                  />
-                </label>
+                <DateRangeFields
+                  from={params.get("from") ?? ""}
+                  to={params.get("to") ?? ""}
+                  onChange={setFilter}
+                />
                 <label>
                   Уровень
                   <select
