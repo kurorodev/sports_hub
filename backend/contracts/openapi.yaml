@@ -111,6 +111,7 @@ paths:
       tags:
       - Support
       operationId: getMySupportTickets
+      description: Личные обращения пользователей. Для ADMIN возвращается 403; администраторы используют очередь GET /admin/support/tickets.
       summary: Свои обращения
       x-phase: P1
       parameters:
@@ -198,6 +199,7 @@ paths:
       tags:
       - Support
       operationId: createSupportTicket
+      description: Создание обращений пользователями, включая жалобы и предложения. ADMIN не может создавать обращения — сервер возвращает 403. Администратор работает с очередью поддержки и отвечает в существующих обращениях.
       summary: Создать обращение; до 10 в час
       x-phase: P1
       parameters:

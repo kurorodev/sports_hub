@@ -51,7 +51,7 @@ export function SupportDesk({
   const now = useNow();
   const repo = useSupportRepository();
   const [params, setParams] = useSearchParams();
-  const queue = admin && params.get("view") === "queue";
+  const queue = admin;
   const [draft, setDraft] = useState(params.get("q") ?? "");
   const status = statuses.find((s) => s === params.get("status"));
   const category = categories.find((c) => c === params.get("category"));
@@ -83,21 +83,27 @@ export function SupportDesk({
       <header className="support-hero">
         <span className="eyebrow muted">ДВИЖ рядом</span>
         <h1>Центр поддержки</h1>
-        <p>Поможем с вопросом, проверим жалобу и услышим вашу идею.</p>
+        <p>
+          {admin
+            ? "Рассматривайте обращения, отвечайте пользователям и управляйте статусами."
+            : "Поможем с вопросом, проверим жалобу и услышим вашу идею."}
+        </p>
       </header>
-      <div className="support-choices">
-        {choices.map(({ category, icon: Icon, title, text }) => (
-          <Link
-            key={category}
-            className="support-choice"
-            to={`/support/new?category=${category}`}
-          >
-            <Icon size={24} aria-hidden="true" />
-            <strong>{title}</strong>
-            <span>{text}</span>
-          </Link>
-        ))}
-      </div>
+      {!admin && (
+        <div className="support-choices">
+          {choices.map(({ category, icon: Icon, title, text }) => (
+            <Link
+              key={category}
+              className="support-choice"
+              to={`/support/new?category=${category}`}
+            >
+              <Icon size={24} aria-hidden="true" />
+              <strong>{title}</strong>
+              <span>{text}</span>
+            </Link>
+          ))}
+        </div>
+      )}
       <section
         className="support-requests"
         aria-labelledby="support-list-title"
@@ -107,19 +113,6 @@ export function SupportDesk({
             <MessagesSquare size={24} aria-hidden="true" />{" "}
             {queue ? "Очередь поддержки" : "Мои обращения"}
           </h2>
-          {admin && (
-            <nav className="support-tabs" aria-label="Обращения поддержки">
-              <Link to="/support" aria-current={!queue ? "page" : undefined}>
-                Мои
-              </Link>
-              <Link
-                to="/support?view=queue"
-                aria-current={queue ? "page" : undefined}
-              >
-                Все обращения
-              </Link>
-            </nav>
-          )}
         </div>
         <form
           className="support-filters"
@@ -188,7 +181,11 @@ export function SupportDesk({
               <div className="support-empty">
                 <LifeBuoy size={32} />
                 <h3>Здесь пока нет обращений</h3>
-                <p>Создайте обращение или измените фильтры.</p>
+                <p>
+                  {admin
+                    ? "Новые обращения появятся здесь. Попробуйте изменить фильтры."
+                    : "Создайте обращение или измените фильтры."}
+                </p>
               </div>
             ) : (
               <ol className="support-ticket-list">
@@ -252,33 +249,35 @@ export function SupportDesk({
           </>
         )}
       </section>
-      <section className="support-faq">
-        <h2>Быстрые ответы</h2>
-        <details>
-          <summary>Где следить за ответом?</summary>
-          <p>
-            Все ответы остаются в обращении. При ответе специалиста придёт
-            уведомление в колокольчик. Пока вкладка открыта, переписка
-            обновляется автоматически.
-          </p>
-        </details>
-        <details>
-          <summary>Как пожаловаться на комментарий?</summary>
-          <p>
-            Откройте обсуждение встречи и нажмите «Пожаловаться» под сообщением.
-            Выберите причину и поясните ситуацию. Жалоба не публикуется в
-            обсуждении.
-          </p>
-        </details>
-        <details>
-          <summary>Когда площадка появится на карте?</summary>
-          <p>
-            Передайте название, город и точный адрес. Администратор проверит
-            предложение и ответит в обращении. Отправка предложения не публикует
-            площадку автоматически.
-          </p>
-        </details>
-      </section>
+      {!admin && (
+        <section className="support-faq">
+          <h2>Быстрые ответы</h2>
+          <details>
+            <summary>Где следить за ответом?</summary>
+            <p>
+              Все ответы остаются в обращении. При ответе специалиста придёт
+              уведомление в колокольчик. Пока вкладка открыта, переписка
+              обновляется автоматически.
+            </p>
+          </details>
+          <details>
+            <summary>Как пожаловаться на комментарий?</summary>
+            <p>
+              Откройте обсуждение встречи и нажмите «Пожаловаться» под
+              сообщением. Выберите причину и поясните ситуацию. Жалоба не
+              публикуется в обсуждении.
+            </p>
+          </details>
+          <details>
+            <summary>Когда площадка появится на карте?</summary>
+            <p>
+              Передайте название, город и точный адрес. Администратор проверит
+              предложение и ответит в обращении. Отправка предложения не
+              публикует площадку автоматически.
+            </p>
+          </details>
+        </section>
+      )}
     </>
   );
 }

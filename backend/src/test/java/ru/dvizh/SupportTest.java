@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import ru.dvizh.domain.*;
+import ru.dvizh.api.SupportApi;
 import ru.dvizh.persistence.Store;
 import static org.assertj.core.api.Assertions.*;
 
@@ -17,6 +18,17 @@ class SupportTest extends ApiTestSupport {
     @Autowired Store db;
     @Autowired Clock clock;
     String ticket(Actor author) throws Exception {return json(call(author,"POST","/support/tickets",Map.of("category","HELP","title","Не могу записаться","description","Помогите разобраться с записью на встречу"),201)).path("id").asText();}
+    @Test void adminUsesQueueAndCannotCreateAnySupportTicket() throws Exception {
+        var user=login("athlete-a");String id=ticket(user);var admin=login("admin");
+        for(var category:SupportApi.Category.values())
+            call(admin,"POST","/support/tickets",Map.of("category",category.name(),"title","Обращение администратора","description","Администратору не нужно создавать запрос в администрацию"),403);
+        assertThat(db.count(SupportTicketEntity.class,"e.authorId=:user",Map.of("user",UUID.fromString(admin.id())))).isZero();
+        call(admin,"GET","/support/tickets",null,403);
+        assertThat(getJson(admin,"/admin/support/tickets").path("items").toString()).contains(id);
+        call(admin,"POST","/support/tickets/"+id+"/messages",Map.of("text","Ответ администратора пользователю"),201);
+        call(admin,"PATCH","/support/tickets/"+id,Map.of("status","RESOLVED"),200);
+        assertThat(getJson(user,"/support/tickets/"+id).path("status").asText()).isEqualTo("RESOLVED");
+    }
     @Test void privateThreadAdminNotificationRepliesStatusesAndReopening() throws Exception {
         var author=login("athlete-a");var stranger=login("athlete-b");var admin=login("admin");String id=ticket(author);
         assertThat(getJson(author,"/support/tickets").path("items").get(0).path("author").path("id").asText()).isEqualTo(author.id());

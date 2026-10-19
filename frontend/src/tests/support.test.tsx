@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { SupportPage } from "../pages/support/ui/SupportPage";
 import { describe, it, expect } from "vitest";
 import { http, HttpResponse, delay } from "msw";
 import { SupportProvider } from "../entities/support";
@@ -27,8 +28,8 @@ async function login(account = "user-alex") {
   setCsrfToken(session.csrfToken);
   return session;
 }
-async function mount(ui: React.ReactNode) {
-  const session = await login();
+async function mount(ui: React.ReactNode, account = "user-alex", path = "/") {
+  const session = await login(account);
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -36,7 +37,7 @@ async function mount(ui: React.ReactNode) {
   render(
     <SupportProvider repository={repo}>
       <QueryClientProvider client={client}>
-        <MemoryRouter>{ui}</MemoryRouter>
+        <MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>
       </QueryClientProvider>
     </SupportProvider>,
   );
@@ -44,6 +45,56 @@ async function mount(ui: React.ReactNode) {
 }
 
 describe("support", () => {
+  it("forbids admin ticket creation and personal inbox while retaining queue access", async () => {
+    await login();
+    const ticket = await repo.create(input);
+    await login("admin");
+    await expect(repo.create(input)).rejects.toMatchObject({ status: 403 });
+    await expect(repo.list(false, { page: 0 })).rejects.toMatchObject({
+      status: 403,
+    });
+    expect(
+      (await repo.list(true, { page: 0 })).items.map((item) => item.id),
+    ).toContain(ticket.id);
+  });
+  it.each(["/support", "/support?view=mine", "/support/new?category=IDEA"])(
+    "shows only the admin queue at %s",
+    async (path) => {
+      await login();
+      await repo.create(input);
+      await mount(
+        <Routes>
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/support/new" element={<SupportPage create />} />
+        </Routes>,
+        "admin",
+        path,
+      );
+      expect(
+        await screen.findByRole("heading", { name: "Очередь поддержки" }),
+      ).toBeVisible();
+      expect(
+        await screen.findByRole("heading", { name: input.title }),
+      ).toBeVisible();
+      expect(
+        screen.queryByRole("heading", { name: "Быстрые ответы" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Новое обращение" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Мои обращения" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", {
+          name: /Помочь разобраться|Сообщить об ошибке|Предложить площадку|Поделиться идеей/,
+        }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("navigation", { name: "Обращения поддержки" }),
+      ).not.toBeInTheDocument();
+    },
+  );
   it("publishes a closed venue suggestion once, with admin permission and a public map link", async () => {
     await login();
     const ticket = await repo.create({
@@ -210,7 +261,7 @@ describe("support", () => {
       input.description,
     );
   });
-  it("renders empty state and lets an administrator use the queue filters", async () => {
+  it("renders the user empty state, creation choices and FAQ", async () => {
     await mount(
       <SupportDesk
         viewerId={makeSession("user-alex")!.user.id}
@@ -218,6 +269,9 @@ describe("support", () => {
       />,
     );
     expect(await screen.findByText("Здесь пока нет обращений")).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Быстрые ответы" }),
+    ).toBeVisible();
     expect(
       screen.queryByRole("link", { name: "Все обращения" }),
     ).not.toBeInTheDocument();

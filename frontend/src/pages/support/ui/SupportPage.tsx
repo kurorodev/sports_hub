@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { sessionQuery } from "../../../entities/session";
 import { categories } from "../../../entities/support/model";
 import {
@@ -35,6 +35,7 @@ export function SupportPage({ create = false }: { create?: boolean }) {
     );
   const viewerId = session.data.user.id;
   const admin = session.data.systemRoles.includes("ADMIN");
+  if (create && admin) return <Navigate to="/support" replace />;
   if (create) {
     const category =
       categories.find(

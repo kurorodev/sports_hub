@@ -20,7 +20,7 @@ public class SupportService {
         this.db=db;this.access=access;this.views=views;this.notifications=notifications;this.clock=clock;this.maps=maps;
     }
     public PageResult<SupportApi.Ticket> list(boolean admin,String q,SupportApi.Status status,SupportApi.Category category,int page,int size) {
-        int offset=PageResult.offset(page,size);var user=access.user();if(admin)access.requireAdmin();
+        int offset=PageResult.offset(page,size);var user=access.user();if(admin)access.requireAdmin();else if(user.admin)throw Problem.forbidden();
         var params=new HashMap<String,Object>();String where="1=1";
         if(!admin){where+=" and e.authorId=:user";params.put("user",user.id);}
         if(status!=null){where+=" and e.status=:status";params.put("status",status);}
@@ -53,7 +53,8 @@ public class SupportService {
         return dto(t);
     }
     @Transactional public SupportApi.Ticket create(SupportApi.Create input) {
-        var user=db.lock(UserEntity.class,access.user().id);
+        var viewer=access.user();if(viewer.admin)throw Problem.forbidden();
+        var user=db.lock(UserEntity.class,viewer.id);
         if(db.count(SupportTicketEntity.class,"e.authorId=:user and e.createdAt>:since",Map.of("user",user.id,"since",clock.instant().minusSeconds(3600)))>=10)
             throw new Problem(429,Api.ErrorCode.RATE_LIMITED,"Можно создать не больше 10 обращений в час. Дополните существующее.");
         var t=new SupportTicketEntity();t.authorId=user.id;t.category=input.category();t.title=input.title();t.description=input.description();

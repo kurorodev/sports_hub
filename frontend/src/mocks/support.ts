@@ -147,6 +147,8 @@ export function supportHandlers(
     const s = auth(request);
     if (s instanceof Response) return s;
     if (queue && !admin(s)) return error(403, "Только администратор");
+    if (!queue && admin(s))
+      return error(403, "Администратору доступна очередь поддержки");
     const p = new URL(request.url).searchParams;
     const status = p.get("status"),
       category = p.get("category"),
@@ -228,6 +230,11 @@ export function supportHandlers(
     http.post(`${api}/support/tickets`, async ({ request }) => {
       const s = auth(request, true);
       if (s instanceof Response) return s;
+      if (admin(s))
+        return error(
+          403,
+          "Администратор не может создавать обращения в поддержку",
+        );
       const parsed = createSchema.safeParse(
         await request.json().catch(() => null),
       );

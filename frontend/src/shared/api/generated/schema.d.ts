@@ -28,10 +28,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Свои обращения */
+        /**
+         * Свои обращения
+         * @description Личные обращения пользователей. Для ADMIN возвращается 403; администраторы используют очередь GET /admin/support/tickets.
+         */
         get: operations["getMySupportTickets"];
         put?: never;
-        /** Создать обращение; до 10 в час */
+        /**
+         * Создать обращение; до 10 в час
+         * @description Создание обращений пользователями, включая жалобы и предложения. ADMIN не может создавать обращения — сервер возвращает 403. Администратор работает с очередью поддержки и отвечает в существующих обращениях.
+         */
         post: operations["createSupportTicket"];
         delete?: never;
         options?: never;
