@@ -18,3 +18,5 @@ export { EventCard } from "./ui/EventCard";
 export { EventLocation } from "./ui/EventLocation";
 
 export { organizationEventsQuery } from "./api/queries";
+
+export { OrganizerPreview } from "./ui/OrganizerPreview";
