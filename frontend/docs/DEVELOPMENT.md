@@ -4,10 +4,10 @@
 
 ## Java и PostgreSQL
 
-Нужны Docker / OrbStack, Node.js 22.12+ и npm. Из корня репозитория:
+Нужны Docker / OrbStack, Node.js 22.12+ и npm. Если `backend/.env` ещё нет, скопируйте `backend/.env.example` в этот файл. Существующий `.env` не перезаписывайте. Из корня репозитория:
 
 ```sh
-docker compose -p dvizh -f backend/compose.yaml up --build -d
+docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up --build -d
 curl http://localhost:8080/api/v1/health
 ```
 
@@ -23,6 +23,8 @@ npm run dev
 
 `GET /demo/accounts` даёт актуальные имена и accountId. Основной QA-путь: `athlete-a` создаёт → `athlete-b` записывается → `athlete-a` видит участника. Cookie `SPORT_SESSION` устанавливает Java; фронт использует `credentials: include`, CSRF из `/session`, приватный кэш очищается при смене аккаунта.
 
+`/register` создаёт отдельный демоаккаунт через `POST /demo/accounts` и сразу устанавливает сессию. Нужен `DEMO_ENABLED=true`. Пароль не требуется; повторный вход — выбор нового аккаунта на `/login`. `/profile` читает и редактирует собственный профиль, `/users/:userId` доступен гостю. Созданные аккаунты и встречи остаются в PostgreSQL после перезапуска.
+
 ## Моки
 
 ```sh
@@ -32,6 +34,8 @@ npm run dev:mock
 `.env.mock` явно запускает MSW; вверху страницы есть отметка режима. На `/login` доступны локальные Александр (`user-alex`), Мария (`user-maria`), клуб (`org-run`) и администратор (`admin`). Это отдельная локальная база, независимая от PostgreSQL. Wire DTO и пути берутся из того же OpenAPI; аккаунты и события различаются. При смене real/mock перезапускайте Vite.
 
 Вся графика и Manrope поставляются локально. SVG-иллюстрации созданы для проекта, не являются фотографиями событий.
+
+Mock-регистрация также создаёт отдельного пользователя. Новые аккаунты хранятся в `dvizh.mock.accounts.v1`, изменения профилей — в `dvizh.mock.profiles.v1`, текущий аккаунт — в `dvizh.mock.account`. Для полного сброса используйте список ключей в [QA.md](QA.md); удаление localStorage не меняет Java/PostgreSQL.
 
 ## Окружение и сборки
 
@@ -62,7 +66,7 @@ npm run test:e2e
 
 ```sh
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5174 \
-  docker compose -p dvizh -f backend/compose.yaml up -d backend
+  docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up -d backend
 
 cd frontend
 npm run test:e2e:api

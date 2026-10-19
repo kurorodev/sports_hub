@@ -119,6 +119,15 @@ export function EventPage() {
             height="360"
           />
           <p className="detail-description">{event.description}</p>
+          {event.requirements?.trim() && (
+            <section
+              className="event-requirements"
+              aria-labelledby="event-requirements-heading"
+            >
+              <h2 id="event-requirements-heading">Условия участия</h2>
+              <p>{event.requirements}</p>
+            </section>
+          )}
           <EventLocation
             location={event.location}
             eventId={event.id}

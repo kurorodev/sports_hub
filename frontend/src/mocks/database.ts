@@ -1,4 +1,5 @@
 import { savedProfile, refreshMockUser } from "./profiles";
+import { profileSchema } from "../entities/profile/api/mappers";
 import { getModerationRecords } from "./moderation";
 import { getOrganizations } from "./organizations";
 import type {
@@ -60,8 +61,67 @@ export const accounts: DemoAccount[] = [
     sportsRoles: [],
   },
 ];
+const signupKey = "dvizh.mock.accounts.v1";
+const signupRecordSchema = z.object({
+  account: z.object({
+    id: z.string(),
+    label: z.string(),
+    systemRoles: z.array(z.enum(["USER", "ORGANIZATION", "ADMIN"])),
+    sportsRoles: z.array(
+      z.enum(["ATHLETE", "COACH", "REFEREE", "SPORTS_ORGANIZER"]),
+    ),
+  }),
+  profile: profileSchema,
+});
+type SignupRecord = z.infer<typeof signupRecordSchema>;
+let memorySignups: SignupRecord[] = [];
+function signups(): SignupRecord[] {
+  const saved =
+    typeof localStorage === "undefined"
+      ? null
+      : localStorage.getItem(signupKey);
+  return saved === null
+    ? memorySignups
+    : z.array(signupRecordSchema).parse(JSON.parse(saved));
+}
+export function getAccounts(): DemoAccount[] {
+  return [...accounts, ...signups().map((item) => item.account)].map(
+    (account) => {
+      const profile = savedProfile(mockId(account.id));
+      return {
+        ...account,
+        label: profile?.displayName ?? account.label,
+        sportsRoles: profile?.sportsRoles ?? account.sportsRoles,
+      };
+    },
+  );
+}
+export function createMockAccount(
+  nickname: string,
+  displayName: string,
+): string {
+  const id = `signup-${crypto.randomUUID()}`;
+  const record: SignupRecord = {
+    account: { id, label: displayName, systemRoles: ["USER"], sportsRoles: [] },
+    profile: {
+      id: mockId(id),
+      nickname,
+      displayName,
+      sportsRoles: [],
+      sportsPreferences: [],
+      rank: "ROOKIE",
+      ratingPoints: 0,
+      createdAt: new Date().toISOString(),
+    },
+  };
+  const next = [...signups(), signupRecordSchema.parse(record)];
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem(signupKey, JSON.stringify(next));
+  memorySignups = next;
+  return id;
+}
 export function makeSession(accountId: string): Session | undefined {
-  const account = accounts.find((item) => item.id === accountId);
+  const account = getAccounts().find((item) => item.id === accountId);
   if (!account) return undefined;
   const manageable = getOrganizations()
     .filter(
@@ -70,12 +130,13 @@ export function makeSession(accountId: string): Session | undefined {
     )
     .map((item) => item.id);
   return {
-    user: savedProfile(mockId(account.id)) ?? {
-      ...mockUser(account.id, account.label),
-      sportsRoles: account.sportsRoles,
-      sportsPreferences: [],
-      createdAt: "2026-10-01T12:00:00Z",
-    },
+    user: savedProfile(mockId(account.id)) ??
+      signups().find((item) => item.account.id === account.id)?.profile ?? {
+        ...mockUser(account.id, account.label),
+        sportsRoles: account.sportsRoles,
+        sportsPreferences: [],
+        createdAt: "2026-10-01T12:00:00Z",
+      },
     systemRoles: [
       ...account.systemRoles.filter((role) => role !== "ORGANIZATION"),
       ...(manageable.length ? ["ORGANIZATION" as const] : []),
@@ -382,8 +443,9 @@ export function getEvents(viewerId?: string): EventPreview[] {
           ? (getOrganizations().find(
               (item) => item.id === record.input.organizer.id,
             )?.name ?? "Организация")
-          : (accounts.find((account) => mockId(account.id) === record.ownerId)
-              ?.label ?? "Участник"),
+          : (getAccounts().find(
+              (account) => mockId(account.id) === record.ownerId,
+            )?.label ?? "Участник"),
     },
     confirmedCount: 0,
     pendingCount: 0,
@@ -483,9 +545,11 @@ export function saveEvent(
 export function resetMockDatabase() {
   memoryStore = { version: 2, events: [] };
   memoryRegistrations = [];
+  memorySignups = [];
   if (typeof localStorage !== "undefined") {
     localStorage.removeItem(eventKey);
     localStorage.removeItem(registrationKey);
+    localStorage.removeItem(signupKey);
   }
 }
 
@@ -516,7 +580,7 @@ export function decideRegistration(
 
 export function mockProfiles(): UserProfileDto[] {
   const users = [
-    ...accounts.map((account) => ({
+    ...getAccounts().map((account) => ({
       ...mockUser(account.id, account.label),
       sportsRoles: account.sportsRoles,
     })),
@@ -526,11 +590,12 @@ export function mockProfiles(): UserProfileDto[] {
     ...new Map(
       users.map((user) => [
         user.id,
-        savedProfile(user.id) ?? {
-          ...user,
-          sportsPreferences: [],
-          createdAt: "2026-10-01T12:00:00Z",
-        },
+        savedProfile(user.id) ??
+          signups().find((item) => item.profile.id === user.id)?.profile ?? {
+            ...user,
+            sportsPreferences: [],
+            createdAt: "2026-10-01T12:00:00Z",
+          },
       ]),
     ).values(),
   ];

@@ -4,16 +4,18 @@
 
 ## Локальный запуск приложения
 
-Нужны запущенный Docker / OrbStack, Node.js 22.12+ и npm. Из корня репозитория:
+Нужны запущенный Docker / OrbStack, Node.js 22.12+ и npm. Если `backend/.env` ещё нет, скопируйте `backend/.env.example` в `backend/.env`. Существующий файл с локальными настройками сохраните. Из корня репозитория:
 
 ```sh
-docker compose -p dvizh -f backend/compose.yaml up --build -d
+docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up --build -d
 cd frontend
 npm ci
 npm run dev -- --port 5173 --strictPort
 ```
 
 Откройте **http://localhost:5173**. Интерфейс работает с настоящим backend; изменения сохраняются в PostgreSQL. На странице входа выберите демоаккаунт без пароля: Алексей, Мария, тренер, представитель организации или администратор.
+
+На `/register` можно создать отдельный демоаккаунт без пароля; он появится в списке повторного входа. Личный профиль и редактирование доступны на `/profile`, публичный профиль организатора — по его имени в карточке встречи. В форме встречи есть необязательные условия участия, которые видны всем читателям события.
 
 Для доступа с другого устройства в той же сети используйте адрес `Network` из вывода Vite, например `http://10.101.228.77:5173`. Добавьте этот origin в `CORS_ORIGINS` в локальном `backend/.env` и примените настройки командой `docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up -d backend`. Сетевой IP может измениться при переподключении. Интерфейс проксирует запросы API; подключаться нужно к порту 5173.
 
@@ -32,7 +34,7 @@ docker compose -p dvizh -f backend/compose.yaml stop
 Из корня репозитория (нужны Docker и Docker Compose):
 
 ```sh
-docker compose -p dvizh -f backend/compose.yaml up --build -d
+docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up --build -d
 curl http://localhost:8080/api/v1/health
 ```
 
@@ -40,13 +42,14 @@ API: `http://localhost:8080/api/v1`. OpenAPI: [`backend/contracts/openapi.yaml`]
 
 Подробные команды, демоаккаунты и проверки: [`backend/README.md`](backend/README.md).
 
-## Забрать backend в рабочую ветку
+## Получить текущую версию приложения
 
-Сохраните текущую работу коммитом, затем в своей ветке выполните:
+Актуальная интеграция frontend и backend находится в ветке `frontend`. Сохраните текущую работу коммитом, затем выполните:
 
 ```sh
 git fetch origin
-git merge origin/master
+git switch frontend
+git pull --ff-only origin frontend
 ```
 
 Backend использует cookie-сессию и CSRF; подключение клиента описано в [инструкции backend](backend/README.md#подключение-frontend).

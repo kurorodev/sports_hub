@@ -37,6 +37,7 @@ export function CreateEventForm({
       organizerChoice: initialOrganizationId ?? "__personal__",
       title: "",
       description: "",
+      requirements: "",
       sportChoice: "",
       customSportName: "",
       date: "",
@@ -214,6 +215,23 @@ export function CreateEventForm({
                 maxLength={5000}
                 placeholder="Расскажите, что ждёт участников…"
                 required
+              />
+            </FormField>
+            <FormField
+              id="event-requirements"
+              label="Условия участия"
+              hint="Что взять с собой, какая подготовка нужна? Необязательно, до 2000 символов."
+              error={errors.requirements?.message}
+            >
+              <textarea
+                {...accessibility(
+                  "event-requirements",
+                  errors.requirements?.message,
+                  true,
+                )}
+                {...form.register("requirements")}
+                rows={3}
+                maxLength={2000}
               />
             </FormField>
           </fieldset>

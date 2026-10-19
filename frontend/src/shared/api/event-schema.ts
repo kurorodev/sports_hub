@@ -27,6 +27,11 @@ export const eventFieldsSchema = z.object({
     "PROFESSIONAL",
   ]),
   eventKind: z.enum(["ACTIVITY", "COMPETITION"]),
+  requirements: z
+    .string()
+    .max(2000, "Условия — до 2000 символов")
+    .nullable()
+    .optional(),
   joinMode: z.enum(["OPEN", "APPROVAL"]),
   maxParticipants: z
     .number({ error: "Укажите число участников" })

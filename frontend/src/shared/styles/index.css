@@ -2786,3 +2786,41 @@ input[type="radio"] {
     width: 100%;
   }
 }
+
+/* Signup and participation conditions share the existing form/card tokens. */
+.signup-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-5);
+}
+.signup-fields input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.auth-switch {
+  margin-top: var(--space-5);
+  color: var(--color-ink-muted);
+}
+.auth-switch a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.event-requirements {
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.event-requirements h2 {
+  margin-top: 0;
+}
+.event-requirements p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-bottom: 0;
+}

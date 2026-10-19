@@ -31,7 +31,7 @@ export async function request<T>(
   const method = (init.method ?? "GET").toUpperCase();
   if (
     ["POST", "PATCH", "DELETE"].includes(method) &&
-    path !== "/demo/session" &&
+    !["/demo/session", "/demo/accounts"].includes(path) &&
     csrfToken
   ) {
     headers.set("X-CSRF-Token", csrfToken);

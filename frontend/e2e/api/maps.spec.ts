@@ -62,9 +62,19 @@ test("Java map: disabled geocoder keeps event creation with a pin working", asyn
   const detail = page.url();
   await page.getByRole("link", { name: "Карта", exact: true }).click();
   await page.getByLabel("Площадки", { exact: true }).uncheck();
-  await page.getByTitle(`Мероприятие: ${title}`, { exact: true }).click();
+  await expect(
+    page.getByTitle(`Мероприятие: ${title}`, { exact: true }),
+  ).toBeVisible();
+  // Persistent Java runs can leave several events at exactly the same point.
+  // Use the public list to select this event without clicking a covered marker.
   await page
-    .locator(".leaflet-popup")
+    .getByRole("region", { name: "Мероприятия в этой области" })
+    .getByRole("article")
+    .filter({ has: page.getByRole("heading", { name: title, exact: true }) })
+    .getByRole("button", { name: "Показать на карте", exact: true })
+    .click();
+  await page
+    .getByRole("complementary", { name: "Выбранный объект" })
     .getByRole("link", { name: "Подробнее" })
     .click();
   await expect(page).toHaveURL(detail);

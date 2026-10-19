@@ -16,6 +16,8 @@ src/
     event-discussion/model/     независимый publishComment и проверка публикации
     event-discussion/ui/        список, пагинация, polling, форма и mutation
     create-event/ui/            существующая форма и её Zod-схема
+    edit-profile/model/         независимый updateProfile с проверкой ответа
+    edit-profile/ui/            форма и orchestration редактирования
   entities/
     event/                      API/query, карточка, форматирование, EventParticipation
     registration/model/         Registration, ParticipantPage, repository port, failures
@@ -26,11 +28,16 @@ src/
     comment/api/                HTTP-адаптер, runtime DTO guards, query options
     comment/lib/                context для внедрения репозитория
     comment/ui/                 сообщение, автор/время, отображение ошибок
-    session/                    существующие session/demo query/services
+    profile/                    модель/порт, HTTP guards, DI context, ProfileSummary
+    session/                    session/demo services, общий переход после входа/регистрации
   shared/                       транспорт, generated DTO, общие UI и токены
   mocks/                        MSW и локальная эмуляция backend
   tests/                        проверки ядра, адаптеров, UI и границ
 ```
+
+`pages/profile` собирает собственный и публичный профиль через внедрённый `ProfileRepository`. Редактирование проходит через `features/edit-profile/model/update-profile`; DTO преобразуются в HTTP-адаптере профиля. Публичные профили читаются без сессии, приватные запросы ждут её восстановления. Рейтинг отображается из ответа API, не вычисляется клиентом.
+
+`pages/register` и `pages/login` используют общий `entities/session/lib/use-session-transition`: отмена запросов, очистка приватного кэша, установка Session/CSRF и переход. `shared/lib/session-return` разрешает только известные внутренние назначения и безопасный контекст карты. Bootstrap POST регистрации и входа не передают старый CSRF; остальные мутации сохраняют существующую защиту. Сессия остаётся в прежнем query/service-подходе.
 
 Допустимое направление слоёв: `app → pages → features → entities → shared`. Промежуточные слои можно пропускать. Модуль одного слоя не импортирует другой модуль того же слоя; несколько модулей собираются выше. `widgets/` пока не требуется и не создаётся.
 

@@ -36,7 +36,9 @@ export function ModerationEventCard({
             {event.organizer.name}
           </Link>
         ) : (
-          event.organizer.name
+          <Link className="person-link" to={`/users/${event.organizer.id}`}>
+            {event.organizer.name}
+          </Link>
         )}
       </p>
       <p className="join-note">

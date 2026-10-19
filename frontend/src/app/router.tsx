@@ -1,4 +1,5 @@
 import { ProfilePage } from "../pages/profile";
+import { RegisterPage } from "../pages/register";
 import { createBrowserRouter } from "react-router-dom";
 import { OrganizationsPage, OrganizationPage } from "../pages/organizations";
 import { Layout } from "./Layout";
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       { path: "/events/new", element: <CreateEventPage /> },
       { path: "/events/:eventId", element: <EventPage /> },
       { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
       { path: "/profile", element: <ProfilePage own /> },
       { path: "/users/:userId", element: <ProfilePage /> },
       { path: "/organizations", element: <OrganizationsPage /> },

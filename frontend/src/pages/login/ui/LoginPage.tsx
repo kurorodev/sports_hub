@@ -1,22 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, Check, UserRound } from "lucide-react";
-import {
-  apiConfig,
-  errorMessage,
-  setCsrfToken,
-} from "../../../shared/api/client";
+import { apiConfig, errorMessage } from "../../../shared/api/client";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import {
   demoAccountsQuery,
-  sessionQuery,
   switchAccount,
+  useSessionTransition,
 } from "../../../entities/session";
-
-import { safeMapReturn } from "../../../shared/lib/activity-navigation";
 
 const schema = z.object({
   accountId: z.string().min(1, "Выберите демо-аккаунт"),
@@ -26,42 +20,15 @@ type LoginValues = z.infer<typeof schema>;
 export function LoginPage() {
   const location = useLocation();
   const accounts = useQuery(demoAccountsQuery);
-  const client = useQueryClient();
-  const navigate = useNavigate();
   const [params] = useSearchParams();
+  const complete = useSessionTransition(params, location.state);
   const form = useForm<LoginValues>({
     resolver: zodResolver(schema),
     defaultValues: { accountId: "" },
   });
   const mutation = useMutation({
     mutationFn: switchAccount,
-    onSuccess: async (session) => {
-      await client.cancelQueries();
-      client.clear();
-      setCsrfToken(session.csrfToken);
-      client.setQueryData(sessionQuery.queryKey, session);
-      const eventId = params.get("eventId") ?? "";
-      const destination =
-        params.get("next") === "profile"
-          ? "/profile"
-          : params.get("next") === "map"
-            ? (safeMapReturn(location.state) ?? "/map")
-            : params.get("next") === "organization"
-              ? "/organization"
-              : params.get("next") === "create-event"
-                ? "/events/new"
-                : ["join-event", "event-discussion"].includes(
-                      params.get("next") ?? "",
-                    ) && /^[\w-]{1,100}$/.test(eventId)
-                  ? `/events/${encodeURIComponent(eventId)}${params.get("next") === "event-discussion" ? "#event-discussion" : ""}`
-                  : "/";
-      navigate(destination, {
-        replace: true,
-        state: safeMapReturn(location.state)
-          ? { mapReturn: safeMapReturn(location.state) }
-          : undefined,
-      });
-    },
+    onSuccess: complete,
   });
   const selected = useWatch({ control: form.control, name: "accountId" });
   return (
@@ -152,6 +119,15 @@ export function LoginPage() {
             </button>
           </form>
         )}
+        <p className="auth-switch">
+          Новый участник?{" "}
+          <Link
+            to={{ pathname: "/register", search: location.search }}
+            state={location.state}
+          >
+            Создать аккаунт
+          </Link>
+        </p>
       </div>
     </section>
   );

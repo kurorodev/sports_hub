@@ -10,7 +10,8 @@ import {
 import { z } from "zod";
 import { http, HttpResponse } from "msw";
 import {
-  accounts,
+  getAccounts,
+  createMockAccount,
   mockProfiles,
   getEvents,
   getSports,
@@ -22,6 +23,7 @@ import {
 } from "./database";
 import { apiConfig } from "../shared/api/client";
 import { createEventSchema } from "../shared/api/event-schema";
+import { signupSchema } from "../shared/api/signup-schema";
 import { getComments, saveComment, hideComment } from "./comments";
 import { mapHandlers } from "./maps";
 
@@ -625,7 +627,46 @@ export const handlers = [
     );
     return json(saveProfile({ ...session.user, ...normalized }));
   }),
-  http.get(`${api}/demo/accounts`, () => json(accounts)),
+  http.get(`${api}/demo/accounts`, () => json(getAccounts())),
+  http.post(`${api}/demo/accounts`, async ({ request }) => {
+    const parsed = signupSchema.safeParse(
+      await request.json().catch(() => null),
+    );
+    if (!parsed.success)
+      return json(
+        {
+          code: "VALIDATION_ERROR",
+          message: "Проверьте данные аккаунта",
+          details: parsed.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        { status: 400 },
+      );
+    const { nickname, displayName } = parsed.data;
+    if (
+      mockProfiles().some(
+        (profile) => profile.nickname.toLowerCase() === nickname.toLowerCase(),
+      )
+    )
+      return json(
+        { code: "CONFLICT", message: "Никнейм уже занят" },
+        { status: 409 },
+      );
+    try {
+      const accountId = createMockAccount(nickname, displayName);
+      if (typeof localStorage !== "undefined")
+        localStorage.setItem(sessionKey, accountId);
+      memoryAccount = accountId;
+      return json(makeSession(accountId), { status: 201 });
+    } catch {
+      return json(
+        { code: "INTERNAL_ERROR", message: "Не удалось сохранить демоаккаунт" },
+        { status: 500 },
+      );
+    }
+  }),
   http.post(`${api}/demo/session`, async ({ request }) => {
     const body: unknown = await request.json();
     if (

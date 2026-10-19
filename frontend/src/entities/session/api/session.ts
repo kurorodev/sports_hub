@@ -1,6 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
 import { ApiError, request, setCsrfToken } from "../../../shared/api/client";
-import type { DemoAccount, Session } from "../../../shared/api/types";
+import type {
+  DemoAccount,
+  DemoRegistrationRequest,
+  Session,
+} from "../../../shared/api/types";
 
 export const sessionQuery = queryOptions({
   queryKey: ["session"],
@@ -27,5 +31,12 @@ export function switchAccount(accountId: string) {
   return request<Session>("/demo/session", {
     method: "POST",
     body: JSON.stringify({ accountId }),
+  });
+}
+
+export function registerAccount(values: DemoRegistrationRequest) {
+  return request<Session>("/demo/accounts", {
+    method: "POST",
+    body: JSON.stringify(values),
   });
 }

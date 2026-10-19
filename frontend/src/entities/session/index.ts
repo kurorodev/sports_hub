@@ -1,1 +1,7 @@
-export { sessionQuery, demoAccountsQuery, switchAccount } from "./api/session";
+export {
+  sessionQuery,
+  demoAccountsQuery,
+  switchAccount,
+  registerAccount,
+} from "./api/session";
+export { useSessionTransition } from "./lib/use-session-transition";

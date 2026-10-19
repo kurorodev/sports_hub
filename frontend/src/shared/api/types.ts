@@ -13,6 +13,7 @@ export type MapEventsResponse = Schemas["MapEventsResponse"];
 export type MapVenuesResponse = Schemas["MapVenuesResponse"];
 export type SystemRole = Schemas["SystemRole"];
 export type DemoAccount = Schemas["DemoAccount"];
+export type DemoRegistrationRequest = Schemas["DemoRegistrationRequest"];
 export type Session = Schemas["Session"];
 export type Sport = Schemas["Sport"];
 export type EventPreview = Schemas["Event"];
