@@ -21,6 +21,7 @@ const event = {
   openForRegistration: true,
   participantLimit: 2,
   confirmedParticipants: 0,
+  pendingParticipants: 0,
   joinMode: "OPEN" as const,
 };
 const registration: Registration = {

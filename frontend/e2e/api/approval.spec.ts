@@ -9,13 +9,16 @@ for (const width of [375, 768, 1440]) {
     page,
     browser,
   }) => {
-    test.setTimeout(45000); // Two separate browser sessions each observe a 5-second decision poll.
+    test.setTimeout(75000); // Separate sessions poll for new applications and decisions.
     await page.setViewportSize({ width, height: 1000 });
     await signInAs(page, "athlete-a");
     const url = await createApproval(
       page,
       `Бег по заявке Java ${width} ${Date.now()}`,
     );
+    const emptyAction = page.getByRole("button", { name: "Новых заявок нет" });
+    const reviewAction = page.getByRole("link", { name: "Рассмотреть заявки" });
+    await expect(emptyAction).toBeDisabled();
     const participantContext = await browser.newContext({
       viewport: { width, height: 1000 },
       serviceWorkers: "block",
@@ -25,6 +28,8 @@ for (const width of [375, 768, 1440]) {
     try {
       await signInAs(participant, "athlete-b");
       await requestParticipation(participant, url);
+      await expect(reviewAction).toBeVisible({ timeout: 15000 });
+      await expect(reviewAction).toHaveCSS("background-color", "rgb(255, 204, 22)");
       await page
         .getByRole("button", { name: "Обновить заявки", exact: true })
         .click();
@@ -33,6 +38,7 @@ for (const width of [375, 768, 1440]) {
         .getByRole("listitem", { name: "Заявка: Мария Беговая", exact: true })
         .getByRole("button", { name: "Одобрить", exact: true })
         .click();
+      await expect(emptyAction).toBeDisabled();
       // No reload/refetch click in the participant session: only real HTTP polling can update this page.
       await expect(
         participant.getByText("Заявка одобрена. До встречи!", { exact: true }),
@@ -52,6 +58,7 @@ for (const width of [375, 768, 1440]) {
       await expect(
         participant.getByText("Ожидает решения", { exact: true }),
       ).toBeVisible();
+      await expect(reviewAction).toBeVisible({ timeout: 15000 });
       await page
         .getByRole("button", { name: "Обновить заявки", exact: true })
         .click();
@@ -65,6 +72,8 @@ for (const width of [375, 768, 1440]) {
       await page
         .getByRole("button", { name: "Подтвердить отказ", exact: true })
         .click();
+      await expect(emptyAction).toBeDisabled();
+      await expect(emptyAction).toHaveCSS("background-color", "rgb(239, 239, 237)");
       await expect(
         participant.getByText("Заявка отклонена", { exact: true }),
       ).toBeVisible({ timeout: 12000 });

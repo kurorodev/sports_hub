@@ -184,6 +184,12 @@ button:disabled {
 .secondary:hover {
   background: var(--color-surface-alt);
 }
+.requests-empty-action:disabled {
+  background: var(--color-surface-alt);
+  color: var(--color-ink-muted);
+  border-color: var(--color-outline);
+  opacity: 1;
+}
 .full-width {
   width: 100%;
 }
