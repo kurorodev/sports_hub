@@ -1137,6 +1137,10 @@ export interface components {
             commentId?: string;
             reportReason?: components["schemas"]["SupportReportReason"];
             venueCity?: string;
+            /** Format: double */
+            venueLatitude?: number | null;
+            /** Format: double */
+            venueLongitude?: number | null;
             venueAddress?: string;
         };
         SupportUpdate: {
@@ -1164,6 +1168,10 @@ export interface components {
             commentAuthor: string | null;
             reportReason: components["schemas"]["SupportReportReason"] | null;
             venueCity: string | null;
+            /** Format: double */
+            venueLatitude?: number | null;
+            /** Format: double */
+            venueLongitude?: number | null;
             venueAddress: string | null;
             /** Format: date-time */
             createdAt: string;

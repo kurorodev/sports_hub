@@ -63,6 +63,8 @@ export interface SupportTicket {
   reportReason: (typeof reportReasons)[number] | null;
   venueCity: string | null;
   venueAddress: string | null;
+  venueLatitude?: number | null;
+  venueLongitude?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,6 +92,8 @@ export interface SupportCreate {
   reportReason?: (typeof reportReasons)[number];
   venueCity?: string;
   venueAddress?: string;
+  venueLatitude?: number;
+  venueLongitude?: number;
 }
 export interface SupportFilters {
   q?: string;

@@ -85,4 +85,14 @@ class SupportTest extends ApiTestSupport {
         call(b,"PATCH","/support/tickets/"+second,Map.of("status","CLOSED"),200);db.flush();
         call(b,"PATCH","/support/tickets/"+first,Map.of("status","OPEN"),200);
     }
+    @Test void venuePointIsOptionalPairedBoundedAndPersists() throws Exception {
+        var a=login("athlete-a");var admin=login("admin");
+        var body=new HashMap<String,Object>(Map.of("category","VENUE_SUGGESTION","title","Новая площадка","description","Площадка для совместных занятий спортом","venueCity","Самара","venueAddress","Парк"));
+        var manual=json(call(a,"POST","/support/tickets",body,201));assertThat(manual.path("venueLatitude").isNull()).isTrue();
+        body.put("venueLatitude",0.0);call(a,"POST","/support/tickets",body,400);
+        body.put("venueLongitude",180.0);var pinned=json(call(a,"POST","/support/tickets",body,201));
+        var restored=getJson(admin,"/support/tickets/"+pinned.path("id").asText());assertThat(restored.path("venueLatitude").asDouble()).isZero();assertThat(restored.path("venueLongitude").asDouble()).isEqualTo(180.0);
+        body.put("venueLatitude",91.0);call(a,"POST","/support/tickets",body,400);
+        call(a,"POST","/support/tickets",Map.of("category","HELP","title","Нужна помощь","description","Подробное описание вопроса","venueLatitude",53.0,"venueLongitude",50.0),400);
+    }
 }

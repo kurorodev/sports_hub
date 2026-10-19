@@ -28,6 +28,8 @@ const ticket = z.object({
   reportReason: z.enum(reportReasons).nullable(),
   venueCity: z.string().nullable(),
   venueAddress: z.string().nullable(),
+  venueLatitude: z.number().min(-90).max(90).nullish(),
+  venueLongitude: z.number().min(-180).max(180).nullish(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });

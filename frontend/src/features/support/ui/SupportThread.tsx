@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import {
   useInfiniteQuery,
   useMutation,
@@ -23,6 +23,12 @@ import { ApiError, errorMessage } from "../../../shared/api/client";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import { relativeTime } from "../../../shared/lib/relative-time";
 import { useNow } from "../../../shared/lib/use-now";
+import { hasPoint } from "../../../shared/lib/map";
+const GeoMap = lazy(() =>
+  import("../../../shared/ui/GeoMap").then((module) => ({
+    default: module.GeoMap,
+  })),
+);
 
 export function SupportThread({
   id,
@@ -34,6 +40,7 @@ export function SupportThread({
   admin: boolean;
 }) {
   const now = useNow();
+  const [mapOpen, setMapOpen] = useState(false);
   const repo = useSupportRepository();
   const client = useQueryClient();
   const root = ["support", viewerId];
@@ -157,6 +164,48 @@ export function SupportThread({
                 <p>
                   {t.venueCity} · {t.venueAddress}
                 </p>
+                {hasPoint({
+                  city: t.venueCity,
+                  address: t.venueAddress ?? "",
+                  latitude: t.venueLatitude,
+                  longitude: t.venueLongitude,
+                }) && (
+                  <>
+                    <p>
+                      Точка: {t.venueLatitude!.toFixed(5)},{" "}
+                      {t.venueLongitude!.toFixed(5)}
+                    </p>
+                    <button
+                      className="button secondary"
+                      type="button"
+                      aria-expanded={mapOpen}
+                      onClick={() => setMapOpen(!mapOpen)}
+                    >
+                      {mapOpen
+                        ? "Скрыть карту площадки"
+                        : "Показать площадку на карте"}
+                    </button>
+                    {mapOpen && (
+                      <Suspense
+                        fallback={<p role="status">Загружаем карту…</p>}
+                      >
+                        <GeoMap
+                          compact
+                          center={{
+                            latitude: t.venueLatitude!,
+                            longitude: t.venueLongitude!,
+                          }}
+                          point={{
+                            latitude: t.venueLatitude!,
+                            longitude: t.venueLongitude!,
+                          }}
+                          zoom={16}
+                          locate={false}
+                        />
+                      </Suspense>
+                    )}
+                  </>
+                )}
                 <span className="field-hint">
                   Площадка появится на карте после проверки и добавления
                   администратором.

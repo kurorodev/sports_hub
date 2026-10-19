@@ -2976,6 +2976,18 @@ components:
           type: string
           minLength: 1
           maxLength: 120
+        venueLatitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          nullable: true
+        venueLongitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          nullable: true
         venueAddress:
           type: string
           minLength: 1
@@ -3047,6 +3059,18 @@ components:
           nullable: true
         venueCity:
           type: string
+          nullable: true
+        venueLatitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          nullable: true
+        venueLongitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
           nullable: true
         venueAddress:
           type: string

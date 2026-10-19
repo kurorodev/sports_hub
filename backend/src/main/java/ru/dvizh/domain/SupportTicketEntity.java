@@ -21,4 +21,6 @@ public class SupportTicketEntity extends BaseEntity {
     @Column(length=20) @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR) @Enumerated(EnumType.STRING) public SupportApi.ReportReason reportReason;
     @Column(length=120) public String venueCity;
     @Column(length=300) public String venueAddress;
+    public Double venueLatitude;
+    public Double venueLongitude;
 }

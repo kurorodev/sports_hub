@@ -14,6 +14,8 @@ export function LocationPicker({
   errors = {},
   idPrefix = "event",
   addressLabel = "Место встречи",
+  cityLabel = "Город",
+  preserveAddressOnPoint = false,
   unmappedHint = "Без точки событие пока не появится на карте.",
 }: {
   value: Location;
@@ -26,6 +28,8 @@ export function LocationPicker({
   };
   idPrefix?: string;
   addressLabel?: string;
+  cityLabel?: string;
+  preserveAddressOnPoint?: boolean;
   unmappedHint?: string;
 }) {
   const listId = useId();
@@ -92,7 +96,11 @@ export function LocationPicker({
     const current = revision.current;
     const controller = new AbortController();
     reverseAbort.current = controller;
-    onChange({ city: "", address: "", ...point });
+    onChange({
+      city: preserveAddressOnPoint ? value.city : "",
+      address: preserveAddressOnPoint ? value.address : "",
+      ...point,
+    });
     setManualPin(true);
     setSearch(false);
     setOpen(false);
@@ -124,7 +132,11 @@ export function LocationPicker({
   return (
     <div className="location-picker">
       <div className="form-two-columns">
-        <FormField id={`${idPrefix}-city`} label="Город" error={errors.city}>
+        <FormField
+          id={`${idPrefix}-city`}
+          label={cityLabel}
+          error={errors.city}
+        >
           <input
             id={`${idPrefix}-city`}
             value={value.city}

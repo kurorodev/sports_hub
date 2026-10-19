@@ -47,6 +47,8 @@ const createSchema = z
     reportReason: z.enum(reportReasons).optional(),
     venueCity: z.string().trim().min(1).max(120).optional(),
     venueAddress: z.string().trim().min(1).max(300).optional(),
+    venueLatitude: z.number().min(-90).max(90).nullish(),
+    venueLongitude: z.number().min(-180).max(180).nullish(),
   })
   .strict();
 const updateSchema = z
@@ -259,7 +261,16 @@ export function supportHandlers(
           return error(400, "Укажите город и адрес");
         t.venueCity = input.venueCity;
         t.venueAddress = input.venueAddress;
-      } else if (input.venueCity || input.venueAddress)
+        if ((input.venueLatitude == null) !== (input.venueLongitude == null))
+          return error(400, "Укажите обе координаты площадки");
+        t.venueLatitude = input.venueLatitude ?? null;
+        t.venueLongitude = input.venueLongitude ?? null;
+      } else if (
+        input.venueCity ||
+        input.venueAddress ||
+        input.venueLatitude != null ||
+        input.venueLongitude != null
+      )
         return error(400, "Адрес указывается только для площадки");
       data.tickets.push(t);
       persist(data);

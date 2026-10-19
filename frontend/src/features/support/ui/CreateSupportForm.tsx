@@ -12,6 +12,9 @@ import {
 } from "../../../entities/support/model";
 import { sessionQuery } from "../../../entities/session";
 import { ApiError, errorMessage } from "../../../shared/api/client";
+import { LocationPicker } from "../../../shared/ui/LocationPicker";
+import type { Location } from "../../../shared/api/types";
+import { hasPoint } from "../../../shared/lib/map";
 
 export interface ReportTarget {
   id: string;
@@ -38,8 +41,7 @@ export function CreateSupportForm({
   const [title, setTitle] = useState(comment ? "Жалоба на комментарий" : "");
   const [description, setDescription] = useState("");
   const [reason, setReason] = useState<(typeof reportReasons)[number]>("SPAM");
-  const [city, setCity] = useState("");
-  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<Location>({ city: "", address: "" });
   const mutation = useMutation({
     mutationFn: (input: SupportCreate) => repo.create(input),
     onSuccess: async (ticket) => {
@@ -63,7 +65,16 @@ export function CreateSupportForm({
           description: description.trim(),
           ...(comment ? { commentId: comment.id, reportReason: reason } : {}),
           ...(category === "VENUE_SUGGESTION"
-            ? { venueCity: city.trim(), venueAddress: address.trim() }
+            ? {
+                venueCity: location.city.trim(),
+                venueAddress: location.address.trim(),
+                ...(hasPoint(location)
+                  ? {
+                      venueLatitude: location.latitude,
+                      venueLongitude: location.longitude,
+                    }
+                  : {}),
+              }
             : {}),
         });
       }}
@@ -125,28 +136,20 @@ export function CreateSupportForm({
         />
       </label>
       {category === "VENUE_SUGGESTION" && (
-        <div className="support-form-columns">
-          <label className="form-field">
-            Город площадки
-            <input
-              disabled={mutation.isPending}
-              required
-              maxLength={120}
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
-          </label>
-          <label className="form-field">
-            Адрес площадки
-            <input
-              disabled={mutation.isPending}
-              required
-              maxLength={300}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </label>
-        </div>
+        <fieldset className="support-location" disabled={mutation.isPending}>
+          <legend className="sr-only">Место площадки</legend>
+          <LocationPicker
+            idPrefix="support-venue"
+            preserveAddressOnPoint
+            cityLabel="Город площадки"
+            addressLabel="Адрес площадки"
+            value={location}
+            onChange={(value) => {
+              if (!mutation.isPending) setLocation(value);
+            }}
+            unmappedHint="Можно отправить город и адрес без точки или уточнить место на карте."
+          />
+        </fieldset>
       )}
       <label className="form-field">
         Подробности

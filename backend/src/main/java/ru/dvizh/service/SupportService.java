@@ -53,8 +53,9 @@ public class SupportService {
         } else if(input.commentId()!=null || input.reportReason()!=null)throw Problem.invalid("Комментарий указывается только для жалобы");
         if(input.category()==SupportApi.Category.VENUE_SUGGESTION) {
             if(input.venueCity()==null || input.venueCity().isBlank() || input.venueAddress()==null || input.venueAddress().isBlank())throw Problem.invalid("Укажите город и адрес площадки");
-            t.venueCity=input.venueCity();t.venueAddress=input.venueAddress();
-        } else if(input.venueCity()!=null || input.venueAddress()!=null)throw Problem.invalid("Адрес указывается только для предложения площадки");
+            if((input.venueLatitude()==null)!=(input.venueLongitude()==null))throw Problem.invalid("Укажите обе координаты площадки");
+            t.venueCity=input.venueCity();t.venueAddress=input.venueAddress();t.venueLatitude=input.venueLatitude();t.venueLongitude=input.venueLongitude();
+        } else if(input.venueCity()!=null || input.venueAddress()!=null || input.venueLatitude()!=null || input.venueLongitude()!=null)throw Problem.invalid("Место указывается только для предложения площадки");
         t.createdAt=clock.instant();t.updatedAt=t.createdAt;db.add(t);
         notifyAdmins(t,user.id,Api.NotificationType.SUPPORT_NEW,t.category==SupportApi.Category.COMMENT_REPORT?"Новая жалоба на комментарий":"Новое обращение в поддержку","support-new:"+t.id);
         return dto(t);
@@ -111,6 +112,6 @@ public class SupportService {
     private boolean terminal(SupportApi.Status status){return status==SupportApi.Status.CLOSED || status==SupportApi.Status.RESOLVED;}
     private String statusLabel(SupportApi.Status status){return switch(status){case OPEN->"Открыто";case IN_PROGRESS->"В работе";case WAITING_USER->"Ожидаем вашего ответа";case RESOLVED->"Решено";case CLOSED->"Закрыто";};}
     private String priorityLabel(SupportApi.Priority priority){return switch(priority){case NORMAL->"Обычный";case HIGH->"Высокий";case URGENT->"Срочный";};}
-    private SupportApi.Ticket dto(SupportTicketEntity t){return new SupportApi.Ticket(t.id,views.user(t.authorId),t.assignedTo==null?null:views.user(t.assignedTo),t.category,t.status,t.priority,t.title,t.description,t.commentId,t.eventId,t.commentText,t.commentAuthor,t.reportReason,t.venueCity,t.venueAddress,t.createdAt,t.updatedAt);}
+    private SupportApi.Ticket dto(SupportTicketEntity t){return new SupportApi.Ticket(t.id,views.user(t.authorId),t.assignedTo==null?null:views.user(t.assignedTo),t.category,t.status,t.priority,t.title,t.description,t.commentId,t.eventId,t.commentText,t.commentAuthor,t.reportReason,t.venueCity,t.venueAddress,t.venueLatitude,t.venueLongitude,t.createdAt,t.updatedAt);}
     private SupportApi.Message messageDto(SupportMessageEntity m){return new SupportApi.Message(m.id,m.ticketId,views.user(m.authorId),m.fromSupport,m.kind,m.text,m.createdAt);}
 }
