@@ -4,7 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { proxy: { "/api/v1": "http://localhost:8080" } },
+  server: {
+    host: "0.0.0.0",
+    proxy: { "/api/v1": "http://localhost:8080" },
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/tests/setup.ts"],

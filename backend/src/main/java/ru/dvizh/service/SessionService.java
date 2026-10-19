@@ -14,11 +14,23 @@ public class SessionService {
     public SessionService(Store db,Views view,@Value("${app.demo-enabled}") boolean demo){this.db=db;this.view=view;this.demo=demo;}
     private void requireDemo(){if(!demo)throw Problem.notFound();}
     public List<Api.DemoAccount> accounts() {
-        requireDemo();return db.list(UserEntity.class,"e.demoAccount is not null",Map.of(),"e.demoAccount asc",0,100).stream()
+        requireDemo();return db.list(UserEntity.class,"e.demoAccount is not null",Map.of(),"e.demoAccount asc",0,Integer.MAX_VALUE).stream()
             .map(u -> new Api.DemoAccount(u.demoAccount,u.displayName,roles(u),u.sportsRoles.stream().sorted().toList())).toList();
     }
     public UUID login(String account) {
         requireDemo();return db.first(UserEntity.class,"e.demoAccount=:account",Map.of("account",account)).orElseThrow(Problem::notFound).id;
+    }
+    @Transactional public UUID register(Api.DemoRegistrationRequest request) {
+        requireDemo();
+        String normalized=request.nickname().toLowerCase(Locale.ROOT);
+        if(db.count(UserEntity.class,"e.normalizedNickname=:name",Map.of("name",normalized))>0)
+            throw Problem.conflict(Api.ErrorCode.CONFLICT,"Никнейм уже занят");
+        var user=new UserEntity();
+        user.nickname=request.nickname();user.normalizedNickname=normalized;user.displayName=request.displayName();
+        user.admin=false;user.demoAccount="signup-"+user.id;
+        db.add(user);db.flush();
+        // The unique database constraint also handles concurrent requests for the same nickname.
+        return user.id;
     }
     public Api.Session session(UUID user,String token) {
         var u=db.get(UserEntity.class,user);

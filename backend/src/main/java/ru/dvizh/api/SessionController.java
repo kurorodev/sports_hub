@@ -23,8 +23,14 @@ public class SessionController {
         return new Api.Health("UP","dvizh-backend","1.0.0");
     }
     @GetMapping("/demo/accounts") public List<Api.DemoAccount> accounts(){return sessions.accounts();}
+    @PostMapping("/demo/accounts") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public Api.Session register(@Valid @RequestBody Api.DemoRegistrationRequest body,HttpServletRequest request,HttpServletResponse response) {
+        return establishSession(sessions.register(body),request,response);
+    }
     @PostMapping("/demo/session") public Api.Session login(@Valid @RequestBody Api.DemoLoginRequest body,HttpServletRequest request,HttpServletResponse response) {
-        UUID id=sessions.login(body.accountId());
+        return establishSession(sessions.login(body.accountId()),request,response);
+    }
+    private Api.Session establishSession(UUID id,HttpServletRequest request,HttpServletResponse response) {
         var old=request.getSession(false);if(old!=null)old.invalidate();
         var context=SecurityContextHolder.createEmptyContext();
         context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(id,null,List.of()));
