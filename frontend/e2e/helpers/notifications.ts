@@ -28,6 +28,10 @@ export function notificationScenarios(
       const url = `/events/${event.id}`;
       const ownerReason = `Уточните место встречи ${event.id}`;
       const commentReason = `Комментарий нарушает правила ${event.id}`;
+      const commentText =
+        width === 375
+          ? `Вопрос ${event.id}\n`.padEnd(2000, "я")
+          : `Вопрос ${event.id}\nМожно прийти без опыта?`;
       await signInAs(page, participant);
       await page.goto(url);
       await page
@@ -36,7 +40,7 @@ export function notificationScenarios(
       await expect(
         page.getByText("Вы участвуете", { exact: true }),
       ).toBeVisible();
-      await sendDiscussion(page, `Вопрос ${event.id}`);
+      await sendDiscussion(page, commentText);
       let dialog = await openNotifications(page);
       const joined = dialog
         .locator(".notification-item")
@@ -125,10 +129,28 @@ export function notificationScenarios(
       await expect(page.getByText(commentReason, { exact: true })).toHaveCount(
         0,
       );
-      dialog = await openNotifications(page);
       await expect(
-        dialog.locator(".notification-item").filter({ hasText: commentReason }),
-      ).toBeVisible();
+        page.getByText(`Вопрос ${event.id}`, { exact: true }),
+      ).toHaveCount(0);
+      dialog = await openNotifications(page);
+      const blockedComment = dialog
+        .locator(".notification-item")
+        .filter({ hasText: commentReason });
+      await expect(blockedComment).toBeVisible();
+      await expect(
+        blockedComment.getByRole("blockquote", { name: "Скрытый комментарий" }),
+      ).toContainText(`Вопрос ${event.id}`);
+      await expect(blockedComment).toContainText(title);
+      await expect(blockedComment.locator("blockquote p")).toHaveText(
+        commentText,
+      );
+      expect(
+        await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true);
+      await page.screenshot({
+        path: `test-results/notifications-comment-${label}-${width}.png`,
+        fullPage: true,
+      });
       await expect(dialog.getByText(ownerReason, { exact: false })).toHaveCount(
         0,
       );
@@ -138,6 +160,9 @@ export function notificationScenarios(
       await expect(
         dialog.getByText("Всё прочитано", { exact: true }),
       ).toBeVisible();
+      await expect(
+        blockedComment.getByRole("blockquote", { name: "Скрытый комментарий" }),
+      ).toContainText(`Вопрос ${event.id}`);
       await dialog
         .getByRole("button", { name: "Закрыть уведомления", exact: true })
         .click();
@@ -146,6 +171,9 @@ export function notificationScenarios(
       await expect(
         dialog.getByText("Всё прочитано", { exact: true }),
       ).toBeVisible();
+      await expect(
+        blockedComment.getByRole("blockquote", { name: "Скрытый комментарий" }),
+      ).toContainText(`Вопрос ${event.id}`);
     });
   }
 }

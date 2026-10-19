@@ -18,6 +18,7 @@ import { request, setCsrfToken } from "../shared/api/client";
 import { sessionQuery } from "../entities/session";
 import { makeSession, mockId } from "../mocks/database";
 import { notify } from "../mocks/notifications";
+import { saveComment } from "../mocks/comments";
 import type { components } from "../shared/api/generated/schema";
 import type { Session } from "../shared/api/types";
 import { relativeTime } from "../shared/lib/relative-time";
@@ -58,6 +59,58 @@ function mount(session: Session) {
 }
 type Page = components["schemas"]["NotificationPage"];
 describe("personal notifications", () => {
+  it("shows each blocked comment with its own reason only in the author's notifications", async () => {
+    const author = await login();
+    const eventId = mockId("morning-run");
+    const original = "<script>не HTML</script>\n" + "я".repeat(1975);
+    expect(original).toHaveLength(2000);
+    const first = saveComment(eventId, author.user, original);
+    const second = saveComment(eventId, author.user, "Другой мой вопрос");
+    await login("admin");
+    for (const [id, reason] of [
+      [first.id, "Первая причина"],
+      [second.id, "Вторая причина"],
+    ])
+      await request(`/admin/comments/${id}/hide`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      });
+    expect((await request<Page>("/me/notifications")).items).toHaveLength(0);
+    await login("user-maria");
+    expect((await request<Page>("/me/notifications")).items).toHaveLength(0);
+    await login();
+    const repo = createHttpNotificationRepository(request);
+    const page = await repo.list(0);
+    expect(page.items.map((n) => n.commentText)).toEqual(
+      expect.arrayContaining([original, second.text]),
+    );
+    const notice = page.items.find((n) => n.commentText === original)!;
+    expect((await repo.read(notice.id)).commentText).toBe(original);
+    const view = mount(author);
+    const user = userEvent.setup();
+    expect(screen.queryByText(original)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Уведомления/ }));
+    const quotes = await screen.findAllByRole("blockquote", {
+      name: "Скрытый комментарий",
+    });
+    const quote = quotes.find(
+      (el) => el.querySelector("p")?.textContent === original,
+    )!;
+    expect(quote).toBeVisible();
+    expect(quote.querySelector("script")).toBeNull();
+    expect(quote.closest("li")).toHaveTextContent("Первая причина");
+    expect(quote.closest("li")).not.toHaveTextContent("Вторая причина");
+    view.unmount();
+    mount(author);
+    await user.click(screen.getByRole("button", { name: /^Уведомления/ }));
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole("blockquote")
+          .some((el) => el.querySelector("p")?.textContent === original),
+      ).toBe(true),
+    );
+  });
   it("formats relative times up to a month", () => {
     const now = Date.parse("2026-10-20T12:00:00Z");
     const ago = (seconds: number) =>

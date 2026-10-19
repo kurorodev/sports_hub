@@ -33,7 +33,13 @@ class SportsCatalogMigrationTest {
         db.update("update events set status='UNPUBLISHED',moderation_reason='Personal event reason' where id=?",event);
         db.update("insert into events(id,created_at,updated_at,title,description,sport_id,event_kind,starts_at,city,address,skill_level,join_mode,organizer_organization_id,status,moderation_reason) values(?,current_timestamp,current_timestamp,'Org event','Keep org event',?,'ACTIVITY',current_timestamp,'City','Park','ANY','OPEN',?,'UNPUBLISHED','Organization event reason')",orgEvent,custom,org);
         db.update("insert into event_comments(id,created_at,updated_at,event_id,author_id,text,status,moderation_reason) values(?,current_timestamp,current_timestamp,?,?,'Old comment','HIDDEN','Personal comment reason')",comment,event,user);
+        Flyway.configure().dataSource(source).target("8").load().migrate();
+        db.update("update notifications set read_at=created_at where type='COMMENT_HIDDEN'");
+        var noticesBefore=db.queryForList("select id,recipient_id,type,text,reason,read_at,created_at,updated_at,version from notifications order by id");
         Flyway.configure().dataSource(source).load().migrate();
+        assertThat(db.queryForList("select id,recipient_id,type,text,reason,read_at,created_at,updated_at,version from notifications order by id")).isEqualTo(noticesBefore);
+        assertThat(db.queryForObject("select comment_text from notifications where type='COMMENT_HIDDEN'",String.class)).isEqualTo("Old comment");
+        assertThat(db.queryForObject("select count(*) from notifications where type<>'COMMENT_HIDDEN' and comment_text is not null",Integer.class)).isZero();
         assertThat(db.queryForObject("select count(*) from sports where canonical_id is null",Integer.class)).isEqualTo(201);
         assertThat(db.queryForObject("select count(*) from sports where registry_code is not null",Integer.class)).isEqualTo(200);
         UUID other=db.queryForObject("select id from sports where canonical_id is null and is_custom=true",UUID.class);

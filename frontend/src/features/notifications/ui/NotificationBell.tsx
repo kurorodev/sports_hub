@@ -170,6 +170,15 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
                   )}
                 </div>
                 <p>{item.text}</p>
+                {item.type === "COMMENT_HIDDEN" && item.commentText && (
+                  <blockquote
+                    className="notification-comment"
+                    aria-label="Скрытый комментарий"
+                  >
+                    <strong>Ваш комментарий</strong>
+                    <p>{item.commentText}</p>
+                  </blockquote>
+                )}
                 {item.reason && (
                   <p className="notification-reason">
                     <strong>Причина: </strong>

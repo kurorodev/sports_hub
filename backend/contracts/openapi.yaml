@@ -3313,6 +3313,12 @@ components:
         text:
           type: string
           maxLength: 2000
+        commentText:
+          type: string
+          nullable: true
+          maxLength: 2000
+          readOnly: true
+          description: Полный исходный текст скрытого комментария для его автора в личном уведомлении COMMENT_HIDDEN; у остальных типов отсутствует или null.
         reason:
           type: string
           nullable: true

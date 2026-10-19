@@ -296,6 +296,7 @@ export const handlers = [
         parsed.data.reason,
         `/events/${comment.eventId}`,
         `comment-hidden:${comment.id}`,
+        comment.text,
       );
       return json(hideComment(comment));
     },

@@ -66,6 +66,32 @@ class NotificationsTest extends ApiTestSupport {
         assertThat(notices(rep,"EVENT_UNPUBLISHED")).singleElement().extracting(n -> n.path("reason").asText()).isEqualTo("Уточните место встречи клуба");
         assertThat(notices(other,"EVENT_UNPUBLISHED")).isEmpty();
     }
+    @Test void hiddenCommentNotificationKeepsTheFullOriginalTextOnlyForItsAuthor() throws Exception {
+        var owner=login("coach");var author=login("athlete-a");var other=login("athlete-b");var admin=login("admin");
+        String event=createEvent(owner,"OPEN",2);
+        String original="<script>не HTML</script>\n"+"я".repeat(1975); // Full 2000-character comment, including the newline.
+        assertThat(original).hasSize(2000);
+        String comment=json(call(author,"POST","/events/"+event+"/comments",Map.of("text",original),201)).path("id").asText();
+        String second=json(call(author,"POST","/events/"+event+"/comments",Map.of("text","Другой мой вопрос"),201)).path("id").asText();
+        call(admin,"POST","/admin/comments/"+comment+"/hide",Map.of("reason","Причина первого скрытия"),200);
+        call(admin,"POST","/admin/comments/"+second+"/hide",Map.of("reason","Причина второго скрытия"),200);
+        var notices=notices(author,"COMMENT_HIDDEN");
+        assertThat(notices).hasSize(2);
+        var first=notices.stream().filter(n -> n.path("commentText").asText().equals(original)).findFirst().orElseThrow();
+        assertThat(first.path("reason").asText()).isEqualTo("Причина первого скрытия");
+        assertThat(first.path("text").asText()).isEqualTo(getJson(owner,"/events/"+event).path("title").asText());
+        assertThat(notices).anyMatch(n -> n.path("commentText").asText().equals("Другой мой вопрос") && n.path("reason").asText().equals("Причина второго скрытия"));
+        String noticeId=first.path("id").asText();
+        assertThat(json(call(author,"POST","/me/notifications/"+noticeId+"/read",null,200)).path("commentText").asText()).isEqualTo(original);
+        db.execute("update CommentEntity e set e.text=:text where e.id=:id",Map.of("text","Изменённый текст","id",UUID.fromString(comment)));
+        assertThat(notices(author,"COMMENT_HIDDEN")).anyMatch(n -> n.path("commentText").asText().equals(original));
+        for(var viewer:List.of(owner,other,admin)) {
+            assertThat(notices(viewer,"COMMENT_HIDDEN")).isEmpty();
+            call(viewer,"POST","/me/notifications/"+noticeId+"/read",null,404);
+        }
+        for(var viewer:List.of(owner,author,other))assertThat(getJson(viewer,"/events/"+event+"/comments").path("total").asInt()).isZero();
+        assertThat(getJson(null,"/events/"+event+"/comments").path("total").asInt()).isZero();
+    }
     @Test void readStateIsIdempotentAndBulkRespectsSnapshotAndAge() throws Exception {
         var a=login("athlete-a");var b=login("athlete-b");var user=UUID.fromString(a.id());var now=clock.instant();
         for(int i=0;i<25;i++)notifications.send(user,Api.NotificationType.EVENT_STATUS,"Событие "+i,"Описание",null,null,"test:"+i);

@@ -35,13 +35,21 @@ public class NotificationService {
         db.execute("update NotificationEntity e set e.readAt=:now,e.updatedAt=:now,e.version=e.version+1 where e.recipientId=:user and e.readAt is null and e.createdAt>=:since and e.createdAt<=:through",
             Map.of("user",user.id,"now",now,"since",now.minus(Duration.ofDays(30)),"through",through));
     }
-    private Api.Notification dto(NotificationEntity n){return new Api.Notification(n.id,n.type,n.title,n.text,n.reason,n.href,n.createdAt,n.readAt);}
+    private Api.Notification dto(NotificationEntity n){return new Api.Notification(n.id,n.type,n.title,n.text,n.reason,n.href,n.createdAt,n.readAt,n.commentText);}
 
     // Called inside the business mutation transaction; rejected/rolled back actions produce no notification.
     @Transactional public void send(UUID recipient,Api.NotificationType type,String title,String text,String reason,String href,String key) {
+        send(recipient,type,title,text,reason,href,key,null);
+    }
+    private void send(UUID recipient,Api.NotificationType type,String title,String text,String reason,String href,String key,String commentText) {
         if(db.count(NotificationEntity.class,"e.recipientId=:user and e.dedupeKey=:key",Map.of("user",recipient,"key",key))>0)return;
         var n=new NotificationEntity();n.recipientId=recipient;n.type=type;n.title=title;n.text=text;n.reason=reason;n.href=href;n.dedupeKey=key;
+        n.commentText=commentText;
         n.createdAt=clock.instant();n.updatedAt=n.createdAt;db.add(n);
+    }
+    @Transactional public void commentHidden(CommentEntity comment) {
+        var event=db.get(EventEntity.class,comment.eventId);
+        send(comment.authorId,Api.NotificationType.COMMENT_HIDDEN,"Ваш комментарий скрыт модератором",event.title,comment.moderationReason,"/events/"+event.id,"comment-hidden:"+comment.id,comment.text);
     }
     public UUID owner(EventEntity e){return e.organizerUserId!=null?e.organizerUserId:db.get(OrganizationEntity.class,e.organizerOrganizationId).createdBy;}
     public Set<UUID> attendees(EventEntity e) {

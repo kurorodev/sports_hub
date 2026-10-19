@@ -15,6 +15,7 @@ const schema = z.object({
   type: z.enum(notificationKinds),
   title: z.string(),
   text: z.string(),
+  commentText: z.string().nullable().optional(),
   reason: z.string().nullable(),
   href: z.string().nullable(),
   createdAt: z.string(),
@@ -45,6 +46,7 @@ export function notify(
   reason: string | null,
   href: string | null,
   dedupeKey: string = crypto.randomUUID(),
+  commentText: string | null = null,
 ) {
   const items = records();
   if (
@@ -62,6 +64,7 @@ export function notify(
       type,
       title,
       text,
+      commentText,
       reason,
       href,
       createdAt: new Date().toISOString(),
@@ -168,6 +171,7 @@ function dto(record: z.infer<typeof schema>): Notice {
     type: record.type,
     title: record.title,
     text: record.text,
+    commentText: record.commentText ?? null,
     reason: record.reason,
     href: record.href,
     createdAt: record.createdAt,

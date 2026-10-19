@@ -7,6 +7,7 @@ const notificationSchema = z.object({
   type: z.enum(notificationKinds),
   title: z.string(),
   text: z.string(),
+  commentText: z.string().max(2000).nullable().optional(),
   reason: z.string().nullable(),
   href: z
     .string()

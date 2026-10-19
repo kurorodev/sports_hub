@@ -1241,6 +1241,8 @@ export interface components {
             type: components["schemas"]["NotificationType"];
             title: string;
             text: string;
+            /** @description Полный исходный текст скрытого комментария для его автора в личном уведомлении COMMENT_HIDDEN; у остальных типов отсутствует или null. */
+            readonly commentText?: string | null;
             /** @description Личная причина; у участников чужого события отсутствует. */
             reason: string | null;
             href: string | null;

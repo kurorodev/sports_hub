@@ -43,7 +43,7 @@ public class DiscussionService {
     @Transactional public Api.Comment hide(UUID id,Api.ModerationRequest request) {
         access.requireAdmin();var candidate=db.get(CommentEntity.class,id);db.lock(EventEntity.class,candidate.eventId);var c=db.refreshLocked(candidate);
         if(c.status!=Api.CommentStatus.VISIBLE)throw Problem.transition();c.status=Api.CommentStatus.HIDDEN;c.moderationReason=request.reason();c.updatedAt=clock.instant();
-        organizations.audit(c.id,"COMMENT_HIDDEN",request.reason());notifications.send(c.authorId,Api.NotificationType.COMMENT_HIDDEN,"Ваш комментарий скрыт модератором",db.get(EventEntity.class,c.eventId).title,request.reason(),"/events/"+c.eventId,"comment-hidden:"+c.id);return view.comment(c);
+        organizations.audit(c.id,"COMMENT_HIDDEN",request.reason());notifications.commentHidden(c);return view.comment(c);
     }
     @Transactional public Api.Event unpublish(UUID id,Api.ModerationRequest request) {
         access.requireAdmin();var e=db.lock(EventEntity.class,id);if(e.status!=Api.EventStatus.PUBLISHED)throw Problem.transition();

@@ -17,6 +17,7 @@ export interface Notification {
   type: (typeof notificationKinds)[number];
   title: string;
   text: string;
+  commentText?: string | null;
   reason: string | null;
   href: string | null;
   createdAt: string;
