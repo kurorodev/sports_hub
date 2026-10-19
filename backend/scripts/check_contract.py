@@ -31,7 +31,9 @@ assert json.loads((resources / 'api-schemas.json').read_text()) == contract['com
 api = (root / 'src/main/java/ru/dvizh/api/Api.java').read_text()
 for name, schema in contract['components']['schemas'].items():
     if schema.get('type') == 'string' and 'enum' in schema:
-        values = re.search(r'public enum ' + name + r' \{ ([^}]+) \}', api).group(1)
+        support_names = {'SupportCategory': 'Category', 'SupportStatus': 'Status', 'SupportPriority': 'Priority', 'SupportReportReason': 'ReportReason'}
+        source = (root / 'src/main/java/ru/dvizh/api/SupportApi.java').read_text() if name in support_names else api
+        values = re.search(r'public enum ' + support_names.get(name, name) + r' \{ ([^}]+) \}', source).group(1)
         assert [v.strip() for v in values.split(',')] == schema['enum'], name
 ET.parse(root / 'pom.xml')
 yaml.safe_load((root / 'compose.yaml').read_text())

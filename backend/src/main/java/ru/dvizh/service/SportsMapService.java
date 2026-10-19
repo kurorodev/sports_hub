@@ -37,9 +37,15 @@ public class SportsMapService {
         return new Api.MapVenuesResponse(items(rows.stream().limit(limit).toList()),rows.size()>limit);
     }
     public Api.VenueMapItem create(Api.VenueCreate input) {
+        return create(input,false);
+    }
+    public Api.VenueMapItem createReviewed(Api.VenueCreate input) {
+        access.requireAdmin();return create(input,true);
+    }
+    private Api.VenueMapItem create(Api.VenueCreate input,boolean reviewed) {
         var user=db.lock(UserEntity.class,access.user().id);
         Instant now=clock.instant();
-        if(db.count(VenueEntity.class,"e.createdBy=:user and e.createdAt>:since",Map.of("user",user.id,"since",now.minus(Duration.ofHours(1))))>=3)
+        if(!reviewed && db.count(VenueEntity.class,"e.createdBy=:user and e.createdAt>:since",Map.of("user",user.id,"since",now.minus(Duration.ofHours(1))))>=3)
             throw new Problem(429,Api.ErrorCode.RATE_LIMITED,"Можно добавить не более 3 площадок за час",3600);
         String name=input.name().trim().replaceAll("\\s+"," ");
         if(name.length()<3) throw Problem.invalid("Название — от 3 символов");

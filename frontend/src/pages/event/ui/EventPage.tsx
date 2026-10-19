@@ -27,8 +27,12 @@ import {
 } from "../../../entities/event";
 import { JoinAction } from "../../../features/join-event";
 import { Participants } from "../../../entities/registration";
+import { useState } from "react";
+import { ReportCommentDialog } from "../../../features/support";
+import type { DiscussionComment } from "../../../entities/comment/model";
 
 export function EventPage() {
+  const [report, setReport] = useState<DiscussionComment | null>(null);
   const { eventId = "" } = useParams();
   const location = useLocation();
   const mapReturn = safeMapReturn(location.state);
@@ -146,12 +150,24 @@ export function EventPage() {
           <Participants eventId={event.id} />
           <EventDiscussion
             key={event.id}
+            onReport={session.data ? setReport : undefined}
             eventId={event.id}
             published={event.status === "PUBLISHED"}
             organizerUserId={
               event.organizer.type === "USER" ? event.organizer.id : undefined
             }
           />
+          {report && session.data && (
+            <ReportCommentDialog
+              viewerId={session.data.user.id}
+              comment={{
+                id: report.id,
+                text: report.text,
+                author: report.author.displayName,
+              }}
+              onClose={() => setReport(null)}
+            />
+          )}
         </div>
         <aside className="detail-summary">
           <h2>Встречаемся здесь</h2>

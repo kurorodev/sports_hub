@@ -72,7 +72,7 @@ public final class Api {
         if(value==null)return null;
         value=value.strip();return value.startsWith("@")?value.substring(1):value;
     }
-    public enum NotificationType { REGISTRATION_STATUS, NEW_REGISTRATION, ORGANIZATION_STATUS, EVENT_STATUS, EVENT_UNPUBLISHED, COMMENT_HIDDEN, EVENT_UPDATED, EVENT_STARTING, MENTION }
+    public enum NotificationType { REGISTRATION_STATUS, NEW_REGISTRATION, ORGANIZATION_STATUS, EVENT_STATUS, EVENT_UNPUBLISHED, COMMENT_HIDDEN, EVENT_UPDATED, EVENT_STARTING, MENTION, SUPPORT_NEW, SUPPORT_REPLY, SUPPORT_STATUS }
     public record Notification(UUID id,NotificationType type,String title,String text,String reason,String href,Instant createdAt,Instant readAt) {}
     public record NotificationPage(List<Notification> items,int page,int size,long total,int totalPages,long unreadCount,Instant asOf) {}
     public record NotificationsReadRequest(@NotNull Instant through) {}

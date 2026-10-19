@@ -2,12 +2,15 @@ import { MentionText } from "../../../shared/ui/MentionText";
 import { Link } from "react-router-dom";
 import { BadgeCheck } from "lucide-react";
 import type { DiscussionComment } from "../model";
+import type { ReactNode } from "react";
 export function CommentCard({
   comment,
   organizerUserId,
+  action,
 }: {
   comment: DiscussionComment;
   organizerUserId?: string;
+  action?: ReactNode;
 }) {
   const date = new Intl.DateTimeFormat("ru-RU", {
     day: "numeric",
@@ -19,6 +22,7 @@ export function CommentCard({
   }).format(new Date(comment.publishedAt));
   return (
     <article
+      id={`comment-${comment.id}`}
       className={`comment-card ${comment.visibility === "hidden" ? "comment-hidden" : ""}`}
       aria-label={`Сообщение: ${comment.author.displayName}`}
     >
@@ -46,6 +50,7 @@ export function CommentCard({
           <MentionText text={comment.text} mentions={comment.mentions} />
         )}
       </p>
+      {action}
     </article>
   );
 }

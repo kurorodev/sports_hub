@@ -79,7 +79,7 @@ export const boundaries = {
         });
       }
       if (
-        /^entities\/(registration|comment|organization|moderation|profile|notification)\/api\/http-[^/]+-repository/.test(
+        /^entities\/(registration|comment|organization|moderation|profile|notification|support)\/api\/http-[^/]+-repository/.test(
           to.relative,
         ) &&
         from.layer !== "app" &&

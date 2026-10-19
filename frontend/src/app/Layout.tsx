@@ -1,6 +1,6 @@
 import { NotificationBell } from "../features/notifications";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, UserRound } from "lucide-react";
+import { ArrowUpRight, UserRound, LifeBuoy } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "../shared/ui/Brand";
 import { apiConfig } from "../shared/api/client";
@@ -39,6 +39,13 @@ export function Layout() {
             )}
           </nav>
           <div className="header-actions">
+            <Link
+              className="support-header-link"
+              to="/support"
+              aria-label="Техническая поддержка"
+            >
+              <LifeBuoy size={21} aria-hidden="true" />
+            </Link>
             {session.data && !session.isError && (
               <NotificationBell
                 key={session.data.user.id}
@@ -75,6 +82,7 @@ export function Layout() {
         <div className="container footer-inner">
           <Brand />
           <p>Спорт начинается с компании.</p>
+          <Link to="/support">Техническая поддержка</Link>
           <span>ДВИЖ · прототип 2026</span>
         </div>
       </footer>
