@@ -20,6 +20,8 @@ const registration: Registration = {
 
 function repository(result: Registration | null): RegistrationRepository {
   return {
+    listRequests: vi.fn(),
+    decide: vi.fn(),
     join: vi.fn(async () => {
       if (!result) throw new RegistrationFailure("full");
       return result;
@@ -62,4 +64,13 @@ describe("registration use cases without React or HTTP", () => {
       code: "full",
     });
   });
+});
+
+it("accepts APPROVAL only as a pending application, never as immediate confirmation", async () => {
+  const approvalInput = { ...input, joinMode: "APPROVAL" as const };
+  const pending = { ...registration, status: "PENDING" as const };
+  expect(await joinEvent(repository(pending), approvalInput)).toEqual(pending);
+  await expect(
+    joinEvent(repository(registration), approvalInput),
+  ).rejects.toMatchObject({ code: "invalid-response" });
 });

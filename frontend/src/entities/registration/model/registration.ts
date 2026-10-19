@@ -8,13 +8,27 @@ export interface Registration {
   id: string;
   eventId: string;
   participant: Participant;
-  status: "CONFIRMED";
+  status: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED" | "WAITLISTED";
+  decisionReason?: string | null;
+  message?: string | null;
   registeredAt: string;
 }
 
 export interface ParticipantPage {
-  participants: (Participant & { joinedAt: string })[];
+  participants: Participant[];
   pageIndex: number;
   pageSize: number;
   totalCount: number;
+}
+
+export interface RegistrationPage {
+  registrations: Registration[];
+  pageIndex: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+export interface RegistrationDecision {
+  outcome: "accept" | "decline";
+  reason?: string;
 }

@@ -4,14 +4,19 @@ import {
   type RegistrationFailureCode,
   type RegistrationRepository,
 } from "../model";
-import { toParticipantPage, toRegistration } from "./mappers";
+import {
+  toParticipantPage,
+  toRegistration,
+  toRegistrationPage,
+} from "./mappers";
+import type { RegistrationDecisionRequest } from "../../../shared/api/types";
 
 const codeMap: Record<string, RegistrationFailureCode> = {
   ALREADY_REGISTERED: "already-registered",
   EVENT_FULL: "full",
   EVENT_NOT_AVAILABLE: "closed",
-  ORGANIZER_CANNOT_JOIN: "organizer",
-  REGISTRATION_MODE_UNAVAILABLE: "unsupported-mode",
+  NOT_EVENT_ORGANIZER: "forbidden",
+  INVALID_STATUS_TRANSITION: "conflict",
 };
 const statusMap: Record<number, RegistrationFailureCode> = {
   0: "network",
@@ -19,6 +24,7 @@ const statusMap: Record<number, RegistrationFailureCode> = {
   403: "forbidden",
   404: "not-found",
   409: "conflict",
+  400: "invalid-input",
   422: "invalid-input",
 };
 
@@ -54,6 +60,27 @@ export function createHttpRegistrationRepository(
 ): RegistrationRepository {
   const path = (id: string) => `/events/${encodeURIComponent(id)}`;
   return {
+    listRequests: (eventId, page, status, signal) =>
+      adaptFailure(async () => {
+        const params = new URLSearchParams({ page: String(page), size: "12" });
+        if (status) params.set("status", status);
+        return toRegistrationPage(
+          await http(`${path(eventId)}/registrations?${params}`, { signal }),
+        );
+      }),
+    decide: (eventId, registrationId, decision) =>
+      adaptFailure(async () => {
+        const body: RegistrationDecisionRequest = {
+          decision: decision.outcome === "accept" ? "APPROVE" : "REJECT",
+          ...(decision.reason ? { reason: decision.reason } : {}),
+        };
+        return toRegistration(
+          await http(
+            `${path(eventId)}/registrations/${encodeURIComponent(registrationId)}/decision`,
+            { method: "POST", body: JSON.stringify(body) },
+          ),
+        );
+      }),
     findMine: (eventId, signal) =>
       adaptFailure(async () => {
         let dto: unknown;
@@ -76,7 +103,10 @@ export function createHttpRegistrationRepository(
     join: (eventId) =>
       adaptFailure(async () =>
         toRegistration(
-          await http(`${path(eventId)}/registrations`, { method: "POST" }),
+          await http(`${path(eventId)}/registrations`, {
+            method: "POST",
+            body: "{}",
+          }),
         ),
       ),
   };

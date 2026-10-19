@@ -8,19 +8,23 @@ import { delay, http, HttpResponse } from "msw";
 import { server } from "./setup";
 import { ApiError, request, setCsrfToken } from "../shared/api/client";
 import type {
-  EventParticipant,
+  PublicUser,
   EventPreview,
   Page,
   Registration,
-} from "../shared/api/provisional";
+} from "../shared/api/types";
 import { switchAccount } from "../entities/session";
 import { createEvent } from "../entities/event";
 import { EventPage } from "../pages/event";
 import { myRegistrationQuery } from "../features/join-event/ui/queries";
 import { createHttpRegistrationRepository } from "../entities/registration/api/http-registration-repository";
+import { mockId, mockUser } from "../mocks/database";
 const repository = createHttpRegistrationRepository(request);
 const postRegistration = (eventId: string) =>
-  request<Registration>(`/events/${eventId}/registrations`, { method: "POST" });
+  request<Registration>(`/events/${eventId}/registrations`, {
+    method: "POST",
+    body: "{}",
+  });
 
 beforeEach(() =>
   vi
@@ -38,16 +42,17 @@ async function makeEvent() {
   return createEvent({
     title: "Два места на пробежку",
     description: "Бежим вместе по парку в спокойном темпе. Возьмите воду.",
-    sportId: "running",
+    sport: { sportId: mockId("running") },
+    organizer: { type: "USER", id: mockId("user-alex") },
     startsAt: "2026-11-07T18:00:00+03:00",
     location: { city: "Москва", address: "Вход в парк" },
-    skillLevel: "Любой уровень",
-    eventKind: "MEETUP",
+    skillLevel: "ANY",
+    eventKind: "ACTIVITY",
     joinMode: "OPEN",
-    capacity: 2,
+    maxParticipants: 2,
   });
 }
-function mount(eventId = "morning-run") {
+function mount(eventId = "82e2dd5f-0000-4000-8000-000000000000") {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -66,7 +71,7 @@ function mount(eventId = "morning-run") {
 }
 const details = (id: string) => request<EventPreview>(`/events/${id}`);
 const participants = (id: string, page = 0, size = 12) =>
-  request<Page<EventParticipant>>(
+  request<Page<PublicUser>>(
     `/events/${id}/participants?page=${page}&size=${size}`,
   );
 
@@ -78,12 +83,12 @@ describe("S3 OPEN API", () => {
       `/events/${event.id}/registrations`,
       {
         method: "POST",
-        body: JSON.stringify({ user: { id: "admin" }, status: "PENDING" }),
+        body: "{}",
       },
     );
     expect(joined).toMatchObject({
       status: "CONFIRMED",
-      user: { id: "user-maria", name: "Мария" },
+      user: { id: mockId("user-maria"), displayName: "Мария" },
     });
     expect(await details(event.id)).toMatchObject({
       confirmedCount: 1,
@@ -100,7 +105,7 @@ describe("S3 OPEN API", () => {
       viewerRegistrationStatus: null,
     });
     expect((await participants(event.id)).items).toEqual([
-      { user: { id: "user-maria", name: "Мария" }, joinedAt: joined.createdAt },
+      mockUser("user-maria", "Мария"),
     ]);
     await signIn();
     expect(await request(`/events/${event.id}/my-registration`)).toEqual(
@@ -113,42 +118,50 @@ describe("S3 OPEN API", () => {
     const client = new QueryClient();
     expect(
       await client.fetchQuery(
-        myRegistrationQuery(repository, "morning-run", "user-maria"),
+        myRegistrationQuery(
+          repository,
+          "82e2dd5f-0000-4000-8000-000000000000",
+          "user-maria",
+        ),
       ),
     ).toBeNull();
     server.use(
-      http.get("/api/v1/events/morning-run/my-registration", () =>
-        HttpResponse.json({}, { status: 503 }),
+      http.get(
+        "/api/v1/events/82e2dd5f-0000-4000-8000-000000000000/my-registration",
+        () => HttpResponse.json({}, { status: 503 }),
       ),
     );
     await expect(
       client.fetchQuery(
-        myRegistrationQuery(repository, "morning-run", "user-maria"),
+        myRegistrationQuery(
+          repository,
+          "82e2dd5f-0000-4000-8000-000000000000",
+          "user-maria",
+        ),
       ),
     ).rejects.toMatchObject({ code: "unavailable" });
   });
 
   it("protects guest, CSRF, organizer, missing event and APPROVAL boundaries", async () => {
-    await expect(postRegistration("morning-run")).rejects.toMatchObject({
+    await expect(
+      postRegistration("82e2dd5f-0000-4000-8000-000000000000"),
+    ).rejects.toMatchObject({
       status: 401,
     });
     await signIn();
     setCsrfToken("expired");
-    await expect(postRegistration("morning-run")).rejects.toMatchObject({
+    await expect(
+      postRegistration("82e2dd5f-0000-4000-8000-000000000000"),
+    ).rejects.toMatchObject({
       status: 403,
     });
     await signIn();
     await expect(postRegistration("missing")).rejects.toMatchObject({
       status: 404,
     });
-    await expect(postRegistration("tennis-sunday")).rejects.toMatchObject({
-      status: 403,
-      body: { code: "ORGANIZER_CANNOT_JOIN" },
-    });
-    await expect(postRegistration("basketball-yard")).rejects.toMatchObject({
-      status: 501,
-      body: { code: "REGISTRATION_MODE_UNAVAILABLE" },
-    });
+    expect(
+      await postRegistration("6d69380d-0000-4000-8000-000000000000"),
+    ).toMatchObject({ status: "PENDING" });
   });
 
   it("enforces capacity and deduplicates concurrent duplicate requests at the last spot", async () => {
@@ -173,7 +186,7 @@ describe("S3 OPEN API", () => {
     });
     expect(await details(event.id)).toMatchObject({
       confirmedCount: 2,
-      capacity: 2,
+      maxParticipants: 2,
     });
     expect((await participants(event.id)).total).toBe(2);
     const available = await request<Page<EventPreview>>(
@@ -184,33 +197,41 @@ describe("S3 OPEN API", () => {
 
   it("closes started events without erasing an earlier confirmed registration", async () => {
     await signIn();
-    await postRegistration("morning-run");
+    await postRegistration("82e2dd5f-0000-4000-8000-000000000000");
     vi.mocked(Date.now).mockReturnValue(
       new Date("2026-11-01T00:00:00Z").getTime(),
     );
-    expect(await details("morning-run")).toMatchObject({
-      registrationOpen: false,
-      viewerRegistrationStatus: "CONFIRMED",
-    });
+    expect(await details("82e2dd5f-0000-4000-8000-000000000000")).toMatchObject(
+      {
+        status: "PUBLISHED",
+        viewerRegistrationStatus: "CONFIRMED",
+      },
+    );
     await signIn("user-alex");
-    await expect(postRegistration("morning-run")).rejects.toMatchObject({
+    await expect(
+      postRegistration("82e2dd5f-0000-4000-8000-000000000000"),
+    ).rejects.toMatchObject({
       status: 409,
       body: { code: "EVENT_NOT_AVAILABLE" },
     });
   });
 
   it("has a consistent seeded participant list and working pagination", async () => {
-    const event = await details("morning-run");
-    const page = await participants("morning-run", 1, 3);
+    const event = await details("82e2dd5f-0000-4000-8000-000000000000");
+    const page = await participants(
+      "82e2dd5f-0000-4000-8000-000000000000",
+      1,
+      3,
+    );
     expect(page).toMatchObject({
       page: 1,
       size: 3,
       total: event.confirmedCount,
     });
     expect(page.items).toHaveLength(3);
-    expect((await participants("morning-run", 0, 3)).items).not.toEqual(
-      page.items,
-    );
+    expect(
+      (await participants("82e2dd5f-0000-4000-8000-000000000000", 0, 3)).items,
+    ).not.toEqual(page.items);
     await expect(participants("missing")).rejects.toBeInstanceOf(ApiError);
   });
 });
@@ -219,17 +240,20 @@ describe("S3 participation UI", () => {
   it("does not confirm a successful HTTP response for a different account", async () => {
     await signIn();
     server.use(
-      http.post("/api/v1/events/morning-run/registrations", () =>
-        HttpResponse.json(
-          {
-            id: "wrong-registration",
-            eventId: "morning-run",
-            user: { id: "admin", name: "Администратор" },
-            status: "CONFIRMED",
-            createdAt: "2026-10-19T12:00:00Z",
-          },
-          { status: 201 },
-        ),
+      http.post(
+        "/api/v1/events/82e2dd5f-0000-4000-8000-000000000000/registrations",
+        () =>
+          HttpResponse.json(
+            {
+              id: "wrong-registration",
+              eventId: "82e2dd5f-0000-4000-8000-000000000000",
+              user: mockUser("admin", "Администратор"),
+              status: "CONFIRMED",
+              createdAt: "2026-10-19T12:00:00Z",
+              updatedAt: "2026-10-19T12:00:00Z",
+            },
+            { status: 201 },
+          ),
       ),
     );
     mount();
@@ -246,7 +270,10 @@ describe("S3 participation UI", () => {
     mount();
     expect(
       await screen.findByRole("link", { name: "Войти для записи" }),
-    ).toHaveAttribute("href", "/login?next=join-event&eventId=morning-run");
+    ).toHaveAttribute(
+      "href",
+      "/login?next=join-event&eventId=82e2dd5f-0000-4000-8000-000000000000",
+    );
     expect(
       await screen.findByRole("list", { name: "Кто идёт" }),
     ).toBeInTheDocument();
@@ -255,10 +282,13 @@ describe("S3 participation UI", () => {
   it("waits for API success, retries failure, and refreshes participants and event count", async () => {
     await signIn();
     server.use(
-      http.post("/api/v1/events/morning-run/registrations", async () => {
-        await delay(150);
-        return HttpResponse.json({}, { status: 503 });
-      }),
+      http.post(
+        "/api/v1/events/82e2dd5f-0000-4000-8000-000000000000/registrations",
+        async () => {
+          await delay(150);
+          return HttpResponse.json({}, { status: 503 });
+        },
+      ),
     );
     mount();
     await userEvent.click(
@@ -291,12 +321,12 @@ describe("S3 participation UI", () => {
     const button = await screen.findByRole("button", {
       name: "Присоединиться",
     });
-    await postRegistration("morning-run");
+    await postRegistration("82e2dd5f-0000-4000-8000-000000000000");
     await userEvent.click(button);
     expect(await screen.findByText("Вы участвуете")).toBeInTheDocument();
     expect(
-      (await participants("morning-run")).items.filter(
-        (item) => item.user.id === "user-maria",
+      (await participants("82e2dd5f-0000-4000-8000-000000000000")).items.filter(
+        (item) => item.id === mockId("user-maria"),
       ),
     ).toHaveLength(1);
   });
@@ -304,8 +334,9 @@ describe("S3 participation UI", () => {
   it("does not join while own-registration lookup fails and offers retry", async () => {
     await signIn();
     server.use(
-      http.get("/api/v1/events/morning-run/my-registration", () =>
-        HttpResponse.json({}, { status: 503 }),
+      http.get(
+        "/api/v1/events/82e2dd5f-0000-4000-8000-000000000000/my-registration",
+        () => HttpResponse.json({}, { status: 503 }),
       ),
     );
     mount();
@@ -327,8 +358,9 @@ describe("S3 participation UI", () => {
   it("supports participant error/retry independently of the join action", async () => {
     await signIn();
     server.use(
-      http.get("/api/v1/events/morning-run/participants", () =>
-        HttpResponse.json({}, { status: 503 }),
+      http.get(
+        "/api/v1/events/82e2dd5f-0000-4000-8000-000000000000/participants",
+        () => HttpResponse.json({}, { status: 503 }),
       ),
     );
     mount();
@@ -347,7 +379,7 @@ describe("S3 participation UI", () => {
 
   it("keeps confirmed participation visible on a past event", async () => {
     await signIn();
-    await postRegistration("morning-run");
+    await postRegistration("82e2dd5f-0000-4000-8000-000000000000");
     vi.mocked(Date.now).mockReturnValue(
       new Date("2026-11-01T00:00:00Z").getTime(),
     );

@@ -102,7 +102,7 @@ export function CatalogPage() {
               key={params.get("q") ?? ""}
               name="q"
               defaultValue={params.get("q") ?? ""}
-              placeholder="Вид спорта, название или настроение"
+              placeholder="Название или описание встречи"
             />
           </label>
           <label className="city-field">
@@ -162,7 +162,7 @@ export function CatalogPage() {
               </summary>
               <div className="filter-fields">
                 <label>
-                  Дата от
+                  Дата от (UTC)
                   <input
                     type="date"
                     value={params.get("from") ?? ""}
@@ -170,7 +170,7 @@ export function CatalogPage() {
                   />
                 </label>
                 <label>
-                  Дата до
+                  Дата до (UTC)
                   <input
                     type="date"
                     min={params.get("from") ?? undefined}
@@ -187,9 +187,11 @@ export function CatalogPage() {
                     }
                   >
                     <option value="">Любой</option>
-                    <option>Начинающий</option>
-                    <option>Средний</option>
-                    <option>Любой уровень</option>
+                    <option value="BEGINNER">Начинающий</option>
+                    <option value="AMATEUR">Любитель</option>
+                    <option value="ADVANCED">Продвинутый</option>
+                    <option value="PROFESSIONAL">Профессиональный</option>
+                    <option value="ANY">Любой уровень</option>
                   </select>
                 </label>
                 <label>

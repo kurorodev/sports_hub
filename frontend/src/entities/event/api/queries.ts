@@ -1,11 +1,14 @@
+import { isUuid } from "../../../shared/lib/identifiers";
 import { queryOptions } from "@tanstack/react-query";
 import { request } from "../../../shared/api/client";
 import type {
   EventPreview,
+  EventCardDto,
+  TeamStatus,
   Page,
   Sport,
-} from "../../../shared/api/provisional";
-import type { CreateEventInput } from "../../../shared/api/provisional-event-schema";
+} from "../../../shared/api/types";
+import type { CreateEventInput } from "../../../shared/api/event-schema";
 
 export const sportsQuery = queryOptions({
   queryKey: ["sports"],
@@ -22,13 +25,33 @@ export function createEvent(input: CreateEventInput) {
 export const eventsQuery = (params: URLSearchParams) =>
   queryOptions({
     queryKey: ["events", params.toString()],
-    queryFn: ({ signal }) =>
-      request<Page<EventPreview>>(`/events?${params}`, { signal }),
+    queryFn: ({ signal }) => {
+      const apiParams = new URLSearchParams(params);
+      // Calendar filters have an explicit UTC boundary; never send a date-only value to Java.
+      for (const key of ["from", "to"]) {
+        const value = apiParams.get(key);
+        if (value && /^\d{4}-\d{2}-\d{2}$/.test(value))
+          apiParams.set(
+            key,
+            `${value}T${key === "from" ? "00:00:00" : "23:59:59.999"}Z`,
+          );
+      }
+      if (!apiParams.has("size")) apiParams.set("size", "6");
+      return request<Page<EventCardDto>>(`/events?${apiParams}`, { signal });
+    },
   });
 export const eventQuery = (id: string) =>
   queryOptions({
     queryKey: ["events", "detail", id],
-    queryFn: ({ signal }) =>
-      request<EventPreview>(`/events/${encodeURIComponent(id)}`, { signal }),
+    enabled: isUuid(id),
+    queryFn: async ({ signal }) => {
+      const path = `/events/${encodeURIComponent(id)}`;
+      const event = await request<EventPreview>(path, { signal });
+      // /team supplies server availability; the UI does not infer rights from its clock.
+      const team = await request<TeamStatus>(`${path}/team`, { signal });
+      if (team.eventId !== event.id)
+        throw new Error("Несогласованные данные события");
+      return { ...event, team };
+    },
     retry: false,
   });

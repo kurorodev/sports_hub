@@ -14,7 +14,9 @@ async function signIn(page: Page, name: string) {
 async function createOpenEvent(page: Page, title: string) {
   await page.goto("/events/new");
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
-  await page.getByLabel("Вид спорта", { exact: true }).selectOption("running");
+  await page
+    .getByLabel("Вид спорта", { exact: true })
+    .selectOption("147eb74c-0000-4000-8000-000000000000");
   await page
     .getByLabel("О встрече", { exact: true })
     .fill("Вместе бежим в спокойном темпе, после можно выпить кофе.");
@@ -69,7 +71,7 @@ for (const width of [375, 768, 1440]) {
     expect(joined.status()).toBe(201);
     expect(await joined.json()).toMatchObject({
       status: "CONFIRMED",
-      user: { name: "Мария" },
+      user: { displayName: "Мария" },
     });
     await expect(
       page.getByText("Вы участвуете", { exact: true }),
@@ -146,15 +148,17 @@ for (const width of [375, 768, 1440]) {
 test("guest login returns to event and APPROVAL is not treated as OPEN", async ({
   page,
 }) => {
-  await page.goto("/events/morning-run");
+  await page.goto("/events/82e2dd5f-0000-4000-8000-000000000000");
   await page.getByRole("link", { name: "Войти для записи" }).click();
   await page.getByLabel("Мария", { exact: false }).check();
   await page.getByRole("button", { name: "Войти в аккаунт" }).click();
-  await expect(page).toHaveURL("/events/morning-run");
+  await expect(page).toHaveURL("/events/82e2dd5f-0000-4000-8000-000000000000");
   await page.getByRole("button", { name: "Присоединиться" }).click();
   await expect(page.getByText("Вы участвуете", { exact: true })).toBeVisible();
-  await page.goto("/events/basketball-yard");
-  await expect(page.getByText(/Подача заявки пока недоступна/)).toBeVisible();
+  await page.goto("/events/6d69380d-0000-4000-8000-000000000000");
+  await expect(
+    page.getByRole("button", { name: "Подать заявку", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Присоединиться" }),
   ).toHaveCount(0);
@@ -164,7 +168,7 @@ for (const width of [320, 1024]) {
   test(`participant list and join action fit ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await signIn(page, "Мария");
-    await page.goto("/events/morning-run");
+    await page.goto("/events/82e2dd5f-0000-4000-8000-000000000000");
     await expect(
       page.getByRole("button", { name: "Присоединиться" }),
     ).toBeVisible();

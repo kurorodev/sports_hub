@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { http, HttpResponse } from "msw";
 import {
   accounts,
@@ -7,10 +8,22 @@ import {
   saveEvent,
   getRegistrations,
   saveRegistration,
+  decideRegistration,
 } from "./database";
 import { apiConfig } from "../shared/api/client";
-import { createEventSchema } from "../shared/api/provisional-event-schema";
+import { createEventSchema } from "../shared/api/event-schema";
 
+function json(body: unknown, init?: ResponseInit) {
+  if (body && typeof body === "object" && "code" in body)
+    return HttpResponse.json(
+      { requestId: crypto.randomUUID(), details: [], ...body },
+      init,
+    );
+  return new HttpResponse(JSON.stringify(body), {
+    ...init,
+    headers: { "Content-Type": "application/json" },
+  });
+}
 const api = apiConfig.baseUrl;
 const sessionKey = "dvizh.mock.account";
 let memoryAccount: string | null = null;
@@ -25,13 +38,10 @@ export function resetMockSession() {
   if (typeof localStorage !== "undefined") localStorage.removeItem(sessionKey);
 }
 const notFound = () =>
-  HttpResponse.json(
-    { code: "NOT_FOUND", message: "Не найдено" },
-    { status: 404 },
-  );
+  json({ code: "NOT_FOUND", message: "Не найдено" }, { status: 404 });
 
 export const handlers = [
-  http.get(`${api}/demo/accounts`, () => HttpResponse.json(accounts)),
+  http.get(`${api}/demo/accounts`, () => json(accounts)),
   http.post(`${api}/demo/session`, async ({ request }) => {
     const body: unknown = await request.json();
     if (
@@ -40,7 +50,7 @@ export const handlers = [
       !("accountId" in body) ||
       typeof body.accountId !== "string"
     ) {
-      return HttpResponse.json(
+      return json(
         { code: "VALIDATION_ERROR", message: "Укажите аккаунт" },
         { status: 422 },
       );
@@ -50,27 +60,24 @@ export const handlers = [
     memoryAccount = body.accountId;
     if (typeof localStorage !== "undefined")
       localStorage.setItem(sessionKey, body.accountId);
-    return HttpResponse.json(session);
+    return json(session);
   }),
   http.get(`${api}/session`, () => {
     const session = makeSession(savedAccount() ?? "");
     return session
-      ? HttpResponse.json(session)
-      : HttpResponse.json(
-          { code: "UNAUTHORIZED", message: "Войдите" },
-          { status: 401 },
-        );
+      ? json(session)
+      : json({ code: "UNAUTHENTICATED", message: "Войдите" }, { status: 401 });
   }),
-  http.get(`${api}/sports`, () => HttpResponse.json(getSports())),
+  http.get(`${api}/sports`, () => json(getSports())),
   http.post(`${api}/events`, async ({ request }) => {
     const session = makeSession(savedAccount() ?? "");
     if (!session)
-      return HttpResponse.json(
-        { code: "UNAUTHORIZED", message: "Войдите" },
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
         { status: 401 },
       );
     if (request.headers.get("X-CSRF-Token") !== session.csrfToken) {
-      return HttpResponse.json(
+      return json(
         { code: "FORBIDDEN", message: "Сессия изменилась. Обновите страницу." },
         { status: 403 },
       );
@@ -79,48 +86,64 @@ export const handlers = [
       await request.json().catch(() => null),
     );
     if (!parsed.success) {
-      const fieldErrors = Object.fromEntries(
-        parsed.error.issues.map((issue) => [
-          issue.path.join("."),
-          issue.message,
-        ]),
-      );
-      return HttpResponse.json(
-        { code: "VALIDATION_ERROR", message: "Проверьте поля", fieldErrors },
+      const details = parsed.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return json(
+        { code: "VALIDATION_ERROR", message: "Проверьте поля", details },
         { status: 422 },
       );
     }
+    if (
+      parsed.data.organizer.type !== "USER" ||
+      parsed.data.organizer.id !== session.user.id
+    )
+      return json(
+        {
+          code: "FORBIDDEN",
+          message: "Недостаточно прав для публикации от этого организатора",
+        },
+        { status: 403 },
+      );
     const event = saveEvent(parsed.data, session.user.id);
     if (!event)
-      return HttpResponse.json(
+      return json(
         {
           code: "VALIDATION_ERROR",
           message: "Спорт больше не доступен",
-          fieldErrors: {
-            sportId: "Выберите спорт из списка или добавьте свой",
-          },
+          details: [
+            {
+              field: "sport.sportId",
+              message: "Выберите спорт из списка или добавьте свой",
+            },
+          ],
         },
         { status: 422 },
       );
-    return HttpResponse.json(event, { status: 201 });
+    return json(event, { status: 201 });
   }),
   http.get(`${api}/events`, ({ request }) => {
     const p = new URL(request.url).searchParams;
     const q = (p.get("q") ?? "").trim().toLocaleLowerCase("ru");
-    let items = getEvents(savedAccount() ?? undefined).filter(
+    let items = getEvents(makeSession(savedAccount() ?? "")?.user.id).filter(
       (event) =>
+        event.status === "PUBLISHED" &&
         (!q ||
-          `${event.title} ${event.description} ${event.sport.name}`
+          `${event.title} ${event.description}`
             .toLocaleLowerCase("ru")
             .includes(q)) &&
         (!p.get("sportId") || event.sport.id === p.get("sportId")) &&
         (!p.get("city") || event.location.city === p.get("city")) &&
         (!p.get("skillLevel") || event.skillLevel === p.get("skillLevel")) &&
         (!p.get("joinMode") || event.joinMode === p.get("joinMode")) &&
-        (!p.get("from") || event.startsAt.slice(0, 10) >= p.get("from")!) &&
-        (!p.get("to") || event.startsAt.slice(0, 10) <= p.get("to")!) &&
+        (!p.get("from") ||
+          Date.parse(event.startsAt) >= Date.parse(p.get("from")!)) &&
+        (!p.get("to") ||
+          Date.parse(event.startsAt) <= Date.parse(p.get("to")!)) &&
         (p.get("hasSpots") !== "true" ||
-          event.confirmedCount < event.capacity) &&
+          event.maxParticipants == null ||
+          event.confirmedCount < event.maxParticipants) &&
         (p.get("includePast") === "true" ||
           new Date(event.startsAt).getTime() >= Date.now()),
     );
@@ -131,24 +154,53 @@ export const handlers = [
     );
     const page = Math.max(0, Number(p.get("page")) || 0);
     const size = Math.min(24, Math.max(1, Number(p.get("size")) || 6));
-    return HttpResponse.json({
+    return json({
       items: items.slice(page * size, (page + 1) * size),
       page,
       size,
       total: items.length,
+      totalPages: Math.ceil(items.length / size),
     });
   }),
   http.get(`${api}/events/:eventId`, ({ params }) => {
-    const event = getEvents(savedAccount() ?? undefined).find(
+    const event = getEvents(makeSession(savedAccount() ?? "")?.user.id).find(
       (item) => item.id === params.eventId,
     );
-    return event ? HttpResponse.json(event) : notFound();
+    return event ? json(event) : notFound();
+  }),
+  http.get(`${api}/events/:eventId/team`, ({ params }) => {
+    const session = makeSession(savedAccount() ?? "");
+    const event = getEvents(session?.user.id).find(
+      (item) => item.id === params.eventId,
+    );
+    if (!event) return notFound();
+    const available =
+      event.status === "PUBLISHED" && Date.parse(event.startsAt) > Date.now();
+    const canJoin =
+      event.viewerRegistrationStatus == null ||
+      event.viewerRegistrationStatus === "CANCELLED";
+    const full =
+      event.maxParticipants != null &&
+      event.confirmedCount >= event.maxParticipants;
+    return json({
+      eventId: event.id,
+      maxParticipants: event.maxParticipants,
+      confirmedCount: event.confirmedCount,
+      pendingCount: event.pendingCount,
+      waitlistedCount: 0,
+      spotsLeft: event.spotsLeft,
+      viewerStatus: event.viewerRegistrationStatus,
+      joinAvailable:
+        available && canJoin && (event.joinMode === "APPROVAL" || !full),
+      waitlistAvailable:
+        available && canJoin && event.joinMode === "OPEN" && full,
+    });
   }),
   http.get(`${api}/events/:eventId/my-registration`, ({ params }) => {
     const session = makeSession(savedAccount() ?? "");
     if (!session)
-      return HttpResponse.json(
-        { code: "UNAUTHORIZED", message: "Войдите" },
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
         { status: 401 },
       );
     if (!getEvents().some((event) => event.id === params.eventId))
@@ -156,7 +208,7 @@ export const handlers = [
     const registration = getRegistrations(String(params.eventId)).find(
       (item) => item.user.id === session.user.id,
     );
-    return registration ? HttpResponse.json(registration) : notFound();
+    return registration ? json(registration) : notFound();
   }),
   http.get(`${api}/events/:eventId/participants`, ({ params, request }) => {
     if (!getEvents().some((event) => event.id === params.eventId))
@@ -170,74 +222,218 @@ export const handlers = [
     const items = getRegistrations(String(params.eventId))
       .filter((item) => item.status === "CONFIRMED")
       .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-      .map((item) => ({ user: item.user, joinedAt: item.createdAt }));
-    return HttpResponse.json({
+      .map((item) => item.user);
+    return json({
       items: items.slice(page * size, (page + 1) * size),
       page,
       size,
       total: items.length,
+      totalPages: Math.ceil(items.length / size),
     });
   }),
-  http.post(`${api}/events/:eventId/registrations`, ({ params, request }) => {
+  http.post(
+    `${api}/events/:eventId/registrations`,
+    async ({ params, request }) => {
+      const session = makeSession(savedAccount() ?? "");
+      if (!session)
+        return json(
+          { code: "UNAUTHENTICATED", message: "Войдите" },
+          { status: 401 },
+        );
+      if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+        return json(
+          { code: "FORBIDDEN", message: "Обновите сессию" },
+          { status: 403 },
+        );
+      const input = z
+        .object({ message: z.string().max(1000).nullable().optional() })
+        .strict()
+        .safeParse(await request.json().catch(() => null));
+      if (!input.success)
+        return json(
+          {
+            code: "VALIDATION_ERROR",
+            message: "Ожидается JSON объекта заявки",
+          },
+          { status: 422 },
+        );
+      const event = getEvents(session.user.id).find(
+        (item) => item.id === params.eventId,
+      );
+      if (!event) return notFound();
+      if (
+        getRegistrations(event.id).some(
+          (item) => item.user.id === session.user.id,
+        )
+      )
+        return json(
+          { code: "ALREADY_REGISTERED", message: "Вы уже участвуете" },
+          { status: 409 },
+        );
+      if (
+        event.status !== "PUBLISHED" ||
+        Date.parse(event.startsAt) <= Date.now()
+      )
+        return json(
+          {
+            code: "EVENT_NOT_AVAILABLE",
+            message: "Запись на эту встречу закрыта",
+          },
+          { status: 409 },
+        );
+      if (
+        event.joinMode === "OPEN" &&
+        event.maxParticipants != null &&
+        event.confirmedCount >= event.maxParticipants
+      )
+        return json(
+          { code: "EVENT_FULL", message: "Все места уже заняты" },
+          { status: 409 },
+        );
+      // Validation + append run synchronously in this mock context, including duplicate/capacity checks.
+      return json(
+        saveRegistration(
+          event.id,
+          session.user,
+          event.joinMode === "OPEN" ? "CONFIRMED" : "PENDING",
+          input.data.message,
+        ),
+        {
+          status: 201,
+        },
+      );
+    },
+  ),
+  http.get(`${api}/events/:eventId/registrations`, ({ params, request }) => {
     const session = makeSession(savedAccount() ?? "");
     if (!session)
-      return HttpResponse.json(
-        { code: "UNAUTHORIZED", message: "Войдите" },
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
         { status: 401 },
-      );
-    if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
-      return HttpResponse.json(
-        { code: "FORBIDDEN", message: "Обновите сессию" },
-        { status: 403 },
       );
     const event = getEvents(session.user.id).find(
       (item) => item.id === params.eventId,
     );
     if (!event) return notFound();
-    if (
-      getRegistrations(event.id).some(
-        (item) => item.user.id === session.user.id,
-      )
-    )
-      return HttpResponse.json(
-        { code: "ALREADY_REGISTERED", message: "Вы уже участвуете" },
-        { status: 409 },
-      );
-    if (event.viewerIsOrganizer)
-      return HttpResponse.json(
-        {
-          code: "ORGANIZER_CANNOT_JOIN",
-          message: "Вы организатор этой встречи",
-        },
+    if (!event.viewerIsOrganizer && !session.systemRoles.includes("ADMIN"))
+      return json(
+        { code: "FORBIDDEN", message: "Нет доступа к заявкам" },
         { status: 403 },
       );
+    const p = new URL(request.url).searchParams;
+    const status = p.get("status");
     if (
-      event.status !== "PUBLISHED" ||
-      Date.parse(event.startsAt) <= Date.now()
+      status &&
+      !["PENDING", "CONFIRMED", "REJECTED", "CANCELLED", "WAITLISTED"].includes(
+        status,
+      )
     )
-      return HttpResponse.json(
-        {
-          code: "EVENT_NOT_AVAILABLE",
-          message: "Запись на эту встречу закрыта",
-        },
-        { status: 409 },
+      return json(
+        { code: "VALIDATION_ERROR", message: "Неизвестный статус" },
+        { status: 400 },
       );
-    if (event.joinMode !== "OPEN")
-      return HttpResponse.json(
-        {
-          code: "REGISTRATION_MODE_UNAVAILABLE",
-          message: "Запись по заявке пока недоступна",
-        },
-        { status: 501 },
+    const page = Math.max(0, Math.floor(Number(p.get("page")) || 0));
+    const size = Math.min(
+      100,
+      Math.max(1, Math.floor(Number(p.get("size")) || 20)),
+    );
+    const items = getRegistrations(event.id)
+      .filter((item) => !status || item.status === status)
+      .sort(
+        (a, b) =>
+          Date.parse(a.createdAt) - Date.parse(b.createdAt) ||
+          a.id.localeCompare(b.id),
       );
-    if (event.confirmedCount >= event.capacity)
-      return HttpResponse.json(
-        { code: "EVENT_FULL", message: "Все места уже заняты" },
-        { status: 409 },
-      );
-    // Validation + append run synchronously in this mock context, including duplicate/capacity checks.
-    return HttpResponse.json(saveRegistration(event.id, session.user), {
-      status: 201,
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
     });
   }),
+  http.post(
+    `${api}/events/:eventId/registrations/:registrationId/decision`,
+    async ({ params, request }) => {
+      const session = makeSession(savedAccount() ?? "");
+      if (!session)
+        return json(
+          { code: "UNAUTHENTICATED", message: "Войдите" },
+          { status: 401 },
+        );
+      if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+        return json(
+          { code: "FORBIDDEN", message: "Обновите сессию" },
+          { status: 403 },
+        );
+      const parsed = z
+        .object({
+          decision: z.enum(["APPROVE", "REJECT"]),
+          reason: z.string().max(1000).nullable().optional(),
+        })
+        .strict()
+        .safeParse(await request.json().catch(() => null));
+      if (!parsed.success)
+        return json(
+          {
+            code: "VALIDATION_ERROR",
+            message: "Проверьте решение",
+            details: parsed.error.issues.map((issue) => ({
+              field: issue.path.join("."),
+              message: issue.message,
+            })),
+          },
+          { status: 422 },
+        );
+      // No await between reading current state and saving the decision: atomic in this mock context.
+      const event = getEvents(session.user.id).find(
+        (item) => item.id === params.eventId,
+      );
+      if (!event) return notFound();
+      if (!event.viewerIsOrganizer)
+        return json(
+          {
+            code: "NOT_EVENT_ORGANIZER",
+            message: "Только организатор принимает решения",
+          },
+          { status: 403 },
+        );
+      if (
+        event.status !== "PUBLISHED" ||
+        Date.parse(event.startsAt) <= Date.now()
+      )
+        return json(
+          { code: "EVENT_NOT_AVAILABLE", message: "Рассмотрение закрыто" },
+          { status: 409 },
+        );
+      const registration = getRegistrations(event.id).find(
+        (item) => item.id === params.registrationId,
+      );
+      if (!registration) return notFound();
+      if (event.joinMode !== "APPROVAL" || registration.status !== "PENDING")
+        return json(
+          {
+            code: "INVALID_STATUS_TRANSITION",
+            message: "Заявка уже рассмотрена",
+          },
+          { status: 409 },
+        );
+      if (
+        parsed.data.decision === "APPROVE" &&
+        event.maxParticipants != null &&
+        event.confirmedCount >= event.maxParticipants
+      )
+        return json(
+          { code: "EVENT_FULL", message: "Свободных мест нет" },
+          { status: 409 },
+        );
+      return json(
+        decideRegistration(
+          registration,
+          parsed.data.decision,
+          parsed.data.reason,
+        ),
+      );
+    },
+  ),
 ];

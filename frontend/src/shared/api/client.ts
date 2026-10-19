@@ -1,4 +1,4 @@
-import type { ApiErrorBody } from "./provisional";
+import type { ApiErrorBody } from "./types";
 
 const mode = import.meta.env.VITE_API_MODE ?? "real";
 if (mode !== "mock" && mode !== "real")
@@ -70,6 +70,8 @@ export function errorMessage(error: unknown): string {
     return "Что-то пошло не так. Попробуйте ещё раз.";
   const messages: Record<number, string> = {
     0: "Нет связи с сервером. Проверьте подключение и повторите попытку.",
+    400: "Проверьте введённые данные.",
+    429: "Слишком много запросов. Подождите и попробуйте снова.",
     401: "Войдите в аккаунт, чтобы продолжить.",
     403: "У этого аккаунта нет доступа к действию.",
     404: "Не удалось найти запрошенные данные.",

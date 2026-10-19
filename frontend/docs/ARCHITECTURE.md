@@ -1,6 +1,6 @@
 # Архитектура frontend
 
-Статус: постепенный переход к Clean Architecture с принципами Feature-Sliced Design. Сценарий S3 OPEN уже разделён на чистое ядро, адаптеры и React. Остальные экраны приведены к слоям FSD, но создание события и сессия пока используют прежний query/service-подход. Весь проект ещё не считается полностью переведённым на Clean Architecture.
+Статус: постепенный переход к Clean Architecture с принципами Feature-Sliced Design. Сценарии S3 OPEN и S4 APPROVAL уже разделены на чистое ядро, адаптеры и React. Остальные экраны приведены к слоям FSD, но создание события и сессия пока используют прежний query/service-подход. Весь проект ещё не считается полностью переведённым на Clean Architecture.
 
 ## Структура и направление зависимостей
 
@@ -11,6 +11,8 @@ src/
   features/
     join-event/model/           независимые сценарии joinEvent/findMyRegistration
     join-event/ui/              JoinAction, useJoinEvent, TanStack query options
+    review-registrations/model/  проверка ответа решения организатора
+    review-registrations/ui/     список, фильтры, пагинация, форма отказа и mutation
     create-event/ui/            существующая форма и её Zod-схема
   entities/
     event/                      API/query, карточка, форматирование, EventParticipation
@@ -19,7 +21,7 @@ src/
     registration/lib/           React context для внедрения репозитория
     registration/ui/            участники и отображение статусов/ошибок
     session/                    существующие session/demo query/services
-  shared/                       транспорт, временные DTO, общие UI и токены
+  shared/                       транспорт, generated DTO, общие UI и токены
   mocks/                        MSW и локальная эмуляция backend
   tests/                        проверки ядра, адаптеров, UI и границ
 ```
@@ -45,10 +47,10 @@ flowchart TD
 
 Это направления зависимостей исходного кода. При выполнении сценарий вызывает внедрённую реализацию порта.
 
-- `entities/registration/model` не импортирует React, TanStack Query, Zod, DTO или HTTP. Модель регистрации использует `participant.displayName`/`registeredAt`, а DTO — `user.name`/`createdAt`. Это разные представления, преобразование выполняет API-адаптер.
+- `entities/registration/model` не импортирует React, TanStack Query, Zod, DTO или HTTP. Модель регистрации использует `participant.displayName`/`registeredAt`, а DTO — `user.displayName`/`createdAt`. Это разные представления, преобразование выполняет API-адаптер.
 - Порт располагается в модели регистрации, поскольку нужен и сценарию записи, и чтению участников. Он не зависит от конкретной реализации. `AbortSignal` используется как стандартный тип отмены чтения; React/HTTP-код в ядро не передаётся.
 - `features/join-event/model` получает репозиторий аргументом. Сценарий проверяет соответствие ответа запрошенному событию и аккаунту. Права, лимит и статус CONFIRMED назначает сервер, сценарий их не вычисляет.
-- `createHttpRegistrationRepository(http)` реализует порт: вызывает прежние API-пути, проверяет временные DTO, преобразует их в модели и переводит `ApiError` в `RegistrationFailure`. Только 404 собственной регистрации означает `null`; ошибка чтения участников остаётся ошибкой. Abort сохраняется отменой.
+- `createHttpRegistrationRepository(http)` реализует порт: вызывает прежние API-пути, проверяет generated DTO, преобразует их в модели и переводит `ApiError` в `RegistrationFailure`. Только 404 собственной регистрации означает `null`; ошибка чтения участников остаётся ошибкой. Abort сохраняется отменой.
 - `useJoinEvent` связывает сценарий с React/TanStack: query, mutation, pending, cache invalidation и защита от позднего ответа предыдущей сессии. В переменных мутации фиксируются eventId/viewerId на момент нажатия. Query cache не входит в ядро.
 - `JoinAction` отображает состояние и вызывает hook. HTTP DTO и конкретный HTTP-репозиторий он не импортирует.
 - `app/providers.tsx` выбирает реализацию и внедряет её через React context. У context нет скрытого HTTP fallback; отсутствие provider — ошибка конфигурации. DI-контейнер и классы для каждого сценария не нужны.
@@ -74,10 +76,28 @@ URL, сетевые пути, CSRF/cookie transport, mock persistence и виз�
 
 ## Границы перехода
 
-OpenAPI пока отсутствует. Временные DTO остаются в `shared/api/provisional.ts`; runtime guards S3 — в `entities/registration/api/mappers.ts`. После появления контракта сначала генерируются типы, затем корректируются адаптеры и моки. Доменная модель не должна импортировать generated DTO.
+Контракт находится в `backend/contracts/openapi.yaml` (версия `1.0.0-draft`). `npm run api:generate` создаёт `shared/api/generated/schema.d.ts`, `shared/api/types.ts` экспортирует aliases на generated DTO. `npm run api:check` обнаруживает устаревшую генерацию. Файлы provisional удалены. Runtime guards S3 находятся в `entities/registration/api/mappers.ts`, UI-валидация создания — в `shared/api/event-schema.ts`. Доменная модель регистрации не импортирует generated DTO.
 
-Создание события, каталог и сессия ещё не имеют самостоятельных портов/use cases. Их транспорт и React orchestration остаются в существующих adapters/UI. Следующие переносы выполняются отдельными проверяемыми срезами, без переименования всего кода ради одинаковой структуры. Java-интеграция не подтверждена.
+Создание события, каталог и сессия ещё не имеют самостоятельных портов/use cases. Их транспорт и React orchestration остаются в существующих adapters/UI. Следующие переносы выполняются отдельными проверяемыми срезами, без переименования всего кода ради одинаковой структуры. Сессия, каталог, создание и OPEN-запись подключены к Java; браузерные проверки выполняются отдельной конфигурацией `playwright.api.config.ts` с заблокированными service workers.
 
 ## Тема и интерфейс
 
 `JoinAction` находится в `features/join-event/ui`, карта отображения статуса — в `entities/registration/ui/presentation.ts`. Цвета, размеры и радиусы централизованы в `src/shared/styles/index.css`; CSS custom properties — источник темы, Tailwind 4 подключён через `@import 'tailwindcss'`. Визуальные правила описаны в [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+
+## Подключение Java
+
+В mock и real используется один HTTP-адаптер. `npm run dev`/`dev:real` выбирает Java, `dev:mock` явно включает MSW; автоматического fallback нет. Точные wire-типы берутся из OpenAPI, а модель регистрации и use cases сохраняют независимость от транспорта.
+
+Каталог использует `EventCard`, детальная страница — `Event`. Query детальной страницы дополнительно читает `/events/{id}/team`: доступность действия приходит из `TeamStatus.joinAvailable/waitlistAvailable`, а права организатора — из `Event.viewerIsOrganizer`. Это уже реализованный серверный P1 endpoint, используемый как зависимость P0-записи. Новый API или клиентское назначение прав не вводились.
+
+Создание отправляет `sport: {sportId}|{customName}`, `maxParticipants`, `organizer: {type:USER,id}` и `publishNow`; Java проверяет, что указанный автор совпадает с сессией. UI не предлагает запись самому организатору; это интерфейсное решение, а не утверждение о серверном запрете. Участники приходят как `PublicUser[]`, ошибки полей — `ApiError.details[]`.
+
+Модель регистрации поддерживает все пять статусов контракта для чтения уже существующих данных. APPROVAL-подача и решения подключены. Отмена и очередь пока не подключены в UI. Их наличие в enum не означает готовый пользовательский сценарий.
+
+## S4: рассмотрение заявок
+
+`pages/event` собирает `JoinAction`, `RegistrationRequests` и `Participants`. Фичи join-event и review-registrations не импортируют друг друга. Они используют общий RegistrationRepository из сущности регистрации. Runtime schema адаптера преобразует Registration DTO и PagedRegistrations в самостоятельные Registration/RegistrationPage, включая message и decisionReason. В wire-адаптере outcome accept/decline преобразуется в контрактный APPROVE/REJECT.
+
+`reviewRegistration` не назначает права или места: он вызывает сервер и отклоняет ответ с чужими eventId/registrationId/participantId либо неправильным итоговым статусом. `useReviewRegistration` фиксирует viewerId и проверяет текущую сессию до объявления успеха и invalidation. Список приватных заявок имеет viewerId в query key.
+
+`RequestRow` отвечает за отображение заявки и доступную с клавиатуры RHF/Zod-форму отказа; `RegistrationRequests` — за query, фильтр, пагинацию и сообщение о сохранении. Метки статусов для организатора и участника находятся в одной карте сущности. PENDING не входит в PublicUser-список участников. HTTP polling обновляет статус у заявителя без перезагрузки и обновляет публичные участники/численность после решения. Отдельная реализация для MSW не внедряется в production-код.

@@ -4,14 +4,24 @@ import { registrationKeys } from "../../../entities/registration";
 import { useRegistrationRepository } from "../../../entities/registration";
 import { joinEvent, type JoinEventInput } from "../model/join-event";
 import { myRegistrationQuery } from "./queries";
+import { useEffect } from "react";
 
-export function useJoinEvent(eventId: string) {
+export function useJoinEvent(eventId: string, joinMode: "OPEN" | "APPROVAL") {
   const session = useQuery(sessionQuery);
   const viewerId = session.data?.user.id;
   const repository = useRegistrationRepository();
   const ownQuery = myRegistrationQuery(repository, eventId, viewerId);
   const own = useQuery(ownQuery);
   const client = useQueryClient();
+  const ownStatus = own.data?.status;
+  useEffect(() => {
+    if (!ownStatus) return;
+    // A polled decision changes public participants and the event's server counts too.
+    void client.invalidateQueries({ queryKey: ["events"] });
+    void client.invalidateQueries({
+      queryKey: [...registrationKeys.event(eventId), "participants"],
+    });
+  }, [client, eventId, ownStatus]);
   const refresh = (targetEventId: string) =>
     Promise.all([
       client.invalidateQueries({ queryKey: ["events"] }),
@@ -40,7 +50,7 @@ export function useJoinEvent(eventId: string) {
     },
   });
   const join = () => {
-    if (viewerId) mutation.mutate({ eventId, viewerId });
+    if (viewerId) mutation.mutate({ eventId, viewerId, joinMode });
   };
   return { session, viewerId, own, mutation, join };
 }

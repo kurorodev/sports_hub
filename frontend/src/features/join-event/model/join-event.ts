@@ -7,6 +7,7 @@ import {
 export interface JoinEventInput {
   eventId: string;
   viewerId: string;
+  joinMode?: "OPEN" | "APPROVAL";
 }
 
 function verifyIdentity(
@@ -27,7 +28,17 @@ export async function joinEvent(
   repository: RegistrationRepository,
   input: JoinEventInput,
 ): Promise<Registration> {
-  return verifyIdentity(await repository.join(input.eventId), input);
+  const registration = verifyIdentity(
+    await repository.join(input.eventId),
+    input,
+  );
+  if (
+    input.joinMode &&
+    registration.status !==
+      (input.joinMode === "OPEN" ? "CONFIRMED" : "PENDING")
+  )
+    throw new RegistrationFailure("invalid-response");
+  return registration;
 }
 
 export async function findMyRegistration(

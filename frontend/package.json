@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode mock",
+    "dev": "vite --mode real",
     "dev:real": "vite --mode real",
     "build": "tsc -b && vite build",
     "build:mock": "tsc -b && vite build --mode mock",
@@ -13,7 +13,10 @@
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "api:generate": "openapi-typescript ../contracts/openapi.yaml -o src/shared/api/generated/schema.d.ts"
+    "api:generate": "openapi-typescript ../backend/contracts/openapi.yaml --default-non-nullable false -o src/shared/api/generated/schema.d.ts",
+    "api:check": "openapi-typescript ../backend/contracts/openapi.yaml --default-non-nullable false -o src/shared/api/generated/schema.d.ts --check",
+    "dev:mock": "vite --mode mock",
+    "test:e2e:api": "playwright test --config playwright.api.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.0",

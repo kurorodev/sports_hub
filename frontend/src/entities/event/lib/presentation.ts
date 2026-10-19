@@ -15,3 +15,28 @@ export function eventDate(value: string) {
   }).format(day);
   return `${date} · ${value.slice(11, 16)}`;
 }
+
+export const skillLabels = {
+  ANY: "Любой уровень",
+  BEGINNER: "Начинающий",
+  AMATEUR: "Любитель",
+  ADVANCED: "Продвинутый",
+  PROFESSIONAL: "Профессиональный",
+} as const;
+export function participantCount(count: number, limit?: number | null) {
+  return limit == null
+    ? `Участников: ${count} · без лимита`
+    : `${count} из ${limit} участников`;
+}
+export function sportImage(name: string) {
+  const key: Record<string, string> = {
+    бег: "running",
+    баскетбол: "basketball",
+    теннис: "tennis",
+    шахматы: "chess",
+  };
+  return sportArt[key[name.toLocaleLowerCase("ru")]] ?? "/art/activity.svg";
+}
+export function eventTimezone(value: string) {
+  return value.endsWith("Z") ? "UTC" : `UTC${value.slice(-6)}`;
+}

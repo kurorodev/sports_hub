@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, MinusCircle } from "lucide-react";
 import {
   RegistrationFailure,
   type Registration,
@@ -7,9 +7,43 @@ import {
 
 export const registrationPresentation: Record<
   Registration["status"],
-  { label: string; tone: string; Icon: typeof CheckCircle2 }
+  {
+    label: string;
+    organizerLabel: string;
+    tone: string;
+    Icon: typeof CheckCircle2;
+  }
 > = {
-  CONFIRMED: { label: "Вы участвуете", tone: "success", Icon: CheckCircle2 },
+  PENDING: {
+    organizerLabel: "Ожидает решения",
+    label: "Ожидает решения",
+    tone: "warning",
+    Icon: Clock,
+  },
+  REJECTED: {
+    organizerLabel: "Отклонено",
+    label: "Заявка отклонена",
+    tone: "danger",
+    Icon: XCircle,
+  },
+  CANCELLED: {
+    organizerLabel: "Участие отменено",
+    label: "Участие отменено",
+    tone: "muted",
+    Icon: MinusCircle,
+  },
+  WAITLISTED: {
+    organizerLabel: "В листе ожидания",
+    label: "В листе ожидания",
+    tone: "warning",
+    Icon: Clock,
+  },
+  CONFIRMED: {
+    organizerLabel: "Одобрено",
+    label: "Вы участвуете",
+    tone: "success",
+    Icon: CheckCircle2,
+  },
 };
 
 const messages: Record<RegistrationFailureCode, string> = {

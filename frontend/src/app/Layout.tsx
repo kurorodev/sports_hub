@@ -41,7 +41,7 @@ export function Layout() {
             <span>
               {session.isPending
                 ? "Сессия…"
-                : (session.data?.user.name ?? "Войти")}
+                : (session.data?.user.displayName ?? "Войти")}
             </span>
             <ArrowUpRight size={15} />
           </Link>

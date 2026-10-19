@@ -1,3 +1,5 @@
+import { RegistrationRequests } from "../../../features/review-registrations";
+import { isUuid } from "../../../shared/lib/identifiers";
 import { toEventParticipation } from "../../../entities/event";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
@@ -12,7 +14,13 @@ import {
 import { ApiError } from "../../../shared/api/client";
 import { ErrorState, NotFound, Skeletons } from "../../../shared/ui/Feedback";
 import { eventQuery } from "../../../entities/event";
-import { eventDate, sportArt } from "../../../entities/event";
+import {
+  eventDate,
+  sportImage,
+  skillLabels,
+  participantCount,
+  eventTimezone,
+} from "../../../entities/event";
 import { JoinAction } from "../../../features/join-event";
 import { Participants } from "../../../entities/registration";
 
@@ -20,6 +28,7 @@ export function EventPage() {
   const { eventId = "" } = useParams();
   const location = useLocation();
   const query = useQuery(eventQuery(eventId));
+  if (!isUuid(eventId)) return <NotFound />;
   if (query.isPending)
     return (
       <section className="page-state">
@@ -65,24 +74,38 @@ export function EventPage() {
         <div>
           <img
             className="detail-art"
-            src={sportArt[event.sport.id] ?? "/art/activity.svg"}
+            src={sportImage(event.sport.name)}
             alt={`Спортивная иллюстрация: ${event.sport.name}`}
             width="600"
             height="360"
           />
           <p className="detail-description">{event.description}</p>
+          {event.status !== "PUBLISHED" && (
+            <div className="notice" role="status">
+              <strong>
+                Запись закрыта ·{" "}
+                {event.status === "DRAFT" ? "Черновик" : "Снято с публикации"}
+              </strong>
+              {event.moderationReason && <p>{event.moderationReason}</p>}
+            </div>
+          )}
+          {event.viewerIsOrganizer && event.joinMode === "APPROVAL" && (
+            <RegistrationRequests
+              key={`${event.id}:${event.organizer.id}`}
+              eventId={event.id}
+              decisionsOpen={event.status === "PUBLISHED"}
+            />
+          )}
           <Participants eventId={event.id} />
         </div>
         <aside className="detail-summary">
           <h2>Встречаемся здесь</h2>
-          <JoinAction event={toEventParticipation(event)} />
+          <JoinAction event={toEventParticipation(event, event.team)} />
           <p>
             <CalendarDays size={20} />
             <time dateTime={event.startsAt}>
               {eventDate(event.startsAt)}
-              <small>
-                Местное время события (UTC{event.startsAt.slice(-6)})
-              </small>
+              <small>Часовой пояс: {eventTimezone(event.startsAt)}</small>
             </time>
           </p>
           <p>
@@ -94,11 +117,11 @@ export function EventPage() {
           </p>
           <p>
             <Gauge size={20} />
-            {event.skillLevel}
+            {skillLabels[event.skillLevel]}
           </p>
           <p>
             <Users size={20} />
-            {event.confirmedCount} из {event.capacity} участников
+            {participantCount(event.confirmedCount, event.maxParticipants)}
           </p>
           <p>
             <Building2 size={20} />
@@ -108,9 +131,10 @@ export function EventPage() {
             {event.joinMode === "OPEN"
               ? "Свободная запись"
               : "Участие после одобрения организатора"}
-            {event.confirmedCount >= event.capacity && (
-              <strong>Все места заняты</strong>
-            )}
+            {event.maxParticipants != null &&
+              event.confirmedCount >= event.maxParticipants && (
+                <strong>Все места заняты</strong>
+              )}
           </div>
         </aside>
       </div>

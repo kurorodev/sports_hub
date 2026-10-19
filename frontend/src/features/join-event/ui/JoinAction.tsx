@@ -10,6 +10,7 @@ import { useJoinEvent } from "./use-join-event";
 export function JoinAction({ event }: { event: EventParticipation }) {
   const { session, viewerId, own, mutation, join } = useJoinEvent(
     event.eventId,
+    event.joinMode,
   );
   if (session.isPending)
     return (
@@ -31,9 +32,19 @@ export function JoinAction({ event }: { event: EventParticipation }) {
     );
   if (event.organizer)
     return (
-      <p className="join-note">
-        Вы организатор. Участники появятся в списке ниже.
-      </p>
+      <div className="join-feedback">
+        <p className="join-note">
+          Вы организатор.{" "}
+          {event.joinMode === "OPEN"
+            ? "Участники появятся в списке ниже."
+            : "Решения по заявкам принимаете вы."}
+        </p>
+        {event.joinMode === "APPROVAL" && (
+          <a className="button secondary full-width" href="#event-requests">
+            Рассмотреть заявки
+          </a>
+        )}
+      </div>
     );
   if (!viewerId && !event.openForRegistration)
     return <p className="join-note">Запись на эту встречу закрыта.</p>;
@@ -77,23 +88,29 @@ export function JoinAction({ event }: { event: EventParticipation }) {
         <Icon size={20} />
         <div>
           <strong>{label}</strong>
-          <p>Участие подтверждено. До встречи!</p>
+          <p>
+            {own.data.status === "CONFIRMED"
+              ? event.joinMode === "APPROVAL"
+                ? "Заявка одобрена. До встречи!"
+                : "Участие подтверждено. До встречи!"
+              : own.data.status === "PENDING"
+                ? "Организатор рассмотрит заявку. До одобрения место не занято."
+                : (own.data.decisionReason ??
+                  "Текущий статус получен от организатора.")}
+          </p>
         </div>
       </div>
     );
   }
   if (!event.openForRegistration)
     return <p className="join-note">Запись на эту встречу закрыта.</p>;
-  if (event.confirmedParticipants >= event.participantLimit)
+  if (
+    event.joinMode === "OPEN" &&
+    event.participantLimit != null &&
+    event.confirmedParticipants >= event.participantLimit
+  )
     return (
       <p className="join-note">Все места заняты. Выберите другую встречу.</p>
-    );
-  if (event.joinMode !== "OPEN")
-    return (
-      <p className="join-note">
-        Эта встреча требует одобрения организатора. Подача заявки пока
-        недоступна.
-      </p>
     );
   return (
     <div className="join-feedback">
@@ -102,13 +119,21 @@ export function JoinAction({ event }: { event: EventParticipation }) {
         disabled={mutation.isPending}
         onClick={join}
       >
-        {mutation.isPending ? "Записываем…" : "Присоединиться"}
+        {mutation.isPending
+          ? event.joinMode === "APPROVAL"
+            ? "Отправляем заявку…"
+            : "Записываем…"
+          : event.joinMode === "APPROVAL"
+            ? "Подать заявку"
+            : "Присоединиться"}
         <ArrowUpRight size={18} />
       </button>
       <p className="join-note">
         {mutation.isPending
           ? "Ждём подтверждение записи…"
-          : "Свободная запись — без ожидания одобрения."}
+          : event.joinMode === "APPROVAL"
+            ? "Участие после одобрения организатора. Заявка не резервирует место."
+            : "Свободная запись — без ожидания одобрения."}
       </p>
       {mutation.isError && (
         <p className="field-error" role="alert">

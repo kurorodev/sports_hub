@@ -11,19 +11,21 @@ import { CreateEventPage } from "../pages/create-event";
 import { EventPage } from "../pages/event";
 import { switchAccount } from "../entities/session";
 import { request, setCsrfToken } from "../shared/api/client";
-import type { EventPreview, Page, Sport } from "../shared/api/provisional";
-import type { CreateEventInput } from "../shared/api/provisional-event-schema";
+import type { EventPreview, Page, Sport } from "../shared/api/types";
+import type { CreateEventInput } from "../shared/api/event-schema";
 
+import { mockId } from "../mocks/database";
 const input: CreateEventInput = {
   title: "Петанк в парке",
   description: "Играем в петанк, объясним правила и вместе потренируемся.",
-  customSportName: "Петанк",
+  sport: { customName: "Петанк" },
+  organizer: { type: "USER", id: mockId("user-alex") },
   startsAt: "2026-11-07T18:30:00+07:00",
   location: { city: "Красноярск", address: "Парк, центральный вход" },
-  skillLevel: "Любой уровень",
-  eventKind: "MEETUP",
+  skillLevel: "ANY",
+  eventKind: "ACTIVITY",
   joinMode: "OPEN",
-  capacity: 8,
+  maxParticipants: 8,
 };
 
 async function signIn(id = "user-alex") {
@@ -56,7 +58,7 @@ async function fillForm() {
   await user.selectOptions(screen.getByLabelText("Вид спорта"), "__custom__");
   await user.type(
     screen.getByLabelText("Название нового вида спорта"),
-    input.customSportName!,
+    "Петанк",
   );
   await user.type(screen.getByLabelText("О встрече"), input.description);
   await user.type(screen.getByLabelText("Город"), input.location.city);
@@ -102,7 +104,6 @@ describe("S1 mock API", () => {
     expect(catalog.items).toHaveLength(1);
     expect(catalog.items[0]).toMatchObject({
       id: created.id,
-      viewerIsOrganizer: false,
       organizer: { name: "Александр", type: "USER" },
     });
     expect(await request<Sport[]>("/sports")).toContainEqual(created.sport);
@@ -116,7 +117,7 @@ describe("S1 mock API", () => {
     const first = await createEvent(input);
     const second = await createEvent({
       ...input,
-      customSportName: "  пЕТАНК  ",
+      sport: { customName: "  пЕТАНК  " },
     });
     expect(second.sport.id).toBe(first.sport.id);
     expect(
@@ -143,20 +144,24 @@ describe("S1 mock API", () => {
     expect(page.items[0].startsAt).toBe("2026-11-07T18:30:00+07:00");
   });
 
-  it("supports an existing discipline and ignores forged organizer fields", async () => {
+  it("rejects a forged organizer and accepts the signed-in owner", async () => {
     await signIn();
-    const created = await request<EventPreview>("/events", {
-      method: "POST",
-      body: JSON.stringify({
+    await expect(
+      createEvent({
         ...input,
-        customSportName: undefined,
-        sportId: "running",
-        organizer: { name: "Подмена", type: "ORGANIZATION" },
-        confirmedCount: 99,
+        organizer: { type: "USER", id: mockId("user-maria") },
       }),
+    ).rejects.toMatchObject({ status: 403 });
+    const created = await createEvent({
+      ...input,
+      sport: { sportId: mockId("running") },
     });
-    expect(created.sport.id).toBe("running");
-    expect(created.organizer).toEqual({ name: "Александр", type: "USER" });
+    expect(created.sport.id).toBe(mockId("running"));
+    expect(created.organizer).toMatchObject({
+      name: "Александр",
+      type: "USER",
+      id: mockId("user-alex"),
+    });
     expect(created.confirmedCount).toBe(0);
   });
 
@@ -170,12 +175,12 @@ describe("S1 mock API", () => {
 
   it.each([
     { patch: { title: "  " }, field: "title" },
-    { patch: { capacity: 0 }, field: "capacity" },
+    { patch: { maxParticipants: 0 }, field: "maxParticipants" },
     { patch: { startsAt: "2026-10-18T23:00:00+07:00" }, field: "startsAt" },
-    { patch: { customSportName: " " }, field: "customSportName" },
+    { patch: { sport: { customName: " " } }, field: "sport" },
     {
-      patch: { customSportName: undefined, sportId: "unknown" },
-      field: "sportId",
+      patch: { sport: { sportId: mockId("unknown") } },
+      field: "sport.sportId",
     },
   ])(
     "validates $field on the server without creating a sport",
@@ -183,7 +188,14 @@ describe("S1 mock API", () => {
       await signIn();
       await expect(createEvent({ ...input, ...patch })).rejects.toMatchObject({
         status: 422,
-        body: { fieldErrors: { [field]: expect.any(String) } },
+        body: {
+          details: expect.arrayContaining([
+            expect.objectContaining({
+              field: expect.stringContaining(field),
+              message: expect.any(String),
+            }),
+          ]),
+        },
       });
       expect(await request<Sport[]>("/sports")).toHaveLength(4);
     },
@@ -256,9 +268,13 @@ describe("S1 creation UI", () => {
           {
             code: "VALIDATION_ERROR",
             message: "Проверьте поля",
-            fieldErrors: {
-              "location.address": "Площадка недоступна, укажите другую",
-            },
+            requestId: "test",
+            details: [
+              {
+                field: "location.address",
+                message: "Площадка недоступна, укажите другую",
+              },
+            ],
           },
           { status: 422 },
         ),

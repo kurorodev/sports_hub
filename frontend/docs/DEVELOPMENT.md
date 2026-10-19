@@ -1,12 +1,17 @@
 # Разработка и запуск frontend
 
-[Документация](README.md) · [Ручная проверка и результаты QA](QA.md)
+[Документация](README.md) · [QA](QA.md) · [API](API_REVIEW.md)
 
-Все команды ниже выполняются из `frontend/`, кроме первоначального `cd frontend`.
+## Java и PostgreSQL
 
-## Локальный запуск и окружение
+Нужны Docker / OrbStack, Node.js 22.12+ и npm. Из корня репозитория:
 
-Node.js 22.12+ или современная совместимая версия (разработка проверяется на Node 25), npm.
+```sh
+docker compose -p dvizh -f backend/compose.yaml up --build -d
+curl http://localhost:8080/api/v1/health
+```
+
+Ожидается `status: UP`. Первый запуск скачивает образы и Maven-зависимости. Данные хранятся в volume `dvizh_postgres_data`; повторный запуск не сбрасывает seed. Детали сервера — в [backend/README.md](../../backend/README.md).
 
 ```sh
 cd frontend
@@ -14,27 +19,37 @@ npm ci
 npm run dev
 ```
 
-Откройте URL из вывода Vite. `npm run dev` явно выбирает `.env.mock`. Вверху страницы видна отметка о моках; вся графика и Manrope поставляются локально. SVG-иллюстрации созданы для проекта, не выдаются за фото событий.
+`npm run dev` и `npm run dev:real` выбирают `.env.real`. Открывайте `http://localhost:5173`: этот origin разрешён стандартной настройкой CORS backend. Vite проксирует `/api/v1` на `http://localhost:8080`. Порты 8080 и 5432 должны быть свободны; чужие сервисы автоматически не останавливаются. Остановка только этого проекта из корня: `docker compose -p dvizh -f backend/compose.yaml stop`.
+
+`GET /demo/accounts` даёт актуальные имена и accountId. Основной QA-путь: `athlete-a` создаёт → `athlete-b` записывается → `athlete-a` видит участника. Cookie `SPORT_SESSION` устанавливает Java; фронт использует `credentials: include`, CSRF из `/session`, приватный кэш очищается при смене аккаунта.
+
+## Моки
 
 ```sh
-npm run dev:real
+npm run dev:mock
 ```
 
-Этот режим выбирает `.env.real`. Относительный `/api/v1` проксируется Vite на `http://localhost:8080`. Java должен поддерживать согласованный контракт, cookie `SPORT_SESSION`, CSRF и демо-аккаунты. При другом origin настройте credentialed CORS, cookie SameSite/Secure и `VITE_API_BASE_URL`. UI не читает cookie. Backend требуется сверить с моделями перед подключением.
+`.env.mock` явно запускает MSW; вверху страницы есть отметка режима. На `/login` доступны локальные Александр (`user-alex`), Мария (`user-maria`), клуб (`org-run`) и администратор (`admin`). Это отдельная локальная база, независимая от PostgreSQL. Wire DTO и пути берутся из того же OpenAPI; аккаунты и события различаются. При смене real/mock перезапускайте Vite.
 
-`.env.example` описывает переменные. Локальные overrides храните в игнорируемом `.env.local` или `.env.mock.local`/`.env.real.local`. `VITE_API_MODE` допускает только `mock|real`; по умолчанию real. `VITE_API_BASE_URL` — URL API без конечного `/`. Секретов здесь быть не должно.
+Вся графика и Manrope поставляются локально. SVG-иллюстрации созданы для проекта, не являются фотографиями событий.
+
+## Окружение и сборки
+
+`.env.example` описывает `VITE_API_MODE=real|mock` и `VITE_API_BASE_URL=/api/v1`. Локальные overrides храните в игнорируемых `.env.local` или `.env.real.local`/`.env.mock.local`. Режим по умолчанию real. API base URL задаётся без конечного `/`.
 
 ```sh
-npm run build         # production, real API, без запуска MSW
-npm run build:mock    # явно выбранная демонстрационная сборка на моках
-npm run preview      # просмотр последней сборки
+npm run build       # production real API
+npm run build:mock  # явная демонстрационная сборка с MSW
+npm run preview     # просмотр последней сборки
 ```
 
-При размещении SPA нужен fallback всех frontend-маршрутов на `index.html`, исключая `/api/*` и статические assets. Продакшен-сервер сам проксирует API; Vite dev proxy не входит в сборку. Публикация не выполнялась.
+Real mode не включает MSW и не переключается на него при ошибке Java. Для другого origin настройте credentialed CORS и cookie SameSite/Secure. При размещении SPA нужен fallback frontend-маршрутов на `index.html`, исключая `/api/*` и assets. Vite dev proxy в production-сборку не входит: API проксирует сервер размещения. Публикация не выполнялась.
 
-## Команды проверок
+## Контракт и проверки
 
 ```sh
+npm run api:generate # из ../backend/contracts/openapi.yaml
+npm run api:check    # проверка актуальности generated/schema.d.ts
 npm run typecheck
 npm run lint
 npm test
@@ -43,6 +58,16 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-RTL/Vitest проверяют фильтры, empty/error/retry, восстановление ролей, запрет доступа, HTTP/CSRF boundary, создание, ошибки полей, timezone, OPEN-запись, дубли и лимит мест. Playwright поднимает Vite в mock mode: каталог/прямые URL, переключение ролей, S1/S3 с перезагрузкой и адаптив. Браузерные скриншоты: `test-results/`, в git не входят. Автотесты не доказывают интеграцию с Java.
+`test:e2e` поднимает отдельный Vite в mock mode на `127.0.0.1:5175`. Тестовые часы фиксированы, seed воспроизводим. `test:e2e:api` запускает real mode на `127.0.0.1:5174`, блокирует service workers и требует доступных Java/PostgreSQL. Для этого origin нужен CORS. Из корня репозитория:
 
-Результаты конкретных прогонов и ограничения проверки фиксируются в [QA.md](QA.md). Требования к API и порядок перехода с временных DTO — в [API_REVIEW.md](API_REVIEW.md).
+```sh
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5174 \
+  docker compose -p dvizh -f backend/compose.yaml up -d backend
+
+cd frontend
+npm run test:e2e:api
+```
+
+Команда пересоздаёт контейнер backend с тестовой CORS-настройкой; его сессии в памяти будут сброшены, бизнес-данные сохранятся. Прогон создаёт собственные встречи и виды спорта через API и оставляет их в базе; общие данные не удаляет. Тесты на моках и Java запускайте последовательно. Их traces сохраняются отдельно в `test-results/mock/` и `test-results/api/`; скриншоты — в `test-results/`. Артефакты `test-results/` в Git не входят. Реальные даты создания вычисляются относительно текущего дня, без изменения часов Java.
+
+Результаты, ручные пути и ограничения — в [QA.md](QA.md). После обновления OpenAPI пересоздайте типы, исправьте адаптеры/моки и повторите оба прогона.

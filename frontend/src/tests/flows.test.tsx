@@ -10,7 +10,7 @@ import { WorkspacePage } from "../pages/workspace";
 import { sessionQuery, switchAccount } from "../entities/session";
 import { ApiError, request, setCsrfToken } from "../shared/api/client";
 import { eventDate } from "../entities/event";
-import type { Page, EventPreview } from "../shared/api/provisional";
+import type { Page, EventPreview } from "../shared/api/types";
 
 function mount(ui: React.ReactNode, path = "/") {
   const client = new QueryClient({
@@ -36,11 +36,13 @@ describe("P0 shell and catalog", () => {
     expect(await client.fetchQuery(sessionQuery)).toBeNull();
     const admin = await switchAccount("admin");
     expect(admin.systemRoles).toContain("ADMIN");
-    expect((await client.fetchQuery(sessionQuery))?.user.id).toBe("admin");
-    await switchAccount("org-run");
+    expect((await client.fetchQuery(sessionQuery))?.user.id).toBe(
+      admin.user.id,
+    );
+    const organization = await switchAccount("org-run");
     expect(
       (await client.fetchQuery(sessionQuery))?.manageableOrganizationIds,
-    ).toEqual(["org-temp"]);
+    ).toEqual(organization.manageableOrganizationIds);
   });
 
   it("rejects an unknown demo account", async () => {
@@ -58,7 +60,8 @@ describe("P0 shell and catalog", () => {
       page.items.every(
         (event) =>
           event.location.city === "Москва" &&
-          event.confirmedCount < event.capacity,
+          (event.maxParticipants == null ||
+            event.confirmedCount < event.maxParticipants),
       ),
     ).toBe(true);
     const secondPage = await request<Page<EventPreview>>(

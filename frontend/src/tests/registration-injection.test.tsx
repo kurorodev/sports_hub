@@ -13,7 +13,7 @@ import type {
 } from "../entities/registration/model";
 import { sessionQuery } from "../entities/session";
 import { JoinAction } from "../features/join-event";
-import type { Session } from "../shared/api/provisional";
+import type { Session } from "../shared/api/types";
 
 const event = {
   eventId: "event-1",
@@ -31,7 +31,16 @@ const registration: Registration = {
   registeredAt: "2026-10-19T12:00:00Z",
 };
 const session = (id: string): Session => ({
-  user: { id, name: id },
+  user: {
+    id,
+    displayName: id,
+    nickname: id,
+    sportsRoles: [],
+    rank: "ROOKIE",
+    ratingPoints: 0,
+    sportsPreferences: [],
+    createdAt: "2026-10-19T12:00:00Z",
+  },
   systemRoles: ["USER"],
   manageableOrganizationIds: [],
   csrfToken: "test",
@@ -60,6 +69,8 @@ describe("React adapter with an injected repository, without HTTP", () => {
     let saved: Registration | null = null;
     const repository: RegistrationRepository = {
       findMine: vi.fn(async () => saved),
+      listRequests: vi.fn(),
+      decide: vi.fn(),
       join: vi.fn(async () => {
         saved = registration;
         return saved;
@@ -81,6 +92,8 @@ describe("React adapter with an injected repository, without HTTP", () => {
     });
     const repository: RegistrationRepository = {
       findMine: vi.fn(async () => null),
+      listRequests: vi.fn(),
+      decide: vi.fn(),
       join: vi.fn(() => pending),
       listParticipants: vi.fn(),
     };

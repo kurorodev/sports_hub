@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, Lightbulb } from "lucide-react";
 import { sessionQuery } from "../../../entities/session";
 import { ApiError, errorMessage } from "../../../shared/api/client";
-import type { Session, Sport } from "../../../shared/api/provisional";
+import type { Session, Sport } from "../../../shared/api/types";
 import { FormField } from "../../../shared/ui/FormField";
 import { createEvent, sportsQuery } from "../../../entities/event";
 import {
@@ -37,8 +37,8 @@ export function CreateEventForm({
       time: "",
       timezoneOffset: "+03:00",
       location: { city: "", address: "" },
-      skillLevel: "Любой уровень",
-      eventKind: "MEETUP",
+      skillLevel: "ANY",
+      eventKind: "ACTIVITY",
       joinMode: "OPEN",
       capacity: 10,
     },
@@ -46,7 +46,8 @@ export function CreateEventForm({
   const sportChoice = useWatch({ control: form.control, name: "sportChoice" });
   const joinMode = useWatch({ control: form.control, name: "joinMode" });
   const mutation = useMutation({
-    mutationFn: (values: EventFormValues) => createEvent(toEventInput(values)),
+    mutationFn: (values: EventFormValues) =>
+      createEvent(toEventInput(values, session.user.id)),
     onSuccess: async (event) => {
       // A late response must not open a previous account's result after switching sessions.
       if (
@@ -63,9 +64,11 @@ export function CreateEventForm({
       if (
         error instanceof ApiError &&
         error.status === 422 &&
-        error.body?.fieldErrors
+        error.body?.details
       ) {
-        const entries = Object.entries(error.body.fieldErrors);
+        const entries = error.body.details.map(
+          ({ field, message }) => [field, message] as const,
+        );
         let focused = false;
         for (const [field, message] of entries) {
           const name = serverFieldNames[field];
@@ -123,7 +126,7 @@ export function CreateEventForm({
                 {...accessibility("event-title", errors.title?.message)}
                 {...form.register("title")}
                 placeholder="Например, волейбол после работы"
-                maxLength={120}
+                maxLength={160}
                 required
               />
             </FormField>
@@ -156,8 +159,7 @@ export function CreateEventForm({
                   {...accessibility("event-kind", errors.eventKind?.message)}
                   {...form.register("eventKind")}
                 >
-                  <option value="MEETUP">Совместная активность</option>
-                  <option value="TRAINING">Тренировка</option>
+                  <option value="ACTIVITY">Совместная активность</option>
                 </select>
               </FormField>
             </div>
@@ -175,7 +177,7 @@ export function CreateEventForm({
                     true,
                   )}
                   {...form.register("customSportName")}
-                  maxLength={60}
+                  maxLength={80}
                   placeholder="Например, алтимат"
                   required
                 />
@@ -184,7 +186,7 @@ export function CreateEventForm({
             <FormField
               id="event-description"
               label="О встрече"
-              hint="Как всё пройдёт, что взять с собой, есть ли расходы? От 20 до 3000 символов."
+              hint="Как всё пройдёт, что взять с собой, есть ли расходы? От 10 до 5000 символов."
               error={errors.description?.message}
             >
               <textarea
@@ -195,7 +197,7 @@ export function CreateEventForm({
                 )}
                 {...form.register("description")}
                 rows={5}
-                maxLength={3000}
+                maxLength={5000}
                 placeholder="Расскажите, что ждёт участников…"
                 required
               />
@@ -219,7 +221,7 @@ export function CreateEventForm({
                   {...form.register("location.city")}
                   autoComplete="address-level2"
                   placeholder="Ваш город"
-                  maxLength={80}
+                  maxLength={120}
                   required
                 />
               </FormField>
@@ -235,7 +237,7 @@ export function CreateEventForm({
                   )}
                   {...form.register("location.address")}
                   placeholder="Адрес и точка сбора"
-                  maxLength={200}
+                  maxLength={300}
                   required
                 />
               </FormField>
@@ -269,7 +271,7 @@ export function CreateEventForm({
             <FormField
               id="event-timezone"
               label="Часовой пояс места встречи"
-              hint="Время на странице встречи останется таким, как вы его указали."
+              hint="Часовой пояс будет указан рядом со временем встречи."
               error={errors.timezoneOffset?.message}
             >
               <select
@@ -307,9 +309,11 @@ export function CreateEventForm({
                   {...accessibility("event-level", errors.skillLevel?.message)}
                   {...form.register("skillLevel")}
                 >
-                  <option>Любой уровень</option>
-                  <option>Начинающий</option>
-                  <option>Средний</option>
+                  <option value="ANY">Любой уровень</option>
+                  <option value="BEGINNER">Начинающий</option>
+                  <option value="AMATEUR">Любитель</option>
+                  <option value="ADVANCED">Продвинутый</option>
+                  <option value="PROFESSIONAL">Профессиональный</option>
                 </select>
               </FormField>
               <FormField
@@ -322,7 +326,7 @@ export function CreateEventForm({
                   {...form.register("capacity", { valueAsNumber: true })}
                   type="number"
                   min={2}
-                  max={1000}
+                  max={10000}
                   inputMode="numeric"
                   required
                 />
@@ -349,8 +353,9 @@ export function CreateEventForm({
           </fieldset>
           <div className="publish-panel">
             <p>
-              Личная встреча от имени <strong>{session.user.name}</strong>.
-              После публикации её увидят другие пользователи.
+              Личная встреча от имени{" "}
+              <strong>{session.user.displayName}</strong>. После публикации её
+              увидят другие пользователи.
             </p>
             {session.manageableOrganizationIds.length > 0 && (
               <p className="field-hint">

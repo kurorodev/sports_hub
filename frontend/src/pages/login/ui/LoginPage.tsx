@@ -110,8 +110,8 @@ export function LoginPage() {
                     <UserRound size={21} />
                   </span>
                   <span>
-                    <strong>{account.name}</strong>
-                    <small>{account.description}</small>
+                    <strong>{account.label}</strong>
+                    <small>{account.systemRoles.join(" · ")}</small>
                   </span>
                   {selected === account.id && (
                     <Check className="account-check" size={20} />

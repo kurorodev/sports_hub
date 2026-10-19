@@ -10,7 +10,7 @@ test("catalog, URL filters, detail and not-found", async ({ page }) => {
     page.getByRole("heading", { name: /Утро. Парк. Лёгкий бег/ }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Теннис", exact: true }).click();
-  await expect(page).toHaveURL(/sportId=tennis/);
+  await expect(page).toHaveURL(/sportId=1c11f8a2-0000-4000-8000-000000000000/);
   await page.reload();
   await page
     .getByRole("heading", { name: "Теннис без спешки" })
@@ -19,7 +19,7 @@ test("catalog, URL filters, detail and not-found", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Теннис без спешки",
   );
-  await expect(page.getByText(/Местное время события/)).toBeVisible();
+  await expect(page.getByText(/Часовой пояс:/)).toBeVisible();
   await page.goto("/events/missing");
   await expect(
     page.getByRole("heading", { name: /сбились с маршрута/ }),
@@ -68,7 +68,10 @@ test("demo session restores and account switch removes privileges", async ({
 
 test("keyboard navigation and required account selection", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: "Демо-вход" })).toBeVisible();
+  // Wait for the account form, including async bootstrap, before the first Tab.
+  await expect(
+    page.getByRole("button", { name: "Войти в аккаунт" }),
+  ).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Перейти к содержимому" }),

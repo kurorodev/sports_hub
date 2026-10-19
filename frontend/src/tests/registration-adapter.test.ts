@@ -12,9 +12,17 @@ import { RegistrationFailure } from "../entities/registration/model";
 const dto = {
   id: "reg-1",
   eventId: "event-1",
-  user: { id: "maria", name: "Мария" },
+  user: {
+    id: "maria",
+    displayName: "Мария",
+    nickname: "maria",
+    sportsRoles: [],
+    rank: "ROOKIE",
+    ratingPoints: 0,
+  },
   status: "CONFIRMED",
   createdAt: "2026-10-19T12:00:00Z",
+  updatedAt: "2026-10-19T12:00:00Z",
 };
 const repository = createHttpRegistrationRepository(request);
 
@@ -24,20 +32,19 @@ describe("registration HTTP boundary", () => {
     expect(model.participant).toEqual({ id: "maria", displayName: "Мария" });
     expect(model).not.toHaveProperty("user");
     expect(model).not.toHaveProperty("createdAt");
-    dto.user.name = "Изменено";
+    dto.user.displayName = "Изменено";
     expect(model.participant.displayName).toBe("Мария");
-    dto.user.name = "Мария";
+    dto.user.displayName = "Мария";
     expect(
       toParticipantPage({
-        items: [{ user: dto.user, joinedAt: dto.createdAt }],
+        items: [dto.user],
         page: 1,
         size: 12,
         total: 13,
+        totalPages: 2,
       }),
     ).toEqual({
-      participants: [
-        { id: "maria", displayName: "Мария", joinedAt: dto.createdAt },
-      ],
+      participants: [{ id: "maria", displayName: "Мария" }],
       pageIndex: 1,
       pageSize: 12,
       totalCount: 13,
@@ -71,10 +78,10 @@ describe("registration HTTP boundary", () => {
   it.each([
     [409, "EVENT_FULL", "full"],
     [409, "ALREADY_REGISTERED", "already-registered"],
-    [403, "ORGANIZER_CANNOT_JOIN", "organizer"],
+    [403, "NOT_EVENT_ORGANIZER", "forbidden"],
     [503, "UNEXPECTED_CODE", "unavailable"],
     [503, "__proto__", "unavailable"],
-    [401, "UNAUTHORIZED", "unauthenticated"],
+    [401, "UNAUTHENTICATED", "unauthenticated"],
   ])(
     "maps HTTP %s/%s into an application failure",
     async (status, code, expected) => {

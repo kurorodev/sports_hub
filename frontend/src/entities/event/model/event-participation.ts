@@ -3,7 +3,7 @@ export interface EventParticipation {
   eventId: string;
   organizer: boolean;
   openForRegistration: boolean;
-  participantLimit: number;
+  participantLimit: number | null;
   confirmedParticipants: number;
   joinMode: "OPEN" | "APPROVAL";
 }

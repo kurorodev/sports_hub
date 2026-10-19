@@ -3,39 +3,89 @@ import type {
   EventPreview,
   Session,
   Registration,
-} from "../shared/api/provisional";
+  PublicUser,
+  Sport,
+} from "../shared/api/types";
 import { z } from "zod";
 import {
   eventDraftSchema,
-  eventFieldsSchema,
   type CreateEventInput,
-} from "../shared/api/provisional-event-schema";
+} from "../shared/api/event-schema";
 
+// Deterministic UUIDs keep mock requests valid under the same contract as Java.
+export function mockId(key: string) {
+  let hash = 2166136261;
+  for (const char of key)
+    hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0;
+  const hex = hash.toString(16).padStart(8, "0");
+  return `${hex}-0000-4000-8000-000000000000`;
+}
+export function mockUser(accountId: string, displayName: string): PublicUser {
+  return {
+    id: mockId(accountId),
+    nickname: accountId,
+    displayName,
+    sportsRoles: ["ATHLETE"],
+    rank: "ROOKIE",
+    ratingPoints: 0,
+  };
+}
 export const accounts: DemoAccount[] = [
-  { id: "user-alex", name: "Александр", description: "Участник · USER" },
-  { id: "user-maria", name: "Мария", description: "Участник · USER" },
+  {
+    id: "user-alex",
+    label: "Александр",
+    systemRoles: ["USER"],
+    sportsRoles: ["ATHLETE"],
+  },
+  {
+    id: "user-maria",
+    label: "Мария",
+    systemRoles: ["USER"],
+    sportsRoles: ["ATHLETE"],
+  },
   {
     id: "org-run",
-    name: "Беговой клуб «Темп»",
-    description: "Представитель организации",
+    label: "Беговой клуб «Темп»",
+    systemRoles: ["USER", "ORGANIZATION"],
+    sportsRoles: ["SPORTS_ORGANIZER"],
   },
-  { id: "admin", name: "Администратор", description: "Модератор · ADMIN" },
+  {
+    id: "admin",
+    label: "Администратор",
+    systemRoles: ["USER", "ADMIN"],
+    sportsRoles: [],
+  },
 ];
-
 export function makeSession(accountId: string): Session | undefined {
   const account = accounts.find((item) => item.id === accountId);
   if (!account) return undefined;
   return {
-    user: { id: account.id, name: account.name },
-    systemRoles: accountId === "admin" ? ["USER", "ADMIN"] : ["USER"],
-    manageableOrganizationIds: accountId === "org-run" ? ["org-temp"] : [],
+    user: {
+      ...mockUser(account.id, account.label),
+      sportsRoles: account.sportsRoles,
+      sportsPreferences: [],
+      createdAt: "2026-10-01T12:00:00Z",
+    },
+    systemRoles: account.systemRoles,
+    manageableOrganizationIds:
+      accountId === "org-run" ? [mockId("org-temp")] : [],
     csrfToken: `mock-csrf-${accountId}`,
     demo: true,
   };
 }
-
-// Fixed future seed; it does not silently shift dates on each page load.
-const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
+type SeedEvent = Omit<
+  EventPreview,
+  | "pendingCount"
+  | "spotsLeft"
+  | "createdAt"
+  | "updatedAt"
+  | "sport"
+  | "organizer"
+> & {
+  sport: Pick<Sport, "id" | "name">;
+  organizer: Pick<EventPreview["organizer"], "name" | "type">;
+};
+const seedData = [
   {
     id: "morning-run",
     title: "Утро. Парк. Лёгкий бег.",
@@ -44,13 +94,13 @@ const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
       "Начинаем день с движения. Бежим в разговорном темпе, знакомимся и пьём кофе после. Дистанция 5 км, можно перейти на шаг. Возьмите воду и удобные кроссовки.",
     startsAt: "2026-10-24T09:00:00+03:00",
     location: { city: "Москва", address: "Парк Горького, главный вход" },
-    skillLevel: "Любой уровень",
+    skillLevel: "ANY",
     joinMode: "OPEN",
-    eventKind: "MEETUP",
+    eventKind: "ACTIVITY",
     status: "PUBLISHED",
     organizer: { name: "Беговой клуб «Темп»", type: "ORGANIZATION" },
     confirmedCount: 8,
-    capacity: 15,
+    maxParticipants: 15,
     viewerIsOrganizer: false,
     viewerRegistrationStatus: null,
   },
@@ -65,13 +115,13 @@ const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
       city: "Москва",
       address: "Парк «Красная Пресня», площадка № 2",
     },
-    skillLevel: "Средний",
+    skillLevel: "AMATEUR",
     joinMode: "APPROVAL",
-    eventKind: "MEETUP",
+    eventKind: "ACTIVITY",
     status: "PUBLISHED",
     organizer: { name: "Александр", type: "USER" },
     confirmedCount: 4,
-    capacity: 6,
+    maxParticipants: 6,
     viewerIsOrganizer: false,
     viewerRegistrationStatus: null,
   },
@@ -83,13 +133,13 @@ const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
       "Тренируем подачи и играем в парах. Подойдёт тем, кто уже держал ракетку и хочет больше практики. Ракетки свои, мячи предоставим. Аренда корта оплачивается на месте по тарифу площадки.",
     startsAt: "2026-10-25T12:00:00+03:00",
     location: { city: "Москва", address: "Сокольники, теннисные корты" },
-    skillLevel: "Начинающий",
+    skillLevel: "BEGINNER",
     joinMode: "OPEN",
-    eventKind: "TRAINING",
+    eventKind: "ACTIVITY",
     status: "PUBLISHED",
     organizer: { name: "Мария", type: "USER" },
     confirmedCount: 2,
-    capacity: 4,
+    maxParticipants: 4,
     viewerIsOrganizer: false,
     viewerRegistrationStatus: null,
   },
@@ -104,13 +154,13 @@ const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
       city: "Москва",
       address: "Библиотека им. Некрасова, зал встреч",
     },
-    skillLevel: "Любой уровень",
+    skillLevel: "ANY",
     joinMode: "OPEN",
-    eventKind: "MEETUP",
+    eventKind: "ACTIVITY",
     status: "PUBLISHED",
     organizer: { name: "Мария", type: "USER" },
     confirmedCount: 10,
-    capacity: 10,
+    maxParticipants: 10,
     viewerIsOrganizer: false,
     viewerRegistrationStatus: null,
   },
@@ -125,13 +175,13 @@ const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
       city: "Санкт-Петербург",
       address: "Парк 300-летия, главный вход",
     },
-    skillLevel: "Начинающий",
+    skillLevel: "BEGINNER",
     joinMode: "OPEN",
-    eventKind: "MEETUP",
+    eventKind: "ACTIVITY",
     status: "PUBLISHED",
     organizer: { name: "Александр", type: "USER" },
     confirmedCount: 3,
-    capacity: 12,
+    maxParticipants: 12,
     viewerIsOrganizer: false,
     viewerRegistrationStatus: null,
   },
@@ -143,18 +193,17 @@ const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
       "Разбираем основы дриблинга, передачи и броска. Небольшая группа, спокойный темп и много практики. Для тех, кто хочет попробовать баскетбол.",
     startsAt: "2026-11-01T14:00:00+03:00",
     location: { city: "Москва", address: "Спортзал «Старт», ул. Лесная, 8" },
-    skillLevel: "Начинающий",
+    skillLevel: "BEGINNER",
     joinMode: "APPROVAL",
-    eventKind: "TRAINING",
+    eventKind: "ACTIVITY",
     status: "PUBLISHED",
     organizer: { name: "Беговой клуб «Темп»", type: "ORGANIZATION" },
     confirmedCount: 5,
-    capacity: 12,
+    maxParticipants: 12,
     viewerIsOrganizer: false,
     viewerRegistrationStatus: null,
   },
-];
-
+] satisfies SeedEvent[];
 const seedOwners: Record<string, string> = {
   "morning-run": "org-run",
   "basketball-yard": "user-alex",
@@ -163,35 +212,59 @@ const seedOwners: Record<string, string> = {
   "river-run": "user-alex",
   "basketball-training": "org-run",
 };
-const createdEventSchema = z.object({
+const seedEvents: EventPreview[] = seedData.map((event) => ({
+  ...event,
+  id: mockId(event.id),
+  sport: { ...event.sport, id: mockId(event.sport.id), isCustom: false },
+  organizer: { ...event.organizer, id: mockId(seedOwners[event.id]) },
+  pendingCount: 0,
+  spotsLeft: event.maxParticipants - event.confirmedCount,
+  createdAt: "2026-10-01T12:00:00Z",
+  updatedAt: "2026-10-01T12:00:00Z",
+}));
+const eventKey = "dvizh.mock.events.v2";
+const registrationKey = "dvizh.mock.registrations.v2";
+const recordSchema = z.object({
   id: z.string(),
   ownerId: z.string(),
-  sport: z.object({ id: z.string(), name: z.string() }),
+  sport: z.object({ id: z.string(), name: z.string(), isCustom: z.boolean() }),
   input: eventDraftSchema,
 });
 const storeSchema = z.object({
-  version: z.literal(1),
-  events: z.array(createdEventSchema),
+  version: z.literal(2),
+  events: z.array(recordSchema),
 });
 type MockStore = z.infer<typeof storeSchema>;
-const storeKey = "dvizh.mock.events.v1";
-let memoryStore: MockStore = { version: 1, events: [] };
-
+let memoryStore: MockStore = { version: 2, events: [] };
+let memoryRegistrations: Registration[] = [];
+const userSchema = z.object({
+  id: z.string(),
+  nickname: z.string(),
+  displayName: z.string(),
+  sportsRoles: z.array(
+    z.enum(["ATHLETE", "COACH", "REFEREE", "SPORTS_ORGANIZER"]),
+  ),
+  rank: z.enum(["ROOKIE", "ACTIVE", "EXPERIENCED", "ELITE"]),
+  ratingPoints: z.number(),
+});
 const registrationSchema = z.object({
   id: z.string(),
   eventId: z.string(),
-  user: z.object({ id: z.string(), name: z.string() }),
-  status: z.literal("CONFIRMED"),
+  user: userSchema,
+  status: z.enum([
+    "PENDING",
+    "CONFIRMED",
+    "REJECTED",
+    "CANCELLED",
+    "WAITLISTED",
+  ]),
+  message: z.string().nullable().optional(),
+  decisionReason: z.string().nullable().optional(),
+  decidedAt: z.iso.datetime({ offset: true }).nullable().optional(),
   createdAt: z.iso.datetime({ offset: true }),
-});
-const registrationStoreSchema = z.object({
-  version: z.literal(1),
-  items: z.array(registrationSchema),
-});
-const registrationKey = "dvizh.mock.registrations.v1";
-let memoryRegistrations: Registration[] = [];
-// Each seeded count corresponds to actual synthetic demo participants, never a separate counter.
-const participantNames = [
+  updatedAt: z.iso.datetime({ offset: true }),
+}) satisfies z.ZodType<Registration>;
+const names = [
   "Анастасия",
   "Илья",
   "Виктория",
@@ -205,152 +278,187 @@ const participantNames = [
 ];
 const seedRegistrations: Registration[] = seedEvents.flatMap((event) =>
   Array.from({ length: event.confirmedCount }, (_, index) => ({
-    id: `seed-${event.id}-${index}`,
+    id: mockId(`reg-${event.id}-${index}`),
     eventId: event.id,
-    user: {
-      id: `demo-${event.id}-${index}`,
-      name: participantNames[index % participantNames.length],
-    },
+    user: mockUser(
+      `participant-${event.id}-${index}`,
+      names[index % names.length],
+    ),
     status: "CONFIRMED",
-    createdAt: "2026-10-01T12:00:00+03:00",
+    createdAt: "2026-10-01T12:00:00Z",
+    updatedAt: "2026-10-01T12:00:00Z",
   })),
 );
-
+function readStore(): MockStore {
+  if (typeof localStorage === "undefined") return memoryStore;
+  const saved = localStorage.getItem(eventKey);
+  return saved
+    ? storeSchema.parse(JSON.parse(saved))
+    : { version: 2, events: [] };
+}
 export function getRegistrations(eventId?: string): Registration[] {
   const saved =
     typeof localStorage !== "undefined"
       ? localStorage.getItem(registrationKey)
       : null;
-  const items =
+  const records =
     typeof localStorage === "undefined"
       ? memoryRegistrations
       : saved
-        ? registrationStoreSchema.parse(JSON.parse(saved)).items
+        ? z.array(registrationSchema).parse(JSON.parse(saved))
         : [];
-  return [...seedRegistrations, ...items].filter(
-    (registration) => !eventId || registration.eventId === eventId,
-  );
+  return [
+    ...new Map(
+      [...seedRegistrations, ...records].map((item) => [item.id, item]),
+    ).values(),
+  ].filter((item) => !eventId || item.eventId === eventId);
 }
-
 export function saveRegistration(
   eventId: string,
-  user: Session["user"],
+  user: PublicUser,
+  status: Registration["status"],
+  message?: string | null,
 ): Registration {
+  const publicUser: PublicUser = {
+    id: user.id,
+    nickname: user.nickname,
+    displayName: user.displayName,
+    sportsRoles: user.sportsRoles,
+    rank: user.rank,
+    ratingPoints: user.ratingPoints,
+  };
   const registration: Registration = {
     id: crypto.randomUUID(),
     eventId,
-    user,
-    status: "CONFIRMED",
+    user: publicUser,
+    status,
+    message,
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
-  const items = [
-    ...getRegistrations().filter((item) => !item.id.startsWith("seed-")),
+  const seedIds = new Set(seedRegistrations.map((item) => item.id));
+  const records = [
+    ...getRegistrations().filter((item) => !seedIds.has(item.id)),
     registration,
   ];
   if (typeof localStorage !== "undefined")
-    localStorage.setItem(
-      registrationKey,
-      JSON.stringify({ version: 1, items }),
-    );
-  memoryRegistrations = items;
+    localStorage.setItem(registrationKey, JSON.stringify(records));
+  memoryRegistrations = records;
   return registration;
 }
-
-function readStore(): MockStore {
-  if (typeof localStorage === "undefined") return memoryStore;
-  const saved = localStorage.getItem(storeKey);
-  if (!saved) return { version: 1, events: [] };
-  // Fail the request visibly instead of silently discarding a corrupt persisted demo.
-  return storeSchema.parse(JSON.parse(saved));
-}
-
-function writeStore(store: MockStore) {
-  if (typeof localStorage !== "undefined")
-    localStorage.setItem(storeKey, JSON.stringify(store));
-  memoryStore = store;
-}
-
-export function resetMockDatabase() {
-  memoryStore = { version: 1, events: [] };
-  if (typeof localStorage !== "undefined") localStorage.removeItem(storeKey);
-  memoryRegistrations = [];
-  if (typeof localStorage !== "undefined")
-    localStorage.removeItem(registrationKey);
-}
-
 export function getEvents(viewerId?: string): EventPreview[] {
-  const created = readStore().events.map(
-    (record): Omit<EventPreview, "registrationOpen"> => ({
-      ...eventFieldsSchema.parse(record.input),
-      startsAt: record.input.startsAt,
-      id: record.id,
-      sport: record.sport,
-      status: "PUBLISHED",
-      organizer: {
-        name:
-          accounts.find((account) => account.id === record.ownerId)?.name ??
-          "Участник",
-        type: "USER",
-      },
-      confirmedCount: 0,
-      viewerIsOrganizer: record.ownerId === viewerId,
-      viewerRegistrationStatus: null,
-    }),
-  );
-  const registrations = getRegistrations();
+  const created: EventPreview[] = readStore().events.map((record) => ({
+    ...record.input,
+    id: record.id,
+    sport: record.sport,
+    skillLevel: record.input.skillLevel ?? "ANY",
+    eventKind: record.input.eventKind ?? "ACTIVITY",
+    status: record.input.publishNow === false ? "DRAFT" : "PUBLISHED",
+    organizer: {
+      id: record.ownerId,
+      type: "USER",
+      name:
+        accounts.find((account) => mockId(account.id) === record.ownerId)
+          ?.label ?? "Участник",
+    },
+    confirmedCount: 0,
+    pendingCount: 0,
+    viewerIsOrganizer: record.ownerId === viewerId,
+    viewerRegistrationStatus: null,
+    createdAt: "2026-10-19T00:00:00Z",
+    updatedAt: "2026-10-19T00:00:00Z",
+  }));
   return [
     ...seedEvents.map((event) => ({
       ...event,
-      viewerIsOrganizer: seedOwners[event.id] === viewerId,
+      viewerIsOrganizer: event.organizer.id === viewerId,
     })),
     ...created,
   ].map((event) => {
-    const confirmed = registrations.filter(
-      (item) => item.eventId === event.id && item.status === "CONFIRMED",
-    );
+    const records = getRegistrations(event.id);
+    const confirmedCount = records.filter(
+      (item) => item.status === "CONFIRMED",
+    ).length;
     return {
       ...event,
-      confirmedCount: confirmed.length,
-      registrationOpen:
-        event.status === "PUBLISHED" && Date.parse(event.startsAt) > Date.now(),
+      confirmedCount,
+      pendingCount: records.filter((item) => item.status === "PENDING").length,
+      spotsLeft:
+        event.maxParticipants == null
+          ? null
+          : Math.max(0, event.maxParticipants - confirmedCount),
       viewerRegistrationStatus:
-        confirmed.find((item) => item.user.id === viewerId)?.status ?? null,
+        records.find((item) => item.user.id === viewerId)?.status ?? null,
     };
   });
 }
-
-export function getSports() {
-  const sports = new Map(
-    getEvents().map((event) => [event.sport.id, event.sport]),
-  );
-  return [...sports.values()];
+export function getSports(): Sport[] {
+  return [
+    ...new Map(
+      getEvents().map((event) => [event.sport.id, event.sport]),
+    ).values(),
+  ];
 }
-
-function normalizeSport(name: string) {
+function normalize(name: string) {
   return name.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru");
 }
-
 export function saveEvent(
   input: CreateEventInput,
   ownerId: string,
 ): EventPreview | undefined {
   const store = readStore();
-  const sports = getSports();
-  const sport = input.sportId
-    ? sports.find((item) => item.id === input.sportId)
-    : (sports.find(
-        (item) =>
-          normalizeSport(item.name) === normalizeSport(input.customSportName!),
-      ) ?? {
-        id: `custom-${crypto.randomUUID()}`,
-        name: input.customSportName!.trim().replace(/\s+/g, " "),
-      });
+  const selection = input.sport;
+  const sport =
+    "sportId" in selection
+      ? getSports().find((item) => item.id === selection.sportId)
+      : (getSports().find(
+          (item) => normalize(item.name) === normalize(selection.customName),
+        ) ?? {
+          id: crypto.randomUUID(),
+          name: selection.customName.trim().replace(/\s+/g, " "),
+          isCustom: true,
+        });
   if (!sport) return undefined;
   const id = crypto.randomUUID();
-  // Event and custom sport are persisted together; a failed write publishes neither.
-  writeStore({
-    version: 1,
+  const next = {
+    version: 2 as const,
     events: [...store.events, { id, ownerId, sport, input }],
-  });
+  };
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem(eventKey, JSON.stringify(next));
+  memoryStore = storeSchema.parse(next);
   return getEvents(ownerId).find((event) => event.id === id);
+}
+export function resetMockDatabase() {
+  memoryStore = { version: 2, events: [] };
+  memoryRegistrations = [];
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem(eventKey);
+    localStorage.removeItem(registrationKey);
+  }
+}
+
+export function decideRegistration(
+  registration: Registration,
+  decision: "APPROVE" | "REJECT",
+  reason?: string | null,
+): Registration {
+  const updated: Registration = {
+    ...registration,
+    status: decision === "APPROVE" ? "CONFIRMED" : "REJECTED",
+    decisionReason: reason ?? null,
+    decidedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  const seedIds = new Set(seedRegistrations.map((item) => item.id));
+  const records = [
+    ...getRegistrations().filter(
+      (item) => item.id !== updated.id && !seedIds.has(item.id),
+    ),
+    updated,
+  ];
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem(registrationKey, JSON.stringify(records));
+  memoryRegistrations = records;
+  return updated;
 }

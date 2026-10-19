@@ -7,24 +7,29 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { EventPreview } from "../../../shared/api/provisional";
-import { eventDate, sportArt } from "../lib/presentation";
+import type { EventCardDto } from "../../../shared/api/types";
+import {
+  eventDate,
+  sportImage,
+  skillLabels,
+  participantCount,
+} from "../lib/presentation";
 
 export function EventCard({
   event,
   participation,
 }: {
-  event: EventPreview;
+  event: EventCardDto;
   participation?: { label: string; tone: string };
 }) {
-  const places = event.capacity - event.confirmedCount;
+  const places = event.spotsLeft ?? Infinity;
   const OrganizerIcon =
     event.organizer.type === "ORGANIZATION" ? Building2 : UserRound;
   return (
     <article className="event-card">
       <div className="event-art">
         <img
-          src={sportArt[event.sport.id] ?? "/art/activity.svg"}
+          src={sportImage(event.sport.name)}
           alt=""
           loading="lazy"
           width="600"
@@ -35,7 +40,7 @@ export function EventCard({
       </div>
       <div className="event-card-body">
         <div className="event-meta-top">
-          <span>{event.skillLevel}</span>
+          <span>{skillLabels[event.skillLevel]}</span>
           <span className="tiny-dot" />
           <span>
             {event.joinMode === "OPEN" ? "Свободная запись" : "По заявке"}
@@ -69,7 +74,7 @@ export function EventCard({
         <div className="card-bottom">
           <span className={places > 0 ? "places" : "places full"}>
             <Users size={16} />
-            {event.confirmedCount} из {event.capacity} участников
+            {participantCount(event.confirmedCount, event.maxParticipants)}
           </span>
           <Link
             className="card-link"

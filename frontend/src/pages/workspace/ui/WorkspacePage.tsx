@@ -51,7 +51,7 @@ export function WorkspacePage({ kind }: { kind: "admin" | "organization" }) {
       <div className="notice">
         <CheckCircle2 size={24} />
         <div>
-          <strong>Сессия восстановлена: {query.data.user.name}</strong>
+          <strong>Сессия восстановлена: {query.data.user.displayName}</strong>
           <p>Вы вошли в аккаунт с доступом к этому разделу.</p>
         </div>
       </div>

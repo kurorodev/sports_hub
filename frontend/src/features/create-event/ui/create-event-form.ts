@@ -1,9 +1,9 @@
 import { z } from "zod";
 import {
   eventFieldsSchema,
-  createEventSchema,
+  sportNameSchema,
   type CreateEventInput,
-} from "../../../shared/api/provisional-event-schema";
+} from "../../../shared/api/event-schema";
 
 export const customSportValue = "__custom__";
 export const timezoneOffsets = Array.from(
@@ -12,7 +12,9 @@ export const timezoneOffsets = Array.from(
 );
 
 export const eventFormSchema = eventFieldsSchema
+  .omit({ maxParticipants: true })
   .extend({
+    capacity: eventFieldsSchema.shape.maxParticipants,
     sportChoice: z.string().min(1, "Выберите вид спорта"),
     customSportName: z.string(),
     date: z.iso.date({ error: "Укажите корректную дату" }),
@@ -21,9 +23,7 @@ export const eventFormSchema = eventFieldsSchema
   })
   .superRefine((values, context) => {
     if (values.sportChoice === customSportValue) {
-      const result = createEventSchema.shape.customSportName.safeParse(
-        values.customSportName,
-      );
+      const result = sportNameSchema.safeParse(values.customSportName);
       if (!result.success)
         context.addIssue({
           code: "custom",
@@ -46,20 +46,26 @@ export const eventFormSchema = eventFieldsSchema
 
 export type EventFormValues = z.infer<typeof eventFormSchema>;
 
-export function toEventInput(values: EventFormValues): CreateEventInput {
-  return createEventSchema.parse({
+export function toEventInput(
+  values: EventFormValues,
+  organizerId: string,
+): CreateEventInput {
+  return {
     title: values.title,
     description: values.description,
     location: values.location,
     skillLevel: values.skillLevel,
     eventKind: values.eventKind,
     joinMode: values.joinMode,
-    capacity: values.capacity,
+    maxParticipants: values.capacity,
+    organizer: { type: "USER", id: organizerId },
+    publishNow: true,
     startsAt: `${values.date}T${values.time}:00${values.timezoneOffset}`,
-    ...(values.sportChoice === customSportValue
-      ? { customSportName: values.customSportName }
-      : { sportId: values.sportChoice }),
-  });
+    sport:
+      values.sportChoice === customSportValue
+        ? { customName: values.customSportName.trim() }
+        : { sportId: values.sportChoice },
+  };
 }
 
 export const serverFieldNames: Record<
@@ -68,7 +74,9 @@ export const serverFieldNames: Record<
 > = {
   title: "title",
   description: "description",
-  sportId: "sportChoice",
+  "sport.sportId": "sportChoice",
+  "sport.customName": "customSportName",
+  sport: "sportChoice",
   customSportName: "customSportName",
   startsAt: "date",
   "location.city": "location.city",
@@ -76,5 +84,5 @@ export const serverFieldNames: Record<
   skillLevel: "skillLevel",
   eventKind: "eventKind",
   joinMode: "joinMode",
-  capacity: "capacity",
+  maxParticipants: "capacity",
 };
