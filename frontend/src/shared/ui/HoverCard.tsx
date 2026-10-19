@@ -45,15 +45,16 @@ export function HoverCard({
       restoringFocus.current = false;
     }
   }
-  function scheduleClose() {
+  function scheduleClose(pointerLeft = false) {
     cancelClose();
     timer.current = setTimeout(() => {
       const active = document.activeElement;
       if (
         !hovered.current &&
-        !pinned.current &&
-        !anchor.current?.contains(active) &&
-        !panel.current?.contains(active)
+        (pointerLeft ||
+          (!pinned.current &&
+            !anchor.current?.contains(active) &&
+            !panel.current?.contains(active)))
       )
         setOpen(false);
     }, 180);
@@ -151,7 +152,7 @@ export function HoverCard({
       onPointerLeave={(event) => {
         if (event.pointerType !== "touch") {
           hovered.current = false;
-          scheduleClose();
+          scheduleClose(true);
         }
       }}
       onFocusCapture={() => {
@@ -214,7 +215,7 @@ export function HoverCard({
             onPointerLeave={(event) => {
               if (event.pointerType !== "touch") {
                 hovered.current = false;
-                scheduleClose();
+                scheduleClose(true);
               }
             }}
           >

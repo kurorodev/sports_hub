@@ -80,6 +80,11 @@ describe("organizer preview", () => {
       within(card).getByRole("link", { name: "Открыть профиль" }),
     ).toHaveAttribute("href", `/users/${organizer.id}`);
     expect(calls).toBe(1);
+    // A click leaves focus on Copy; that focus must not pin a mouse preview.
+    await user.hover(screen.getByRole("button", { name: "Снаружи" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
   });
 
   it("opens with keyboard, closes with Escape, restores focus and dismisses outside", async () => {
@@ -191,13 +196,11 @@ describe("organizer preview", () => {
         ),
       );
       mount();
-      await userEvent
-        .setup()
-        .click(
-          screen.getByRole("button", {
-            name: `Краткая информация: ${organizer.name}`,
-          }),
-        );
+      await userEvent.setup().click(
+        screen.getByRole("button", {
+          name: `Краткая информация: ${organizer.name}`,
+        }),
+      );
       expect(await screen.findByRole("alert")).toBeVisible();
       expect(
         screen.queryByRole("button", { name: /Скопировать/ }),

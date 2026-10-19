@@ -38,7 +38,7 @@ for (const width of [320, 375, 768, 1440]) {
     await card.screenshot({
       path: `test-results/organizer-preview-${width}.png`,
     });
-    await page.keyboard.press("Escape");
+    await page.mouse.move(0, 0);
     await expect(card).toBeHidden();
     await expect(page).toHaveURL("/");
     await event.getByRole("heading").getByRole("link").click();
