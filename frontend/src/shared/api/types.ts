@@ -34,3 +34,7 @@ export type OrganizationCreate = Schemas["OrganizationCreate"];
 export type OrganizationDecisionRequest =
   Schemas["OrganizationDecisionRequest"];
 export type PagedOrganizationsDto = Schemas["PagedOrganizations"];
+
+export type ModerationRequest = Schemas["ModerationRequest"];
+export type PagedEventDetailsDto = Schemas["PagedEventDetails"];
+export type PagedCommentsDto = Schemas["PagedComments"];

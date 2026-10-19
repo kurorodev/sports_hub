@@ -1,3 +1,5 @@
+import { AdminEvents, AdminComments } from "../../../features/moderate-content";
+import { useSearchParams } from "react-router-dom";
 import { MyOrganizations } from "../../../features/organization-application";
 import { AdminOrganizations } from "../../../features/review-organizations";
 import { sportsQuery } from "../../../entities/event";
@@ -9,6 +11,8 @@ import { ErrorState } from "../../../shared/ui/Feedback";
 
 export function WorkspacePage({ kind }: { kind: "admin" | "organization" }) {
   const query = useQuery(sessionQuery);
+  const [params] = useSearchParams();
+  const section = params.get("section");
   const sports = useQuery({
     ...sportsQuery,
     enabled: kind === "organization" && Boolean(query.data),
@@ -57,7 +61,39 @@ export function WorkspacePage({ kind }: { kind: "admin" | "organization" }) {
         {kind === "admin" ? "Кабинет администратора" : "Кабинет организации"}
       </h1>
       {kind === "admin" ? (
-        <AdminOrganizations viewerId={query.data.user.id} />
+        <>
+          <nav className="admin-sections" aria-label="Разделы модерации">
+            <Link
+              to="/admin"
+              aria-current={
+                section !== "events" && section !== "comments"
+                  ? "page"
+                  : undefined
+              }
+            >
+              Организации
+            </Link>
+            <Link
+              to="/admin?section=events"
+              aria-current={section === "events" ? "page" : undefined}
+            >
+              Мероприятия
+            </Link>
+            <Link
+              to="/admin?section=comments"
+              aria-current={section === "comments" ? "page" : undefined}
+            >
+              Комментарии
+            </Link>
+          </nav>
+          {section === "events" ? (
+            <AdminEvents viewerId={query.data.user.id} />
+          ) : section === "comments" ? (
+            <AdminComments viewerId={query.data.user.id} />
+          ) : (
+            <AdminOrganizations viewerId={query.data.user.id} />
+          )}
+        </>
       ) : sports.isPending ? (
         <p role="status">Загружаем виды спорта…</p>
       ) : sports.isError ? (

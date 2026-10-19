@@ -166,5 +166,14 @@ describe("map coordinates and occupancy", () => {
     await expect(
       request(`/map/events?bbox=${bbox}&limit=501`),
     ).rejects.toBeInstanceOf(ApiError);
+    await login("admin");
+    await request(`/admin/events/${published.id}/unpublish`, {
+      method: "POST",
+      body: JSON.stringify({ reason: "Площадка закрыта на ремонт" }),
+    });
+    const moderated = await request<MapEventsResponse>(
+      `/map/events?bbox=${bbox}`,
+    );
+    expect(moderated.items.map((item) => item.id)).not.toContain(published.id);
   });
 });
