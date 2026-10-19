@@ -27,6 +27,16 @@ const commentSchema = z.object({
     ratingPoints: z.number().int().nonnegative(),
   }),
   text: z.string(),
+  mentions: z
+    .array(
+      z.object({
+        userId: z.string().uuid(),
+        nickname: z.string(),
+        start: z.number().int().nonnegative(),
+        end: z.number().int().positive(),
+      }),
+    )
+    .optional(),
   status: z.enum(["VISIBLE", "HIDDEN"]),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -42,7 +52,12 @@ function toComment(dto: z.infer<typeof commentSchema>): DiscussionComment {
   return {
     id: dto.id,
     eventId: dto.eventId,
-    author: { id: dto.author.id, displayName: dto.author.displayName },
+    author: {
+      id: dto.author.id,
+      displayName: dto.author.displayName,
+      nickname: dto.author.nickname,
+    },
+    mentions: dto.status === "HIDDEN" ? [] : (dto.mentions ?? []),
     text: dto.status === "HIDDEN" ? "" : dto.text,
     visibility: dto.status === "VISIBLE" ? "visible" : "hidden",
     publishedAt: dto.createdAt,

@@ -52,7 +52,9 @@ export async function sendDiscussion(page: Page, text: string) {
   await page
     .getByRole("button", { name: "Отправить сообщение", exact: true })
     .click();
-  await expect(page.getByText(text, { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".comment-text").getByText(text, { exact: true }),
+  ).toBeVisible();
 }
 export async function findModerationEvent(page: Page, title: string) {
   await page.goto("/admin?section=events");

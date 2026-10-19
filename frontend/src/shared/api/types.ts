@@ -13,6 +13,7 @@ export type MapEventsResponse = Schemas["MapEventsResponse"];
 export type MapVenuesResponse = Schemas["MapVenuesResponse"];
 export type SystemRole = Schemas["SystemRole"];
 export type DemoAccount = Schemas["DemoAccount"];
+export type DemoRegistrationRequest = Schemas["DemoRegistrationRequest"];
 export type Session = Schemas["Session"];
 export type Sport = Schemas["Sport"];
 export type EventPreview = Schemas["Event"];
@@ -38,3 +39,11 @@ export type PagedOrganizationsDto = Schemas["PagedOrganizations"];
 export type ModerationRequest = Schemas["ModerationRequest"];
 export type PagedEventDetailsDto = Schemas["PagedEventDetails"];
 export type PagedCommentsDto = Schemas["PagedComments"];
+
+export type UserProfileDto = Schemas["UserProfile"];
+export type ProfilePatchDto = Schemas["ProfilePatch"];
+
+export type AuthRegistrationRequest =
+  components["schemas"]["AuthRegistrationRequest"];
+export type AuthLoginRequest = components["schemas"]["AuthLoginRequest"];
+export type Mention = components["schemas"]["Mention"];

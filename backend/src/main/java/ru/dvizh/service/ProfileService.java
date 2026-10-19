@@ -12,6 +12,11 @@ import ru.dvizh.persistence.Store;
 public class ProfileService {
     private final Store db;private final Access access;private final Views view;private final PatchValidator validator;private final SportsCatalog catalog;
     public ProfileService(Store db,Access access,Views view,PatchValidator validator,SportsCatalog catalog) {this.db=db;this.access=access;this.view=view;this.validator=validator;this.catalog=catalog;}
+    public List<Api.PublicUser> search(String prefix) {
+        prefix=prefix.strip();if(prefix.startsWith("@"))prefix=prefix.substring(1);
+        if(!prefix.matches("[A-Za-z0-9_-]{1,40}"))throw Problem.invalid("Введите от 1 до 40 символов никнейма");
+        return db.list(UserEntity.class,"locate(:prefix,e.normalizedNickname)=1",Map.of("prefix",prefix.toLowerCase(Locale.ROOT)),"e.normalizedNickname asc",0,8).stream().map(u -> view.user(u.id)).toList();
+    }
     public Api.UserProfile me() { return view.profile(access.user()); }
     public Api.UserProfile get(UUID id) { return view.profile(db.get(UserEntity.class,id)); }
     public Api.Rating rating(UUID id) { return view.rating(db.get(UserEntity.class,id)); }
@@ -25,7 +30,8 @@ public class ProfileService {
         var u=db.lock(UserEntity.class,access.user().id);
         if(patch.has("nickname")) {
             String nickname=patch.path("nickname").asText().strip();
-            if(nickname.length()<3) throw Problem.invalid("Никнейм должен содержать от 3 до 40 символов");
+            if(nickname.startsWith("@"))nickname=nickname.substring(1);
+            if(!nickname.matches("[A-Za-z0-9_-]{3,40}")) throw Problem.invalid("Никнейм: 3–40 латинских букв, цифр, _ или -");
             String normalized=nickname.toLowerCase(Locale.ROOT);
             if(db.count(UserEntity.class,"e.normalizedNickname=:name and e.id<>:id",Map.of("name",normalized,"id",u.id))>0)
                 throw Problem.conflict(Api.ErrorCode.CONFLICT,"Никнейм уже занят");

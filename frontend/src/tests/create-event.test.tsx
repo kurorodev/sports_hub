@@ -22,6 +22,7 @@ import { mockId } from "../mocks/database";
 const input: CreateEventInput = {
   title: "Петанк в парке",
   description: "Играем в петанк, объясним правила и вместе потренируемся.",
+  requirements: "Вода и удобная обувь.\n<script>Обычный текст</script>",
   sport: { customName: "Петанк" },
   organizer: { type: "USER", id: mockId("user-alex") },
   startsAt: "2026-11-07T18:30:00+07:00",
@@ -66,6 +67,10 @@ async function fillForm() {
   await user.selectOptions(screen.getByLabelText("Вид спорта"), "__custom__");
   await user.type(screen.getByLabelText("Название активности"), "Петанк");
   await user.type(screen.getByLabelText("О встрече"), input.description);
+  await user.type(
+    screen.getByLabelText("Условия участия"),
+    input.requirements!,
+  );
   await user.type(screen.getByLabelText("Город"), input.location.city);
   await user.type(
     screen.getByLabelText("Место встречи"),
@@ -97,6 +102,7 @@ describe("S1 mock API", () => {
     await signIn();
     const created = await createEvent(input);
     expect(created).toMatchObject({
+      requirements: input.requirements,
       status: "PUBLISHED",
       confirmedCount: 0,
       viewerIsOrganizer: true,
@@ -265,6 +271,9 @@ describe("S1 creation UI", () => {
     );
     expect(screen.getByText("Встреча опубликована")).toBeInTheDocument();
     expect(screen.getByText("Вы организатор")).toBeInTheDocument();
+    const conditions = screen.getByRole("region", { name: "Условия участия" });
+    expect(conditions.textContent).toContain(input.requirements);
+    expect(conditions.querySelector("script")).toBeNull();
   });
 
   it("attaches server validation to its field and retains entered values", async () => {

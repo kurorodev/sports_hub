@@ -29,14 +29,14 @@ public class SecurityConfig {
         http.cors(c -> {}).csrf(c -> c.csrfTokenRepository(repository)
             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
             .ignoringRequestMatchers(request -> "POST".equals(request.getMethod()) &&
-                Set.of(request.getContextPath()+"/api/v1/demo/session",request.getContextPath()+"/api/v1/demo/accounts").contains(request.getRequestURI())))
+                Set.of(request.getContextPath()+"/api/v1/demo/session",request.getContextPath()+"/api/v1/demo/accounts",request.getContextPath()+"/api/v1/auth/register",request.getContextPath()+"/api/v1/auth/login").contains(request.getRequestURI())))
             .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .securityContext(c -> c.securityContextRepository(contexts).requireExplicitSave(true))
             .requestCache(c -> c.disable()).httpBasic(c -> c.disable()).formLogin(c -> c.disable()).logout(c -> c.disable())
             .authorizeHttpRequests(c -> c
                 .requestMatchers("/error", "/openapi.yaml", "/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS,"/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST,"/api/v1/demo/session","/api/v1/demo/accounts").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST,"/api/v1/demo/session","/api/v1/demo/accounts","/api/v1/auth/register","/api/v1/auth/login").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                     "/api/v1/health", "/api/v1/demo/accounts", "/api/v1/sports", "/api/v1/users/**", "/api/v1/map/**", "/api/v1/geo/**",
                     "/api/v1/events", "/api/v1/events/*", "/api/v1/events/*/participants", "/api/v1/events/*/comments", "/api/v1/events/*/team",

@@ -31,7 +31,12 @@ export async function request<T>(
   const method = (init.method ?? "GET").toUpperCase();
   if (
     ["POST", "PATCH", "DELETE"].includes(method) &&
-    path !== "/demo/session" &&
+    ![
+      "/demo/session",
+      "/demo/accounts",
+      "/auth/register",
+      "/auth/login",
+    ].includes(path) &&
     csrfToken
   ) {
     headers.set("X-CSRF-Token", csrfToken);
@@ -60,6 +65,7 @@ export async function request<T>(
       .catch(() => undefined);
     throw new ApiError(response.status, body);
   }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 

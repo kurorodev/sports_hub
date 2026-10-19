@@ -1,3 +1,4 @@
+import { refreshMockUser } from "./profiles";
 import { z } from "zod";
 import type {
   OrganizationDto,
@@ -29,7 +30,7 @@ export function getOrganizations(): OrganizationDto[] {
     ...(saved === null
       ? memory
       : z.array(organizationSchema).parse(JSON.parse(saved))),
-  ];
+  ].map((item) => ({ ...item, createdBy: refreshMockUser(item.createdBy) }));
 }
 function persist(items: OrganizationDto[]) {
   memory = items.filter((item) => item.id !== mockId("org-temp"));

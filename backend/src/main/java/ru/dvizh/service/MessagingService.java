@@ -10,8 +10,8 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional(readOnly=true)
 public class MessagingService {
-    private final Store db;private final Access access;private final Views view;private final Clock clock;
-    public MessagingService(Store db,Access access,Views view,Clock clock){this.db=db;this.access=access;this.view=view;this.clock=clock;}
+    private final Store db;private final Access access;private final Views view;private final Clock clock;private final MentionService mentions;
+    public MessagingService(Store db,Access access,Views view,Clock clock,MentionService mentions){this.db=db;this.access=access;this.view=view;this.clock=clock;this.mentions=mentions;}
     public record Created(Api.Conversation conversation,boolean created) {}
     @Transactional public Created create(Api.ConversationCreate request) {
         var actor=access.user();var c=new ConversationEntity();c.type=request.type();
@@ -47,7 +47,7 @@ public class MessagingService {
         var c=db.lock(ConversationEntity.class,id);
         // Serialize community sends with leave/rejoin so membership cannot be bypassed by a race.
         if(c.organizationId!=null)db.lock(OrganizationEntity.class,c.organizationId);
-        requireMember(c);var m=new MessageEntity();m.conversationId=id;m.authorId=access.user().id;m.text=request.text().strip();
+        requireMember(c);var m=new MessageEntity();m.conversationId=id;m.authorId=access.user().id;m.text=request.text().strip();m.mentions=mentions.resolve(m.text);
         m.createdAt=clock.instant();m.updatedAt=m.createdAt;c.lastMessageAt=m.createdAt;c.updatedAt=m.createdAt;db.add(m);return view.message(m);
     }
     private boolean activeMember(UUID organization,UUID user) {

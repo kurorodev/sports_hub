@@ -92,8 +92,19 @@ describe("comment HTTP boundary", () => {
     );
     expect(await adapter.list("event-1", 0)).toEqual({
       comments: [
-        model,
-        { ...model, id: "hidden", text: "", visibility: "hidden" },
+        {
+          ...model,
+          author: { ...model.author, nickname: dto.author.nickname },
+          mentions: [],
+        },
+        {
+          ...model,
+          author: { ...model.author, nickname: dto.author.nickname },
+          mentions: [],
+          id: "hidden",
+          text: "",
+          visibility: "hidden",
+        },
       ],
       pageIndex: 0,
       pageSize: 10,

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useRegistrationRepository } from "../lib/use-registration-repository";
 import { registrationErrorMessage } from "./presentation";
 import { useState } from "react";
@@ -46,7 +47,9 @@ export function Participants({ eventId }: { eventId: string }) {
                 <span className="participant-avatar" aria-hidden="true">
                   {participant.displayName.slice(0, 1)}
                 </span>
-                <span>{participant.displayName}</span>
+                <Link className="person-link" to={`/users/${participant.id}`}>
+                  {participant.displayName}
+                </Link>
               </li>
             ))}
           </ul>

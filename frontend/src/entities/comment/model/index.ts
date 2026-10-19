@@ -1,7 +1,8 @@
 export interface DiscussionComment {
   id: string;
   eventId: string;
-  author: { id: string; displayName: string };
+  author: { id: string; displayName: string; nickname?: string };
+  mentions?: { userId: string; nickname: string; start: number; end: number }[];
   text: string;
   visibility: "visible" | "hidden";
   publishedAt: string;

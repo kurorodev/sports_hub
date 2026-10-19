@@ -90,6 +90,11 @@ describe("architectural dependency boundaries", () => {
       'import { createRepository } from "../../../entities/moderation/api/http-moderation-repository";',
       "adapter",
     ],
+    [
+      "features/edit-profile/ui/view.js",
+      'import { createRepository } from "../../../entities/profile/api/http-profile-repository";',
+      "adapter",
+    ],
   ])("rejects forbidden dependency from %s", (file, code, message) => {
     expect(lint(file, code).some((item) => item.messageId === message)).toBe(
       true,

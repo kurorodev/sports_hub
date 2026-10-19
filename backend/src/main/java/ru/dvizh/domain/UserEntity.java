@@ -19,6 +19,7 @@ public class UserEntity extends BaseEntity {
     @Column(length=20) public String preferredTime;
     @Column(nullable=false) public boolean admin;
     @Column(unique=true,length=80) public String demoAccount;
+    @Column(length=255) public String passwordHash;
     @ElementCollection @CollectionTable(name="user_sport_roles",joinColumns=@JoinColumn(name="user_id"))
     @Column(name="sports_role",length=30) @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR) @Enumerated(EnumType.STRING)
     public Set<Api.SportsRole> sportsRoles = new HashSet<>();

@@ -77,7 +77,9 @@ export function EventCard({
               {event.organizer.name}
             </Link>
           ) : (
-            <span>{event.organizer.name}</span>
+            <Link className="person-link" to={`/users/${event.organizer.id}`}>
+              {event.organizer.name}
+            </Link>
           )}
         </div>
         <div className="card-bottom">

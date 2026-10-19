@@ -30,7 +30,7 @@ public class SessionController {
     @PostMapping("/demo/session") public Api.Session login(@Valid @RequestBody Api.DemoLoginRequest body,HttpServletRequest request,HttpServletResponse response) {
         return establishSession(sessions.login(body.accountId()),request,response);
     }
-    private Api.Session establishSession(UUID id,HttpServletRequest request,HttpServletResponse response) {
+    Api.Session establishSession(UUID id,HttpServletRequest request,HttpServletResponse response) {
         var old=request.getSession(false);if(old!=null)old.invalidate();
         var context=SecurityContextHolder.createEmptyContext();
         context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(id,null,List.of()));
@@ -45,6 +45,8 @@ public class SessionController {
         UUID id=access.viewerId();if(id==null)throw new Problem(401,Api.ErrorCode.UNAUTHENTICATED,"Войдите в аккаунт");
         return sessions.session(id,csrf.loadDeferredToken(req,res).get().getToken());
     }
+    @DeleteMapping("/auth/session") @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void logoutAccount(HttpServletRequest request){logout(request);}
     @DeleteMapping("/demo/session") @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
     public void logout(HttpServletRequest request){var session=request.getSession(false);if(session!=null)session.invalidate();SecurityContextHolder.clearContext();}
 }

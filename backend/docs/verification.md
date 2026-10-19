@@ -73,3 +73,7 @@
 - Обе конфигурации проверены: `docker compose -f compose.yaml config --quiet` и `docker compose -f compose.yaml -f compose.local.yaml config --quiet`.
 - Синтаксис shell-скриптов проверен через `bash -n`, Python-скриптов — через `ast.parse`. Java-исходники, тесты, Maven и Dockerfile побайтово совпадают с исходной веткой backend.
 - Повторная Maven-сборка и запуск API не выполнялись: в текущем окружении отсутствует Maven. Результаты исходной ветки выше являются историческими.
+
+## Пароли и упоминания · 19.10.2026
+
+Добавлены парольные аккаунты, поиск по @никнейму и постоянные упоминания в комментариях/сообщениях. `mvn verify` — 51/51; `mvn -Ppostgres-it verify` — 90/90, из них 39 PostgreSQL, без ошибок/пропусков. Использована отдельная Testcontainers БД. Контракт: 62 операции, YAML/JSON/generated согласованы. V3 применена на локальном стенде с сохранением данных. Состав изменений и ограничения: [passwords-and-mentions.md](passwords-and-mentions.md); браузерная приёмка: [frontend QA](../../frontend/docs/QA.md).

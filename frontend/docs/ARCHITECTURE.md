@@ -16,6 +16,8 @@ src/
     event-discussion/model/     независимый publishComment и проверка публикации
     event-discussion/ui/        список, пагинация, polling, форма и mutation
     create-event/ui/            существующая форма и её Zod-схема
+    edit-profile/model/         независимый updateProfile с проверкой ответа
+    edit-profile/ui/            форма и orchestration редактирования
   entities/
     event/                      API/query, карточка, форматирование, EventParticipation
     registration/model/         Registration, ParticipantPage, repository port, failures
@@ -26,11 +28,16 @@ src/
     comment/api/                HTTP-адаптер, runtime DTO guards, query options
     comment/lib/                context для внедрения репозитория
     comment/ui/                 сообщение, автор/время, отображение ошибок
-    session/                    существующие session/demo query/services
+    profile/                    модель/порт, HTTP guards, DI context, ProfileSummary
+    session/                    session/demo services, общий переход после входа/регистрации
   shared/                       транспорт, generated DTO, общие UI и токены
   mocks/                        MSW и локальная эмуляция backend
   tests/                        проверки ядра, адаптеров, UI и границ
 ```
+
+`pages/profile` собирает собственный и публичный профиль через внедрённый `ProfileRepository`. Редактирование проходит через `features/edit-profile/model/update-profile`; DTO преобразуются в HTTP-адаптере профиля. Публичные профили читаются без сессии, приватные запросы ждут её восстановления. Рейтинг отображается из ответа API, не вычисляется клиентом.
+
+`pages/register` и `pages/login` используют общий `entities/session/lib/use-session-transition`: отмена запросов, очистка приватного кэша, установка Session/CSRF и переход. `shared/lib/session-return` разрешает только известные внутренние назначения и безопасный контекст карты. Bootstrap POST регистрации и входа не передают старый CSRF; остальные мутации сохраняют существующую защиту. Сессия остаётся в прежнем query/service-подходе.
 
 Допустимое направление слоёв: `app → pages → features → entities → shared`. Промежуточные слои можно пропускать. Модуль одного слоя не импортирует другой модуль того же слоя; несколько модулей собираются выше. `widgets/` пока не требуется и не создаётся.
 
@@ -143,3 +150,9 @@ MSW хранит аудит/причины в `dvizh.mock.moderation.v1`; getEve
 Общие ссылки режимов и проверка адреса возврата — `shared/lib/activity-navigation.ts`, представление переключателя — `shared/ui/ActivityViewSwitch`. Фильтры, область и выбор объекта принадлежат URL; `pages/map/ui/use-map-params` объединяет отложенные изменения области с текущими параметрами и синхронно обновляет управляемые поля через router. Число участников, публикация и загруженность остаются серверным состоянием TanStack Query. `entities/event/ui/EventLocation` показывает адрес и по запросу лениво загружает общий GeoMap; страница события собирает его с регистрациями и обсуждением. Новых API-контрактов или менеджера глобального состояния нет.
 
 С 20.10.2026 справочник спорта закрыт: `GET /sports` возвращает официальный снимок ВРВС + «Другое». `sport.customName` — текст активности категории «Другое», не новая категория. Нормализация старых данных выполняется серверной миграцией; UI получает канонические DTO. Мок-снимок генерируется из backend-ресурса (`sports:generate` / `sports:check`).
+
+## Пароли и упоминания
+
+`features/password-login` связывает форму с session services. Вход/регистрация используют существующий общий переход Session/CSRF; выход очищает запросы и кэш только после успешного 204. `shared/ui/MentionInput` получает text/onChange от RHF Controller, отменяет устаревшие запросы подсказок через AbortSignal и сохраняет курсор после вставки. `shared/ui/MentionText` отображает только корректные неперекрывающиеся диапазоны как внутренние ссылки. Модель комментария содержит независимые поля mentions, HTTP-адаптер проверяет wire-формат и очищает скрытые данные. Пароли проверяет только Java; `mocks/passwords.ts` используется исключительно явным MSW-режимом.
+
+При смене/завершении сессии `replaceSession` отменяет запросы, удаляет остальные query и mutation cache, обновляет CSRF и перезаписывает наблюдаемый session query. Сам query сессии сохраняется, чтобы шапка и защищённые страницы получили новую идентичность.

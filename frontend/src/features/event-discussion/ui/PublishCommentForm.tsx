@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send } from "lucide-react";
@@ -14,6 +14,8 @@ import {
   publishComment,
   type PublishCommentInput,
 } from "../model/publish-comment";
+import { MentionInput } from "../../../shared/ui/MentionInput";
+
 const schema = z.object({
   text: z
     .string()
@@ -60,22 +62,30 @@ export function PublishCommentForm({
       <FormField
         id="discussion-message"
         label="Ваше сообщение"
-        hint="Вопрос или ответ по встрече. До 2000 символов."
+        hint="Вопрос или ответ по встрече. Напишите @никнейм, чтобы отметить пользователя. До 2000 символов."
         error={form.formState.errors.text?.message}
       >
-        <textarea
-          id="discussion-message"
-          {...form.register("text")}
-          rows={4}
-          maxLength={2000}
-          disabled={mutation.isPending}
-          aria-invalid={Boolean(form.formState.errors.text)}
-          aria-describedby={
-            form.formState.errors.text
-              ? "discussion-message-error"
-              : "discussion-message-hint"
-          }
-          placeholder="Например: подойдёт ли встреча новичку?"
+        <Controller
+          control={form.control}
+          name="text"
+          render={({ field }) => (
+            <MentionInput
+              id="discussion-message"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              rows={4}
+              maxLength={2000}
+              disabled={mutation.isPending}
+              aria-invalid={Boolean(form.formState.errors.text)}
+              aria-describedby={
+                form.formState.errors.text
+                  ? "discussion-message-error"
+                  : "discussion-message-hint"
+              }
+              placeholder="Например: @nickname, придёшь на встречу?"
+            />
+          )}
         />
       </FormField>
       <div className="discussion-submit">
