@@ -2926,7 +2926,7 @@ input[type="radio"] {
 .mention-options button { width: 100%; text-align: left; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 10px; border: 0; border-radius: 8px; background: transparent; overflow-wrap: anywhere; }
 .mention-options [aria-selected="true"] button { background: var(--color-brand); color: var(--color-ink); }
 .mention-options span, .comment-handle { color: var(--color-ink-muted); font-size: 0.875rem; }
-.mention-link { color: var(--color-ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.mention-link { color: #8a6500; background: #fff4c2; border-radius: 4px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
 /* Interactive organizer previews render in a portal to escape card clipping. */
 .hover-card-anchor {
