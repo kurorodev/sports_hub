@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, RefreshCw } from "lucide-react";
@@ -15,6 +15,7 @@ import type {
 } from "../../../entities/comment/model";
 import { sessionQuery } from "../../../entities/session";
 import { ErrorState } from "../../../shared/ui/Feedback";
+import { Toast } from "../../../shared/ui/Toast";
 import { PublishCommentForm } from "./PublishCommentForm";
 
 export function EventDiscussion({
@@ -33,7 +34,8 @@ export function EventDiscussion({
   const client = useQueryClient();
   const viewerId = session.data?.user.id;
   const [page, setPage] = useState(0);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<DiscussionComment | null>(null);
+  const dismissNotice = useCallback(() => setNotice(null), []);
   const panel = useRef<HTMLElement>(null);
   const location = useLocation();
   useEffect(() => {
@@ -46,7 +48,7 @@ export function EventDiscussion({
     enabled: !session.isPending && !session.isError,
   });
   const onPublished = (comment: DiscussionComment) => {
-    setNotice("Сообщение опубликовано.");
+    setNotice(comment);
     void client
       .invalidateQueries({ queryKey: commentKeys.event(eventId) })
       .then(() => {
@@ -160,10 +162,12 @@ export function EventDiscussion({
           )}
         </>
       )}
-      {notice && (
-        <p className="discussion-success success" role="status">
-          {notice}
-        </p>
+      {notice?.eventId === eventId && notice.author.id === viewerId && (
+        <Toast
+          key={notice.id}
+          message="Сообщение опубликовано."
+          onDismiss={dismissNotice}
+        />
       )}
       {!published ? (
         <p className="notice">

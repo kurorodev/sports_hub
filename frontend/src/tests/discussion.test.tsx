@@ -186,6 +186,13 @@ describe("discussion UI", () => {
       screen.getByRole("button", { name: "Отправить сообщение" }),
     );
     expect(await screen.findByText("Сообщение опубликовано.")).toBeVisible();
+    expect(document.querySelector(".discussion-panel .toast")).toBeNull();
+    await user.click(
+      screen.getByRole("button", { name: "Закрыть уведомление" }),
+    );
+    expect(
+      screen.queryByText("Сообщение опубликовано."),
+    ).not.toBeInTheDocument();
     expect(field).toHaveValue("");
     expect(getComments()).toHaveLength(1);
   });
