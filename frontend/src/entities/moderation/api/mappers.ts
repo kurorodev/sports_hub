@@ -131,12 +131,14 @@ export function readModerationComments(
   value: unknown,
   page: number,
   eventId?: string,
+  authorId?: string,
 ): ModerationPage<ModerationComment> {
   const result = commentsPage.safeParse(value);
   if (
     !result.success ||
     result.data.page !== page ||
-    (eventId && result.data.items.some((item) => item.eventId !== eventId))
+    (eventId && result.data.items.some((item) => item.eventId !== eventId)) ||
+    (authorId && result.data.items.some((item) => item.author.id !== authorId))
   )
     throw new ModerationFailure("invalid-response");
   return {

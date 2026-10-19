@@ -148,6 +148,23 @@ export const handlers = [
       );
     const p = new URL(request.url).searchParams;
     const eventId = p.get("eventId");
+    const authorId = p.get("authorId");
+    const latest = p.get("latest") === "true";
+    const last24Hours = p.get("last24Hours") === "true";
+    if (
+      ["latest", "last24Hours"].some(
+        (key) => p.has(key) && !["true", "false"].includes(p.get(key)!),
+      ) ||
+      [authorId, eventId].some(
+        (id) => id && !z.string().uuid().safeParse(id).success,
+      )
+    )
+      return json(
+        { code: "VALIDATION_ERROR", message: "Некорректный фильтр" },
+        { status: 400 },
+      );
+    if (authorId && !mockProfiles().some((item) => item.id === authorId))
+      return notFound();
     if (eventId && !getEvents().some((item) => item.id === eventId))
       return notFound();
     const page = Math.max(0, Math.floor(Number(p.get("page")) || 0)),
@@ -155,19 +172,26 @@ export const handlers = [
         100,
         Math.max(1, Math.floor(Number(p.get("size")) || 20)),
       );
-    const items = getComments()
-      .filter((item) => !eventId || item.eventId === eventId)
+    const filtered = getComments()
+      .filter(
+        (item) =>
+          (!eventId || item.eventId === eventId) &&
+          (!authorId || item.author.id === authorId) &&
+          (!last24Hours || Date.parse(item.createdAt) >= Date.now() - 86400000),
+      )
       .sort(
         (a, b) =>
-          Date.parse(a.createdAt) - Date.parse(b.createdAt) ||
-          a.id.localeCompare(b.id),
+          Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+          b.id.localeCompare(a.id),
       );
+    const items = latest ? filtered.slice(0, 10) : filtered;
+    const pageSize = latest ? Math.min(size, 10) : size;
     return json({
-      items: items.slice(page * size, (page + 1) * size),
+      items: items.slice(page * pageSize, (page + 1) * pageSize),
       page,
-      size,
+      size: pageSize,
       total: items.length,
-      totalPages: Math.ceil(items.length / size),
+      totalPages: Math.ceil(items.length / pageSize),
     });
   }),
   http.post(

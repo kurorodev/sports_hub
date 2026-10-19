@@ -1,5 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { ModerationRepository, EventStatus } from "../model";
+import type {
+  ModerationRepository,
+  EventStatus,
+  ModerationCommentFilter,
+} from "../model";
 export const moderationKeys = { all: ["moderation"] as const };
 export const moderationEventsQuery = (
   repo: ModerationRepository,
@@ -17,7 +21,7 @@ export const moderationEventsQuery = (
 export const moderationCommentsQuery = (
   repo: ModerationRepository,
   viewerId: string,
-  filter: { eventId?: string; page: number },
+  filter: ModerationCommentFilter,
 ) =>
   queryOptions({
     queryKey: ["moderation", "comments", viewerId, filter],

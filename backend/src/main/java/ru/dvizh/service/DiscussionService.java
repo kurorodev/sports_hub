@@ -13,11 +13,25 @@ public class DiscussionService {
     private final Store db;private final Access access;private final Views view;private final OrganizationService organizations;private final Clock clock;private final MentionService mentions;private final NotificationService notifications;
     public DiscussionService(Store db,Access access,Views view,OrganizationService organizations,Clock clock,MentionService mentions,NotificationService notifications){this.db=db;this.access=access;this.view=view;this.organizations=organizations;this.clock=clock;this.mentions=mentions;this.notifications=notifications;}
     public PageResult<Api.Comment> list(UUID eventId,boolean admin,int page,int size) {
+        return list(eventId,admin,null,false,false,page,size);
+    }
+    public PageResult<Api.Comment> adminComments(UUID eventId,UUID authorId,boolean latest,boolean last24Hours,int page,int size) {
+        return list(eventId,true,authorId,latest,last24Hours,page,size);
+    }
+    private PageResult<Api.Comment> list(UUID eventId,boolean admin,UUID authorId,boolean latest,boolean last24Hours,int page,int size) {
         if(admin)access.requireAdmin();else {if(eventId==null)throw Problem.notFound();access.eventVisible(db.get(EventEntity.class,eventId));}
+        PageResult.offset(page,size);
         var p=new HashMap<String,Object>();String condition="1=1";
         if(eventId!=null){db.get(EventEntity.class,eventId);condition+=" and e.eventId=:event";p.put("event",eventId);}
+        if(authorId!=null){db.get(UserEntity.class,authorId);condition+=" and e.authorId=:author";p.put("author",authorId);}
+        if(last24Hours){condition+=" and e.createdAt>=:since";p.put("since",clock.instant().minus(java.time.Duration.ofHours(24)));}
         if(!admin && !access.admin()){condition+=" and e.status=:status";p.put("status",Api.CommentStatus.VISIBLE);}
-        return PageResult.of(db.list(CommentEntity.class,condition,p,"e.createdAt asc,e.id asc",PageResult.offset(page,size),size).stream().map(view::comment).toList(),page,size,db.count(CommentEntity.class,condition,p));
+        long total=db.count(CommentEntity.class,condition,p);
+        if(latest){size=Math.min(size,10);total=Math.min(total,10);}
+        int offset=PageResult.offset(page,size);
+        int limit=(int)Math.min(size,Math.max(0,total-offset));
+        var items=limit==0?List.<Api.Comment>of():db.list(CommentEntity.class,condition,p,admin?"e.createdAt desc,e.id desc":"e.createdAt asc,e.id asc",offset,limit).stream().map(view::comment).toList();
+        return PageResult.of(items,page,size,total);
     }
     @Transactional public Api.Comment create(UUID eventId,Api.CommentCreate request) {
         var u=access.user();var e=db.lock(EventEntity.class,eventId);access.eventVisible(e);

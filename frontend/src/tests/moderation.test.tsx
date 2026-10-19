@@ -385,7 +385,7 @@ describe("moderation UI", () => {
       await screen.findByRole("article", { name: `Мероприятие: ${e.title}` }),
     ).not.toHaveTextContent("Неподходящее описание");
   });
-  it("shows hidden status in admin only, retains other messages and validates event UUID", async () => {
+  it("shows hidden status in admin only and retains other messages", async () => {
     const e = await event();
     await postComment(e.id, "Проверяемый комментарий");
     await postComment(e.id, "Сохраняемый комментарий");
@@ -410,18 +410,67 @@ describe("moderation UI", () => {
     expect(await screen.findByText("Скрыт модератором")).toBeVisible();
     expect(screen.getByText("Сохраняемый комментарий")).toBeVisible();
     expect(screen.getByText("Проверяемый комментарий")).toBeVisible();
-    await userEvent.clear(
-      screen.getByLabelText("ID мероприятия (необязательно)"),
-    );
-    await userEvent.type(
-      screen.getByLabelText("ID мероприятия (необязательно)"),
-      "invalid",
-    );
-    await userEvent.click(
-      screen.getByRole("button", { name: "Показать комментарии" }),
+  });
+  it("validates IDs in filter links and recovers by clearing filters", async () => {
+    await login("admin");
+    mount(
+      <AdminComments viewerId={mockId("admin")} />,
+      "/admin?section=comments&eventId=invalid",
     );
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "корректный UUID",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Сбросить фильтры" }),
+    );
+    expect(await screen.findByText(/Найдено комментариев:/)).toBeVisible();
+  });
+  it("combines named user and event selection with latest ten and 24-hour filters", async () => {
+    const e = await event();
+    for (let i = 0; i < 12; i++)
+      await postComment(e.id, `Комментарий автора ${i}`);
+    const other = await event();
+    await postComment(other.id, "Другое мероприятие");
+    await login("user-maria");
+    await postComment(e.id, "Другой пользователь");
+    await login("admin");
+    mount(<AdminComments viewerId={mockId("admin")} />);
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByLabelText("Поиск пользователя по никнейму"),
+      "user-alex",
+    );
+    await screen.findByRole("option", { name: /Александр/ });
+    await user.selectOptions(
+      screen.getByLabelText("Пользователь", { exact: true }),
+      mockId("user-alex"),
+    );
+    await screen.findAllByRole("option", { name: e.title });
+    await user.selectOptions(
+      screen.getByLabelText("Мероприятие", { exact: true }),
+      e.id,
+    );
+    await user.click(screen.getByLabelText("Последние 10 комментариев"));
+    await user.click(screen.getByLabelText("За последние 24 часа"));
+    await waitFor(() =>
+      expect(screen.getByText("Найдено комментариев: 10")).toBeVisible(),
+    );
+    expect(screen.queryByText("Другой пользователь")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Другое мероприятие", {
+        selector: ".moderation-text",
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Комментарий автора 0")).not.toBeInTheDocument();
+    expect(screen.getByText("Комментарий автора 11")).toBeVisible();
+    expect(
+      screen.queryByRole("navigation", {
+        name: "Страницы модерации комментариев",
+      }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Сбросить фильтры" }));
+    await waitFor(() =>
+      expect(screen.getByText("Найдено комментариев: 14")).toBeVisible(),
     );
   });
   it("keeps existing participation and shows the server reason on direct unpublished access", async () => {

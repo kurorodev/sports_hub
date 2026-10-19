@@ -26,13 +26,20 @@ export interface ModerationPage<T> {
   pageSize: number;
   totalCount: number;
 }
+export interface ModerationCommentFilter {
+  eventId?: string;
+  authorId?: string;
+  latest?: boolean;
+  last24Hours?: boolean;
+  page: number;
+}
 export interface ModerationRepository {
   events(
     filter: { q: string; status?: EventStatus; page: number },
     signal?: AbortSignal,
   ): Promise<ModerationPage<ModerationEvent>>;
   comments(
-    filter: { eventId?: string; page: number },
+    filter: ModerationCommentFilter,
     signal?: AbortSignal,
   ): Promise<ModerationPage<ModerationComment>>;
   unpublish(id: string, reason: string): Promise<ModerationEvent>;

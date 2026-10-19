@@ -1493,7 +1493,7 @@ paths:
       - Administration
       summary: Комментарии для модерации
       operationId: getAdminComments
-      description: ''
+      description: Фильтры пользователя и мероприятия объединяются. Затем применяется интервал последних 24 часов и ограничение последними 10 комментариями. Без фильтра пользователя/мероприятия выбираются все комментарии. Сортировка по createdAt DESC, id DESC. Время отсчитывается по часам сервера; скрытые комментарии также доступны администратору.
       responses:
         '200':
           description: Успешный ответ
@@ -1507,6 +1507,8 @@ paths:
           $ref: '#/components/responses/401'
         '403':
           $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
         '500':
           $ref: '#/components/responses/500'
       parameters:
@@ -1516,6 +1518,27 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: authorId
+        in: query
+        required: false
+        description: UUID автора комментария
+        schema:
+          type: string
+          format: uuid
+      - name: latest
+        in: query
+        required: false
+        description: Ограничить отфильтрованный результат последними 10 комментариями, включая total и пагинацию
+        schema:
+          type: boolean
+          default: false
+      - name: last24Hours
+        in: query
+        required: false
+        description: Комментарии с createdAt не раньше текущего серверного времени минус 24 часа
+        schema:
+          type: boolean
+          default: false
       - *id002
       - *id003
       x-phase: P0

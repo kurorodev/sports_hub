@@ -715,7 +715,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Комментарии для модерации */
+        /**
+         * Комментарии для модерации
+         * @description Фильтры пользователя и мероприятия объединяются. Затем применяется интервал последних 24 часов и ограничение последними 10 комментариями. Без фильтра пользователя/мероприятия выбираются все комментарии. Сортировка по createdAt DESC, id DESC. Время отсчитывается по часам сервера; скрытые комментарии также доступны администратору.
+         */
         get: operations["getAdminComments"];
         put?: never;
         post?: never;
@@ -3089,6 +3092,12 @@ export interface operations {
         parameters: {
             query?: {
                 eventId?: string;
+                /** @description UUID автора комментария */
+                authorId?: string;
+                /** @description Ограничить отфильтрованный результат последними 10 комментариями, включая total и пагинацию */
+                latest?: boolean;
+                /** @description Комментарии с createdAt не раньше текущего серверного времени минус 24 часа */
+                last24Hours?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -3110,6 +3119,7 @@ export interface operations {
             400: components["responses"]["400"];
             401: components["responses"]["401"];
             403: components["responses"]["403"];
+            404: components["responses"]["404"];
             500: components["responses"]["500"];
         };
     };

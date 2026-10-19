@@ -9,61 +9,59 @@ import {
 import { ErrorState } from "../../../shared/ui/Feedback";
 import { isUuid } from "../../../shared/lib/identifiers";
 import { ModerationCommentCard } from "./ModerationCommentCard";
+import { AdminCommentFilters } from "./AdminCommentFilters";
 export function AdminComments({ viewerId }: { viewerId: string }) {
   const repo = useModerationRepository();
   const [params, setParams] = useSearchParams();
   const eventId = params.get("eventId") ?? "";
-  const page = Math.max(0, Math.floor(Number(params.get("page")) || 0));
-  const valid = !eventId || isUuid(eventId);
-  const [draft, setDraft] = useState(eventId);
+  const authorId = params.get("authorId") ?? "";
+  const latest = params.get("latest") === "true";
+  const last24Hours = params.get("last24Hours") === "true";
+  const page = latest
+    ? 0
+    : Math.max(0, Math.floor(Number(params.get("page")) || 0));
+  const valid =
+    (!eventId || isUuid(eventId)) && (!authorId || isUuid(authorId));
   const [notice, setNotice] = useState("");
   const query = useQuery({
     ...moderationCommentsQuery(repo, viewerId, {
       eventId: eventId || undefined,
+      authorId: authorId || undefined,
+      latest,
+      last24Hours,
       page,
     }),
     enabled: valid,
   });
-  function filter(id: string, nextPage: number) {
-    const next = new URLSearchParams({ section: "comments" });
-    if (id) next.set("eventId", id);
+  function filter(changes: Record<string, string>, nextPage = 0) {
+    const next = new URLSearchParams(params);
+    next.set("section", "comments");
+    next.delete("page");
+    for (const [key, value] of Object.entries(changes)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
     if (nextPage) next.set("page", String(nextPage));
+    setNotice("");
     setParams(next);
   }
   return (
     <section aria-labelledby="moderation-comments-heading">
       <h2 id="moderation-comments-heading">Модерация комментариев</h2>
       <p className="join-note">
-        Ищите обсуждение через «Комментарии мероприятия» в разделе мероприятий
-        или укажите его ID.
+        Выберите пользователя и/или мероприятие. Ограничения по количеству и
+        времени применяются к выбранным условиям, без выбора — ко всем
+        комментариям.
       </p>
       <div className="organization-toolbar">
-        <form
-          className="organization-search"
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            filter(draft.trim(), 0);
-          }}
-        >
-          <label htmlFor="moderation-event-id">
-            ID мероприятия (необязательно)
-          </label>
-          <div>
-            <input
-              id="moderation-event-id"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              aria-invalid={!valid}
-              aria-describedby={
-                !valid ? "moderation-event-id-error" : undefined
-              }
-            />
-            <button className="button secondary" type="submit">
-              Показать комментарии
-            </button>
-          </div>
-        </form>
+        <AdminCommentFilters
+          viewerId={viewerId}
+          eventId={eventId}
+          authorId={authorId}
+          latest={latest}
+          last24Hours={last24Hours}
+          onChange={filter}
+        />
         <button
           className="button secondary"
           disabled={query.isFetching || !valid}
@@ -74,7 +72,8 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
       </div>
       {!valid ? (
         <p id="moderation-event-id-error" role="alert" className="field-error">
-          Укажите корректный UUID мероприятия или оставьте поле пустым.
+          Укажите корректный UUID мероприятия и пользователя в ссылке или
+          сбросьте фильтры.
         </p>
       ) : query.isPending ? (
         <p role="status">Загружаем комментарии…</p>
@@ -109,30 +108,31 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
               ))}
             </div>
           )}
-          {(query.data.totalCount > query.data.pageSize || page > 0) && (
-            <nav
-              className="pagination"
-              aria-label="Страницы модерации комментариев"
-            >
-              <button
-                className="button secondary"
-                disabled={page === 0}
-                onClick={() => filter(eventId, page - 1)}
+          {!latest &&
+            (query.data.totalCount > query.data.pageSize || page > 0) && (
+              <nav
+                className="pagination"
+                aria-label="Страницы модерации комментариев"
               >
-                Назад
-              </button>
-              <span>Страница {page + 1}</span>
-              <button
-                className="button secondary"
-                disabled={
-                  (page + 1) * query.data.pageSize >= query.data.totalCount
-                }
-                onClick={() => filter(eventId, page + 1)}
-              >
-                Далее
-              </button>
-            </nav>
-          )}
+                <button
+                  className="button secondary"
+                  disabled={page === 0}
+                  onClick={() => filter({}, page - 1)}
+                >
+                  Назад
+                </button>
+                <span>Страница {page + 1}</span>
+                <button
+                  className="button secondary"
+                  disabled={
+                    (page + 1) * query.data.pageSize >= query.data.totalCount
+                  }
+                  onClick={() => filter({}, page + 1)}
+                >
+                  Далее
+                </button>
+              </nav>
+            )}
         </>
       )}
       {notice && (

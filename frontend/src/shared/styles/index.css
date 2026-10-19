@@ -1877,6 +1877,21 @@ input[type="radio"] {
 .organization-toolbar > .form-field {
   margin-bottom: 0;
 }
+.comment-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+.comment-filters .form-field { min-width: 0; margin-bottom: 0; }
+.comment-filters select { width: 100%; min-width: 0; }
+.comment-filters .pagination { flex-wrap: wrap; margin-top: 0; }
+.comment-filter-toggle { display: flex; align-items: center; gap: var(--space-2); }
+.comment-filter-toggle input { accent-color: var(--color-ink); }
+@media (max-width: 767px) {
+  .comment-filters { grid-template-columns: minmax(0, 1fr); }
+}
 .organization-toolbar .organization-search > label {
   font-size: 14px;
   font-weight: 750;

@@ -69,10 +69,14 @@ export function createHttpModerationRepository(
           size: "10",
         });
         if (filter.eventId) params.set("eventId", filter.eventId);
+        if (filter.authorId) params.set("authorId", filter.authorId);
+        if (filter.latest) params.set("latest", "true");
+        if (filter.last24Hours) params.set("last24Hours", "true");
         return readModerationComments(
           await http(`/admin/comments?${params}`, { signal }),
           filter.page,
           filter.eventId,
+          filter.authorId,
         );
       }),
     unpublish: (id, reason) =>
