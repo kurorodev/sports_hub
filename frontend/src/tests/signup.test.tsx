@@ -8,9 +8,13 @@ import {
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { http, HttpResponse } from "msw";
+import { LoginPage } from "../pages/login";
 import { RegisterPage } from "../pages/register";
 import {
   registerAccount,
+  registerPasswordAccount,
+  loginWithPassword,
+  logoutAccount,
   sessionQuery,
   switchAccount,
 } from "../entities/session";
@@ -19,6 +23,13 @@ import type { DemoAccount, UserProfileDto } from "../shared/api/types";
 import { sessionReturn } from "../shared/lib/session-return";
 import { resetMockSession } from "../mocks/handlers";
 import { server } from "./setup";
+
+function SessionObserver() {
+  const session = useQuery(sessionQuery);
+  return (
+    <div data-testid="shell-session">{session.data?.user.displayName}</div>
+  );
+}
 
 function Destination() {
   const session = useQuery(sessionQuery);
@@ -50,8 +61,10 @@ function mount(path = "/register", state?: unknown) {
           },
         ]}
       >
+        <SessionObserver />
         <Routes>
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<Destination />} />
         </Routes>
       </MemoryRouter>
@@ -63,6 +76,7 @@ async function fill(nickname = "new-runner", displayName = "Новый учас�
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Никнейм"), nickname);
   await user.type(screen.getByLabelText("Имя в профиле"), displayName);
+  await user.type(screen.getByLabelText("Пароль"), "valid-password");
   return user;
 }
 
@@ -75,6 +89,9 @@ describe("new account signup", () => {
     await user.click(screen.getByRole("button", { name: "Создать аккаунт" }));
     await screen.findByRole("heading", { name: "Новый участник" });
     expect(screen.getByText("/events/new")).toBeInTheDocument();
+    expect(screen.getByTestId("shell-session")).toHaveTextContent(
+      "Новый участник",
+    );
     expect(client.getQueryData(["private", "previous-user"])).toBeUndefined();
     const session = client.getQueryData(sessionQuery.queryKey)!;
     expect(session.user.id).not.toBe(original.user.id);
@@ -124,7 +141,7 @@ describe("new account signup", () => {
     "reports HTTP %s without claiming success or losing the form",
     async (status) => {
       server.use(
-        http.post("/api/v1/demo/accounts", () =>
+        http.post("/api/v1/auth/register", () =>
           HttpResponse.json(
             { code: "VALIDATION_ERROR", message: "Ошибка", details: [] },
             { status },
@@ -173,7 +190,7 @@ describe("new account signup", () => {
   it("validates blank names without sending a signup request", async () => {
     let calls = 0;
     server.use(
-      http.post("/api/v1/demo/accounts", () => {
+      http.post("/api/v1/auth/register", () => {
         calls++;
         return HttpResponse.error();
       }),
@@ -206,4 +223,73 @@ it("does not turn arbitrary return parameters into external redirects", () => {
   expect(sessionReturn(new URLSearchParams("next=profile"), null).to).toBe(
     "/profile",
   );
+});
+
+it("password accounts cannot use demo login; credentials survive rename and are never stored as plaintext", async () => {
+  const session = await registerPasswordAccount({
+    nickname: "@private-user",
+    displayName: "Личный аккаунт",
+    password: "valid-password",
+  });
+  setCsrfToken(session.csrfToken);
+  expect(
+    (await request<DemoAccount[]>("/demo/accounts")).some(
+      (a) => a.label === "Личный аккаунт",
+    ),
+  ).toBe(false);
+  await expect(
+    switchAccount(`signup-${session.user.id}`),
+  ).rejects.toBeInstanceOf(ApiError);
+  expect(JSON.stringify(localStorage)).not.toContain("valid-password");
+  await request("/me/profile", {
+    method: "PATCH",
+    body: JSON.stringify({ nickname: "renamed-private" }),
+  });
+  resetMockSession();
+  await expect(
+    loginWithPassword({
+      nickname: "renamed-private",
+      password: "wrong-password",
+    }),
+  ).rejects.toBeInstanceOf(ApiError);
+  expect(
+    (
+      await loginWithPassword({
+        nickname: "@renamed-private",
+        password: "valid-password",
+      })
+    ).user.id,
+  ).toBe(session.user.id);
+  await logoutAccount();
+  await expect(request("/session")).rejects.toBeInstanceOf(ApiError);
+});
+
+it("password login stays available when demo accounts are disabled", async () => {
+  await registerPasswordAccount({
+    nickname: "no-demo-user",
+    displayName: "Без деморежима",
+    password: "valid-password",
+  });
+  resetMockSession();
+  setCsrfToken();
+  server.use(
+    http.get("/api/v1/demo/accounts", () =>
+      HttpResponse.json(
+        { code: "NOT_FOUND", message: "Отключено" },
+        { status: 404 },
+      ),
+    ),
+  );
+  mount("/login?next=profile");
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText("Никнейм"), "@no-demo-user");
+  await user.type(screen.getByLabelText("Пароль"), "valid-password");
+  await waitFor(() =>
+    expect(
+      screen.queryByRole("heading", { name: "Демо-вход" }),
+    ).not.toBeInTheDocument(),
+  );
+  await user.click(screen.getByRole("button", { name: "Войти" }));
+  await screen.findByRole("heading", { name: "Без деморежима" });
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });

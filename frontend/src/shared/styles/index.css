@@ -2824,3 +2824,12 @@ input[type="radio"] {
   overflow-wrap: anywhere;
   margin-bottom: 0;
 }
+
+.demo-login-heading { margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-outline); }
+.mention-input { position: relative; min-width: 0; }
+.mention-input textarea { width: 100%; }
+.mention-options { padding: 4px; margin: 4px 0 0; list-style: none; border: 1px solid var(--color-outline); border-radius: 12px; background: var(--color-surface); max-height: 240px; overflow-y: auto; }
+.mention-options button { width: 100%; text-align: left; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 10px; border: 0; border-radius: 8px; background: transparent; overflow-wrap: anywhere; }
+.mention-options [aria-selected="true"] button { background: var(--color-brand); color: var(--color-ink); }
+.mention-options span, .comment-handle { color: var(--color-ink-muted); font-size: 0.875rem; }
+.mention-link { color: var(--color-ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }

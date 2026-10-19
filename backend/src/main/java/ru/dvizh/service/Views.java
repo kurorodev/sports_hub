@@ -85,10 +85,10 @@ public class Views {
     public Api.Registration registration(RegistrationEntity r) {
         return new Api.Registration(r.id,r.eventId,user(r.userId),r.status,r.message,r.decisionReason,r.createdAt,r.updatedAt,r.decidedAt);
     }
-    public Api.Comment comment(CommentEntity c) { return new Api.Comment(c.id,c.eventId,user(c.authorId),c.text,c.status,c.createdAt,c.updatedAt); }
+    public Api.Comment comment(CommentEntity c) { return new Api.Comment(c.id,c.eventId,user(c.authorId),c.text,c.status,c.createdAt,c.updatedAt,c.mentions.stream().map(m -> new Api.Mention(m.userId,m.nickname,m.startIndex,m.endIndex)).toList()); }
     public Api.RatingLedgerEntry ledger(LedgerEntity l) { return new Api.RatingLedgerEntry(l.id,l.userId,l.eventId,l.registrationId,l.points,l.reason,l.verifiedBy,l.createdAt); }
     public Api.Membership membership(MembershipEntity m) { return new Api.Membership(m.organizationId,user(m.userId),m.status,m.joinedAt); }
-    public Api.Message message(MessageEntity m) { return new Api.Message(m.id,m.conversationId,user(m.authorId),m.text,m.createdAt); }
+    public Api.Message message(MessageEntity m) { return new Api.Message(m.id,m.conversationId,user(m.authorId),m.text,m.createdAt,m.mentions.stream().map(x -> new Api.Mention(x.userId,x.nickname,x.startIndex,x.endIndex)).toList()); }
     public Api.Conversation conversation(ConversationEntity c) {
         List<Api.PublicUser> participants;
         if(c.type==Api.ConversationType.DIRECT) participants=List.of(user(c.userLowId),user(c.userHighId));

@@ -1,8 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useParams,
+  useSearchParams,
+  useNavigate,
+  Link,
+} from "react-router-dom";
 import { Pencil, ArrowLeft, UserRound } from "lucide-react";
 import { useState } from "react";
-import { sessionQuery } from "../../../entities/session";
+import {
+  sessionQuery,
+  logoutAccount,
+  replaceSession,
+} from "../../../entities/session";
 import { sportsQuery } from "../../../entities/event";
 import {
   ownProfileQuery,
@@ -15,8 +24,19 @@ import { ProfileFailure } from "../../../entities/profile/model";
 import { ProfileForm } from "../../../features/edit-profile";
 import { ErrorState, NotFound, Skeletons } from "../../../shared/ui/Feedback";
 import { isUuid } from "../../../shared/lib/identifiers";
+import { errorMessage } from "../../../shared/api/client";
+
 export function ProfilePage({ own = false }: { own?: boolean }) {
   const { userId = "" } = useParams();
+  const client = useQueryClient();
+  const navigate = useNavigate();
+  const logout = useMutation({
+    mutationFn: logoutAccount,
+    onSuccess: async () => {
+      await replaceSession(client, null);
+      navigate("/login", { replace: true });
+    },
+  });
   const [params, setParams] = useSearchParams();
   const [notice, setNotice] = useState("");
   const session = useQuery(sessionQuery);
@@ -98,8 +118,20 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
               </button>
             )}
             <Link className="button secondary" to="/login">
-              Сменить демо-аккаунт
+              Сменить аккаунт
             </Link>
+            <button
+              className="button secondary"
+              disabled={logout.isPending}
+              onClick={() => logout.mutate()}
+            >
+              {logout.isPending ? "Выходим…" : "Выйти"}
+            </button>
+            {logout.isError && (
+              <p role="alert" className="field-error">
+                {errorMessage(logout.error)}
+              </p>
+            )}
           </div>
         ) : (
           session.data?.user.id === profile.id && (

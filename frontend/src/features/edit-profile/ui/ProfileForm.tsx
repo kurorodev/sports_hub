@@ -18,15 +18,12 @@ import {
   preferredTimes,
   type Profile,
 } from "../../../entities/profile/model";
+import { handleSchema } from "../../../shared/api/signup-schema";
 import { FormField } from "../../../shared/ui/FormField";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import { useUpdateProfile } from "./use-update-profile";
 const schema = z.object({
-  handle: z
-    .string()
-    .trim()
-    .min(3, "Никнейм — от 3 символов")
-    .max(40, "Никнейм — до 40 символов"),
+  handle: handleSchema,
   name: z
     .string()
     .trim()
@@ -72,7 +69,7 @@ export function ProfileForm({
   const errors = form.formState.errors;
   const fields = [
     ["name", "Имя в профиле", 100],
-    ["handle", "Никнейм", 40],
+    ["handle", "Никнейм", 41],
     ["firstName", "Имя (необязательно)", 80],
     ["lastName", "Фамилия (необязательно)", 80],
     ["city", "Город", 100],
@@ -101,9 +98,11 @@ export function ProfileForm({
               label={label}
               error={errors[field]?.message}
               hint={
-                field === "avatarUrl"
-                  ? "Аватар по ссылке. Если изображение недоступно, покажем первую букву имени."
-                  : undefined
+                field === "handle"
+                  ? "Можно с @ или без. 3–40 латинских букв, цифр, _ или -."
+                  : field === "avatarUrl"
+                    ? "Аватар по ссылке. Если изображение недоступно, покажем первую букву имени."
+                    : undefined
               }
             >
               <input

@@ -4,13 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, Check, UserRound } from "lucide-react";
-import { apiConfig, errorMessage } from "../../../shared/api/client";
+import { ApiError, apiConfig, errorMessage } from "../../../shared/api/client";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import {
   demoAccountsQuery,
   switchAccount,
   useSessionTransition,
 } from "../../../entities/session";
+
+import { PasswordLoginForm } from "../../../features/password-login";
 
 const schema = z.object({
   accountId: z.string().min(1, "Выберите демо-аккаунт"),
@@ -41,8 +43,8 @@ export function LoginPage() {
           уже рядом<span className="brand-dot">.</span>
         </h1>
         <p>
-          Выбери аккаунт, чтобы проверить пользовательские роли и восстановление
-          сессии.
+          Войди по никнейму и паролю, чтобы присоединяться к встречам и
+          общаться.
         </p>
         <div className="notice">
           <strong>
@@ -53,71 +55,85 @@ export function LoginPage() {
           <p>
             {apiConfig.mode === "mock"
               ? "Это тестовые аккаунты. Данные не отправляются в Java backend. Переключение очищает кэш предыдущего пользователя."
-              : "Вход доступен, если backend предоставляет демо-сессии. Используется HttpOnly-cookie."}
+              : "Войди по @никнейму и паролю. Тестовые аккаунты отображаются отдельно, если включён демонстрационный режим."}
           </p>
         </div>
       </div>
       <div className="login-panel">
-        <h2>Демо-вход</h2>
-        {accounts.isPending ? (
-          <p role="status">Загружаем аккаунты…</p>
-        ) : accounts.isError ? (
-          <ErrorState
-            error={accounts.error}
-            retry={() => void accounts.refetch()}
-          />
-        ) : accounts.data.length === 0 ? (
-          <p>Демо-аккаунты пока не настроены на сервере.</p>
-        ) : (
-          <form
-            onSubmit={form.handleSubmit((values) =>
-              mutation.mutate(values.accountId),
-            )}
-          >
-            <fieldset disabled={mutation.isPending}>
-              <legend className="sr-only">Выберите демо-аккаунт</legend>
-              {accounts.data.map((account) => (
-                <label
-                  className={`account-option ${selected === account.id ? "selected" : ""}`}
-                  key={account.id}
+        <h2>Войти</h2>
+        <PasswordLoginForm onSuccess={complete} />
+        {!(
+          accounts.error instanceof ApiError && accounts.error.status === 404
+        ) && (
+          <section aria-label="Демонстрационные аккаунты">
+            <h2 className="demo-login-heading">Демо-вход</h2>
+            <p className="field-hint">
+              Тестовые роли для знакомства с приложением. Аккаунты с паролем
+              сюда не попадают.
+            </p>
+            {accounts.isPending ? (
+              <p role="status">Загружаем аккаунты…</p>
+            ) : accounts.isError ? (
+              <ErrorState
+                error={accounts.error}
+                retry={() => void accounts.refetch()}
+              />
+            ) : accounts.data.length === 0 ? (
+              <p>Демо-аккаунты пока не настроены на сервере.</p>
+            ) : (
+              <form
+                onSubmit={form.handleSubmit((values) =>
+                  mutation.mutate(values.accountId),
+                )}
+              >
+                <fieldset
+                  disabled={!form.formState.isReady || mutation.isPending}
                 >
-                  <input
-                    type="radio"
-                    value={account.id}
-                    {...form.register("accountId")}
-                  />
-                  <span className="account-icon">
-                    <UserRound size={21} />
-                  </span>
-                  <span>
-                    <strong>{account.label}</strong>
-                    <small>{account.systemRoles.join(" · ")}</small>
-                  </span>
-                  {selected === account.id && (
-                    <Check className="account-check" size={20} />
-                  )}
-                </label>
-              ))}
-            </fieldset>
-            {form.formState.errors.accountId && (
-              <p className="field-error" role="alert">
-                {form.formState.errors.accountId.message}
-              </p>
+                  <legend className="sr-only">Выберите демо-аккаунт</legend>
+                  {accounts.data.map((account) => (
+                    <label
+                      className={`account-option ${selected === account.id ? "selected" : ""}`}
+                      key={account.id}
+                    >
+                      <input
+                        type="radio"
+                        value={account.id}
+                        {...form.register("accountId")}
+                      />
+                      <span className="account-icon">
+                        <UserRound size={21} />
+                      </span>
+                      <span>
+                        <strong>{account.label}</strong>
+                        <small>{account.systemRoles.join(" · ")}</small>
+                      </span>
+                      {selected === account.id && (
+                        <Check className="account-check" size={20} />
+                      )}
+                    </label>
+                  ))}
+                </fieldset>
+                {form.formState.errors.accountId && (
+                  <p className="field-error" role="alert">
+                    {form.formState.errors.accountId.message}
+                  </p>
+                )}
+                {mutation.isError && (
+                  <p className="field-error" role="alert">
+                    {errorMessage(mutation.error)}
+                  </p>
+                )}
+                <button
+                  className="button primary full-width"
+                  disabled={!form.formState.isReady || mutation.isPending}
+                  type="submit"
+                >
+                  {mutation.isPending ? "Входим…" : "Войти в аккаунт"}
+                  <ArrowUpRight size={19} />
+                </button>
+              </form>
             )}
-            {mutation.isError && (
-              <p className="field-error" role="alert">
-                {errorMessage(mutation.error)}
-              </p>
-            )}
-            <button
-              className="button primary full-width"
-              disabled={mutation.isPending}
-              type="submit"
-            >
-              {mutation.isPending ? "Входим…" : "Войти в аккаунт"}
-              <ArrowUpRight size={19} />
-            </button>
-          </form>
+          </section>
         )}
         <p className="auth-switch">
           Новый участник?{" "}

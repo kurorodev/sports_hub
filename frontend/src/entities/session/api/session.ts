@@ -40,3 +40,23 @@ export function registerAccount(values: DemoRegistrationRequest) {
     body: JSON.stringify(values),
   });
 }
+
+export function registerPasswordAccount(
+  values: import("../../../shared/api/types").AuthRegistrationRequest,
+) {
+  return request<Session>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(values),
+  });
+}
+export function loginWithPassword(
+  values: import("../../../shared/api/types").AuthLoginRequest,
+) {
+  return request<Session>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(values),
+  });
+}
+export function logoutAccount() {
+  return request<void>("/auth/session", { method: "DELETE" });
+}

@@ -11,6 +11,7 @@ import { z } from "zod";
 import { http, HttpResponse } from "msw";
 import {
   getAccounts,
+  passwordAccount,
   createMockAccount,
   mockProfiles,
   getEvents,
@@ -23,6 +24,8 @@ import {
 } from "./database";
 import { apiConfig } from "../shared/api/client";
 import { createEventSchema } from "../shared/api/event-schema";
+import { passwordSignupSchema } from "../shared/api/signup-schema";
+import { hashMockPassword, verifyMockPassword } from "./passwords";
 import { signupSchema } from "../shared/api/signup-schema";
 import { getComments, saveComment, hideComment } from "./comments";
 import { mapHandlers } from "./maps";
@@ -627,6 +630,118 @@ export const handlers = [
     );
     return json(saveProfile({ ...session.user, ...normalized }));
   }),
+  http.get(`${api}/users`, ({ request }) => {
+    const prefix = (
+      new URL(request.url).searchParams.get("nicknamePrefix") ?? ""
+    )
+      .trim()
+      .replace(/^@/, "");
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(prefix))
+      return json(
+        { code: "VALIDATION_ERROR", message: "Введите никнейм" },
+        { status: 400 },
+      );
+    return json(
+      mockProfiles()
+        .filter((u) =>
+          u.nickname.toLowerCase().startsWith(prefix.toLowerCase()),
+        )
+        .sort((a, b) => a.nickname.localeCompare(b.nickname))
+        .slice(0, 8)
+        .map(
+          ({
+            id,
+            nickname,
+            displayName,
+            avatarUrl,
+            sportsRoles,
+            rank,
+            ratingPoints,
+          }) => ({
+            id,
+            nickname,
+            displayName,
+            avatarUrl,
+            sportsRoles,
+            rank,
+            ratingPoints,
+          }),
+        ),
+    );
+  }),
+  http.post(`${api}/auth/register`, async ({ request }) => {
+    const parsed = passwordSignupSchema.safeParse(
+      await request.json().catch(() => null),
+    );
+    if (!parsed.success)
+      return json(
+        { code: "VALIDATION_ERROR", message: "Проверьте поля аккаунта" },
+        { status: 400 },
+      );
+    const { nickname, displayName, password } = parsed.data;
+    if (
+      mockProfiles().some(
+        (u) => u.nickname.toLowerCase() === nickname.toLowerCase(),
+      )
+    )
+      return json(
+        { code: "CONFLICT", message: "Никнейм уже занят" },
+        { status: 409 },
+      );
+    const hash = await hashMockPassword(password);
+    // Recheck uniqueness after asynchronous hashing.
+    if (
+      mockProfiles().some(
+        (u) => u.nickname.toLowerCase() === nickname.toLowerCase(),
+      )
+    )
+      return json(
+        { code: "CONFLICT", message: "Никнейм уже занят" },
+        { status: 409 },
+      );
+    const id = createMockAccount(nickname, displayName, hash);
+    if (typeof localStorage !== "undefined")
+      localStorage.setItem(sessionKey, id);
+    memoryAccount = id;
+    return json(makeSession(id), { status: 201 });
+  }),
+  http.post(`${api}/auth/login`, async ({ request }) => {
+    const parsed = z
+      .object({
+        nickname: z.string().trim().min(1).max(41),
+        password: z.string().min(1).max(128),
+      })
+      .strict()
+      .safeParse(await request.json().catch(() => null));
+    if (!parsed.success)
+      return json(
+        { code: "VALIDATION_ERROR", message: "Проверьте поля входа" },
+        { status: 400 },
+      );
+    const record = passwordAccount(parsed.data.nickname.replace(/^@/, ""));
+    if (
+      !record?.passwordHash ||
+      !(await verifyMockPassword(parsed.data.password, record.passwordHash))
+    )
+      return json(
+        { code: "UNAUTHENTICATED", message: "Неверный никнейм или пароль" },
+        { status: 401 },
+      );
+    memoryAccount = record.account.id;
+    if (typeof localStorage !== "undefined")
+      localStorage.setItem(sessionKey, memoryAccount);
+    return json(makeSession(memoryAccount));
+  }),
+  http.delete(`${api}/auth/session`, ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session || request.headers.get("X-CSRF-Token") !== session.csrfToken)
+      return json(
+        { code: "FORBIDDEN", message: "Сессия изменилась" },
+        { status: 403 },
+      );
+    resetMockSession();
+    return new HttpResponse(null, { status: 204 });
+  }),
   http.get(`${api}/demo/accounts`, () => json(getAccounts())),
   http.post(`${api}/demo/accounts`, async ({ request }) => {
     const parsed = signupSchema.safeParse(
@@ -680,6 +795,8 @@ export const handlers = [
         { status: 422 },
       );
     }
+    if (!getAccounts().some((account) => account.id === body.accountId))
+      return notFound();
     const session = makeSession(body.accountId);
     if (!session) return notFound();
     memoryAccount = body.accountId;

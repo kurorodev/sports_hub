@@ -12,7 +12,7 @@ const text = (value: string) => value.trim() || null;
 export function normalizeProfile(draft: ProfileDraft): ProfileChanges {
   const result: ProfileChanges = {
     ...draft,
-    handle: draft.handle.trim(),
+    handle: draft.handle.trim().replace(/^@/, ""),
     name: draft.name.trim(),
     firstName: text(draft.firstName),
     lastName: text(draft.lastName),
@@ -24,8 +24,7 @@ export function normalizeProfile(draft: ProfileDraft): ProfileChanges {
     preferredTime: draft.preferredTime || null,
   };
   if (
-    result.handle.length < 3 ||
-    result.handle.length > 40 ||
+    !/^[A-Za-z0-9_-]{3,40}$/.test(result.handle) ||
     !result.name ||
     result.name.length > 100 ||
     (result.firstName?.length ?? 0) > 80 ||

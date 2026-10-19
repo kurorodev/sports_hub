@@ -42,3 +42,8 @@ export type PagedCommentsDto = Schemas["PagedComments"];
 
 export type UserProfileDto = Schemas["UserProfile"];
 export type ProfilePatchDto = Schemas["ProfilePatch"];
+
+export type AuthRegistrationRequest =
+  components["schemas"]["AuthRegistrationRequest"];
+export type AuthLoginRequest = components["schemas"]["AuthLoginRequest"];
+export type Mention = components["schemas"]["Mention"];

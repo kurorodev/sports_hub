@@ -4,24 +4,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import {
-  registerAccount,
+  registerPasswordAccount,
   useSessionTransition,
 } from "../../../entities/session";
 import { ApiError, errorMessage } from "../../../shared/api/client";
-import { signupSchema } from "../../../shared/api/signup-schema";
-import type { DemoRegistrationRequest } from "../../../shared/api/types";
+import { passwordSignupSchema } from "../../../shared/api/signup-schema";
+import type { AuthRegistrationRequest } from "../../../shared/api/types";
 import { FormField } from "../../../shared/ui/FormField";
 
 export function RegisterPage() {
   const location = useLocation();
   const [params] = useSearchParams();
   const complete = useSessionTransition(params, location.state, "/profile");
-  const form = useForm<DemoRegistrationRequest>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: { nickname: "", displayName: "" },
+  const form = useForm<AuthRegistrationRequest>({
+    resolver: zodResolver(passwordSignupSchema),
+    defaultValues: { nickname: "", displayName: "", password: "" },
   });
   const mutation = useMutation({
-    mutationFn: registerAccount,
+    mutationFn: registerPasswordAccount,
     retry: false,
     onSuccess: complete,
     onError: (error) => {
@@ -35,7 +35,11 @@ export function RegisterPage() {
       } else if ([400, 422].includes(error.status)) {
         let focused = false;
         for (const detail of error.body?.details ?? []) {
-          if (detail.field === "nickname" || detail.field === "displayName") {
+          if (
+            detail.field === "nickname" ||
+            detail.field === "displayName" ||
+            detail.field === "password"
+          ) {
             form.setError(
               detail.field,
               { message: detail.message },
@@ -59,10 +63,10 @@ export function RegisterPage() {
         </h1>
         <p>Создай профиль, найди компанию и занимайся вместе.</p>
         <div className="notice">
-          <strong>Демонстрационная регистрация без пароля</strong>
+          <strong>Твой никнейм — твоя отметка в чате</strong>
           <p>
-            Новый аккаунт появится в списке демо-входа. Через него можно будет
-            вернуться в свой профиль.
+            Выбери никнейм и пароль. По @никнейму тебя смогут отметить в
+            обсуждении встречи.
           </p>
         </div>
       </div>
@@ -72,19 +76,25 @@ export function RegisterPage() {
           noValidate
           onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
         >
-          <fieldset disabled={mutation.isPending} className="signup-fields">
+          <fieldset
+            disabled={!form.formState.isReady || mutation.isPending}
+            className="signup-fields"
+          >
             <legend className="sr-only">Данные нового аккаунта</legend>
             <FormField
               id="signup-nickname"
               label="Никнейм"
-              hint="От 3 до 40 символов. Регистр не влияет на уникальность."
+              hint="@nickname: 3–40 латинских букв, цифр, _ или -."
               error={errors.nickname?.message}
             >
               <input
                 id="signup-nickname"
                 autoComplete="username"
+                placeholder="@nickname"
+                autoCapitalize="none"
+                spellCheck={false}
                 required
-                maxLength={40}
+                maxLength={41}
                 aria-invalid={Boolean(errors.nickname)}
                 aria-describedby={`signup-nickname-hint${errors.nickname ? " signup-nickname-error" : ""}`}
                 {...form.register("nickname")}
@@ -106,12 +116,30 @@ export function RegisterPage() {
                 {...form.register("displayName")}
               />
             </FormField>
+            <FormField
+              id="signup-password"
+              label="Пароль"
+              hint="От 8 до 128 символов. Пробелы по краям сохраняются."
+              error={errors.password?.message}
+            >
+              <input
+                id="signup-password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                maxLength={128}
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={`signup-password-hint${errors.password ? " signup-password-error" : ""}`}
+                {...form.register("password")}
+              />
+            </FormField>
           </fieldset>
           {mutation.isError && (
             <p className="field-error" role="alert">
               {mutation.error instanceof ApiError &&
               mutation.error.status === 404
-                ? "Демонстрационная регистрация сейчас недоступна."
+                ? "Регистрация сейчас недоступна."
                 : mutation.error instanceof ApiError &&
                     mutation.error.status === 409
                   ? "Никнейм уже занят. Выберите другой."
@@ -121,7 +149,7 @@ export function RegisterPage() {
           <button
             className="button primary full-width"
             type="submit"
-            disabled={mutation.isPending}
+            disabled={!form.formState.isReady || mutation.isPending}
           >
             {mutation.isPending ? "Создаём аккаунт…" : "Создать аккаунт"}
             <ArrowUpRight size={19} />

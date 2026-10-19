@@ -72,6 +72,7 @@ const signupRecordSchema = z.object({
     ),
   }),
   profile: profileSchema,
+  passwordHash: z.string().optional(),
 });
 type SignupRecord = z.infer<typeof signupRecordSchema>;
 let memorySignups: SignupRecord[] = [];
@@ -84,7 +85,7 @@ function signups(): SignupRecord[] {
     ? memorySignups
     : z.array(signupRecordSchema).parse(JSON.parse(saved));
 }
-export function getAccounts(): DemoAccount[] {
+function allAccounts(): DemoAccount[] {
   return [...accounts, ...signups().map((item) => item.account)].map(
     (account) => {
       const profile = savedProfile(mockId(account.id));
@@ -96,12 +97,31 @@ export function getAccounts(): DemoAccount[] {
     },
   );
 }
+export function getAccounts(): DemoAccount[] {
+  const protectedIds = new Set(
+    signups()
+      .filter((item) => item.passwordHash)
+      .map((item) => item.account.id),
+  );
+  return allAccounts().filter((account) => !protectedIds.has(account.id));
+}
+export function passwordAccount(nickname: string) {
+  return signups().find(
+    (record) =>
+      record.passwordHash &&
+      (
+        savedProfile(record.profile.id) ?? record.profile
+      ).nickname.toLowerCase() === nickname.toLowerCase(),
+  );
+}
 export function createMockAccount(
   nickname: string,
   displayName: string,
+  passwordHash?: string,
 ): string {
   const id = `signup-${crypto.randomUUID()}`;
   const record: SignupRecord = {
+    ...(passwordHash ? { passwordHash } : {}),
     account: { id, label: displayName, systemRoles: ["USER"], sportsRoles: [] },
     profile: {
       id: mockId(id),
@@ -121,7 +141,7 @@ export function createMockAccount(
   return id;
 }
 export function makeSession(accountId: string): Session | undefined {
-  const account = getAccounts().find((item) => item.id === accountId);
+  const account = allAccounts().find((item) => item.id === accountId);
   if (!account) return undefined;
   const manageable = getOrganizations()
     .filter(
@@ -443,7 +463,7 @@ export function getEvents(viewerId?: string): EventPreview[] {
           ? (getOrganizations().find(
               (item) => item.id === record.input.organizer.id,
             )?.name ?? "Организация")
-          : (getAccounts().find(
+          : (allAccounts().find(
               (account) => mockId(account.id) === record.ownerId,
             )?.label ?? "Участник"),
     },
@@ -580,7 +600,7 @@ export function decideRegistration(
 
 export function mockProfiles(): UserProfileDto[] {
   const users = [
-    ...getAccounts().map((account) => ({
+    ...allAccounts().map((account) => ({
       ...mockUser(account.id, account.label),
       sportsRoles: account.sportsRoles,
     })),

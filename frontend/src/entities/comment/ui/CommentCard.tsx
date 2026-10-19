@@ -1,3 +1,4 @@
+import { MentionText } from "../../../shared/ui/MentionText";
 import { Link } from "react-router-dom";
 import { BadgeCheck } from "lucide-react";
 import type { DiscussionComment } from "../model";
@@ -27,6 +28,9 @@ export function CommentCard({
             {comment.author.displayName}
           </Link>
         </strong>
+        {comment.author.nickname && (
+          <span className="comment-handle">@{comment.author.nickname}</span>
+        )}
         {organizerUserId === comment.author.id && (
           <span className="comment-organizer">
             <BadgeCheck size={16} />
@@ -36,9 +40,11 @@ export function CommentCard({
         <time dateTime={comment.publishedAt}>{date}</time>
       </header>
       <p className="comment-text">
-        {comment.visibility === "hidden"
-          ? "Комментарий скрыт модератором."
-          : comment.text}
+        {comment.visibility === "hidden" ? (
+          "Комментарий скрыт модератором."
+        ) : (
+          <MentionText text={comment.text} mentions={comment.mentions} />
+        )}
       </p>
     </article>
   );

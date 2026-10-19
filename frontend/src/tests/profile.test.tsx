@@ -141,7 +141,9 @@ describe("profile HTTP and UI", () => {
     await user.clear(handle);
     await user.type(handle, "aa");
     await user.click(screen.getByRole("button", { name: "Сохранить профиль" }));
-    expect(await screen.findByText("Никнейм — от 3 символов")).toBeVisible();
+    expect(
+      await screen.findByText("Никнейм: 3–40 латинских букв, цифр, _ или -"),
+    ).toBeVisible();
     await user.clear(handle);
     await user.type(handle, "USER-MARIA");
     await user.type(

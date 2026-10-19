@@ -34,12 +34,7 @@ export const profileSchema = z.object({
 }) satisfies z.ZodType<UserProfileDto>;
 export const profilePatchSchema = z
   .object({
-    nickname: z
-      .string()
-      .min(3)
-      .max(40)
-      .refine((value) => value.trim().length >= 3)
-      .optional(),
+    nickname: z.string().regex(/^[A-Za-z0-9_-]{3,40}$/).optional(),
     displayName: z
       .string()
       .min(1)

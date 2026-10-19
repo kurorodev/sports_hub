@@ -3,5 +3,11 @@ export {
   demoAccountsQuery,
   switchAccount,
   registerAccount,
+  registerPasswordAccount,
+  loginWithPassword,
+  logoutAccount,
 } from "./api/session";
-export { useSessionTransition } from "./lib/use-session-transition";
+export {
+  useSessionTransition,
+  replaceSession,
+} from "./lib/use-session-transition";
