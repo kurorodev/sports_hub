@@ -1,125 +1,143 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
+import { Building2, Plus, ArrowLeft, LockKeyhole } from "lucide-react";
 import { sessionQuery } from "../../../entities/session";
-import {
-  OrganizationCard,
-  organizationsQuery,
-  organizationErrorMessage,
-  useOrganizationRepository,
-} from "../../../entities/organization";
+import { MyOrganizations } from "../../../features/organization-application";
 import { ErrorState } from "../../../shared/ui/Feedback";
+import { Toast } from "../../../shared/ui/Toast";
+import { OrganizationsDirectory } from "./OrganizationsDirectory";
+import { OrganizationApplication } from "./OrganizationApplication";
+
 export function OrganizationsPage() {
-  const repo = useOrganizationRepository();
   const session = useQuery(sessionQuery);
   const [params, setParams] = useSearchParams();
-  const q = params.get("q") ?? "";
-  const page = Math.max(0, Math.floor(Number(params.get("page")) || 0));
-  const [draft, setDraft] = useState(q);
-  const query = useQuery(
-    organizationsQuery(repo, { q, page }, session.data?.user.id),
+  const view =
+    params.get("view") === "apply"
+      ? "apply"
+      : params.get("view") === "mine"
+        ? "mine"
+        : "all";
+  const [notice, setNotice] = useState<{ id: string; text: string } | null>(
+    null,
   );
-  function change(nextQ: string, nextPage: number) {
-    const next = new URLSearchParams();
-    if (nextQ) next.set("q", nextQ);
-    if (nextPage) next.set("page", String(nextPage));
-    setParams(next);
+  const dismissNotice = useCallback(() => setNotice(null), []);
+  function search(nextView: "all" | "mine" | "apply") {
+    const next = new URLSearchParams(params);
+    if (nextView === "all") next.delete("view");
+    else next.set("view", nextView);
+    return next;
+  }
+  function destination(nextView: "all" | "mine" | "apply") {
+    const next = search(nextView);
+    return `/organizations${next.size ? `?${next}` : ""}`;
   }
   return (
-    <section className="workspace-page">
-      <div className="organization-toolbar">
-        <div>
-          <span className="eyebrow muted">Спорт объединяет</span>
-          <h1>Организации и сообщества</h1>
-          <p>Клубы, которые уже получили допуск к публикации встреч.</p>
+    <section className="workspace-page organization-hub">
+      <header className="organization-hub-heading">
+        <div className="organization-hub-intro">
+          <span className="organization-hub-icon">
+            <Building2 size={28} aria-hidden="true" />
+          </span>
+          <div>
+            <span className="eyebrow muted">Клубы и сообщества</span>
+            <h1>Организации</h1>
+            <p>Найдите свою команду или развивайте собственный клуб.</p>
+          </div>
         </div>
-        <Link className="button primary" to="/organization">
-          Моя организация / заявка
+        {view !== "apply" && (
+          <Link className="button primary" to={destination("apply")}>
+            <Plus size={18} aria-hidden="true" />
+            Добавить организацию
+          </Link>
+        )}
+      </header>
+      <nav className="organization-hub-nav" aria-label="Разделы организаций">
+        <Link
+          to={destination("all")}
+          aria-current={view === "all" ? "page" : undefined}
+        >
+          Все организации
         </Link>
-      </div>
-      <form
-        className="organization-search"
-        onSubmit={(event) => {
-          event.preventDefault();
-          change(draft.trim(), 0);
-        }}
-      >
-        <label htmlFor="organization-search">
-          Название или описание организации
-        </label>
-        <div>
-          <input
-            id="organization-search"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
-          <button className="button secondary" type="submit">
-            Найти организации
-          </button>
-        </div>
-      </form>
-      {query.isPending ? (
-        <p className="page-state" role="status">
-          Загружаем организации…
-        </p>
-      ) : query.isError ? (
+        <Link
+          to={destination("mine")}
+          aria-current={view !== "all" ? "page" : undefined}
+        >
+          Мои организации
+        </Link>
+      </nav>
+      {session.isError ? (
         <ErrorState
-          message={organizationErrorMessage(query.error)}
-          error={query.error}
-          retry={() => void query.refetch()}
+          error={session.error}
+          retry={() => void session.refetch()}
         />
-      ) : (
-        <>
-          <p className="organization-count">
-            Найдено организаций: {query.data.totalCount}
+      ) : view === "all" ? (
+        <OrganizationsDirectory key={params.get("q") ?? ""} />
+      ) : session.isPending ? (
+        <p className="page-state" role="status">
+          Проверяем сессию…
+        </p>
+      ) : !session.data ? (
+        <div className="organization-access">
+          <LockKeyhole size={28} aria-hidden="true" />
+          <h2>
+            {view === "apply"
+              ? "Расскажите о своём клубе"
+              : "Ваши организации и заявки"}
+          </h2>
+          <p>
+            Войдите, чтобы подать заявку, следить за её статусом и публиковать
+            встречи от организации.
           </p>
-          {query.data.organizations.length === 0 ? (
-            <div className="notice">
-              <p>Организаций по этим условиям пока нет.</p>
-              {q && (
-                <button
-                  className="button secondary"
-                  onClick={() => {
-                    setDraft("");
-                    change("", 0);
-                  }}
-                >
-                  Сбросить поиск организаций
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="organization-list">
-              {query.data.organizations.map((organization) => (
-                <OrganizationCard
-                  key={organization.id}
-                  organization={organization}
-                />
-              ))}
-            </div>
-          )}
-          {(query.data.totalCount > query.data.pageSize || page > 0) && (
-            <nav className="pagination" aria-label="Страницы организаций">
-              <button
-                className="button secondary"
-                disabled={page === 0}
-                onClick={() => change(q, page - 1)}
-              >
-                Назад
-              </button>
-              <span>Страница {page + 1}</span>
-              <button
-                className="button secondary"
-                disabled={
-                  (page + 1) * query.data.pageSize >= query.data.totalCount
-                }
-                onClick={() => change(q, page + 1)}
-              >
-                Далее
-              </button>
-            </nav>
-          )}
-        </>
+          <Link
+            className="button primary"
+            to={`/login?next=${view === "apply" ? "organization-apply" : "organization"}`}
+          >
+            Войти в аккаунт
+          </Link>
+        </div>
+      ) : view === "mine" ? (
+        <div className="organization-mine">
+          <p className="organization-section-description">
+            Здесь собраны ваши клубы, статусы заявок и доступ к публикации
+            встреч.
+          </p>
+          <MyOrganizations
+            key={session.data.user.id}
+            viewerId={session.data.user.id}
+          />
+        </div>
+      ) : (
+        <div className="organization-application-page">
+          <Link className="back-link" to={destination("mine")}>
+            <ArrowLeft size={16} aria-hidden="true" />К моим организациям
+          </Link>
+          <div className="organization-section-heading">
+            <h2>Добавьте свой клуб</h2>
+            <p>
+              Заполните короткую заявку. После одобрения вы сможете публиковать
+              встречи от имени организации.
+            </p>
+          </div>
+          <OrganizationApplication
+            key={session.data.user.id}
+            viewerId={session.data.user.id}
+            onCreated={(organization) => {
+              setNotice({
+                id: organization.id,
+                text: `«${organization.name}»: заявка отправлена на рассмотрение.`,
+              });
+              setParams(search("mine"));
+            }}
+          />
+        </div>
+      )}
+      {notice && (
+        <Toast
+          key={notice.id}
+          message={notice.text}
+          onDismiss={dismissNotice}
+        />
       )}
     </section>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -52,10 +52,13 @@ export function OrganizationApplicationForm({
   });
   const error = form.formState.errors;
   const [sportSearch, setSportSearch] = useState("");
+  const selectedSports = useWatch({ control: form.control, name: "sportIds" });
   const visibleSports = sports.filter((sport) =>
-    sport.name
-      .toLocaleLowerCase("ru")
-      .includes(sportSearch.trim().toLocaleLowerCase("ru")),
+    sportSearch.trim()
+      ? sport.name
+          .toLocaleLowerCase("ru")
+          .includes(sportSearch.trim().toLocaleLowerCase("ru"))
+      : selectedSports.includes(sport.id),
   );
   return (
     <form
@@ -104,6 +107,7 @@ export function OrganizationApplicationForm({
         <FormField
           id="organization-sport-search"
           label="Найти вид спорта организации"
+          hint="Необязательно. Найдите и отметьте нужные направления."
         >
           <input
             id="organization-sport-search"
@@ -111,10 +115,11 @@ export function OrganizationApplicationForm({
             value={sportSearch}
             onChange={(event) => setSportSearch(event.target.value)}
             placeholder="Например, шахматы"
+            aria-describedby="organization-sport-search-hint"
           />
         </FormField>
         <fieldset className="organization-sports">
-          <legend>Виды спорта (необязательно)</legend>
+          <legend>Выбрано видов спорта: {selectedSports.length}</legend>
           {sports.map((sport) => (
             <label key={sport.id} hidden={!visibleSports.includes(sport)}>
               <input
@@ -126,7 +131,11 @@ export function OrganizationApplicationForm({
             </label>
           ))}
           {visibleSports.length === 0 && (
-            <p role="status">По этому запросу виды спорта не найдены.</p>
+            <p className="field-hint" role="status">
+              {sportSearch.trim()
+                ? "По этому запросу виды спорта не найдены."
+                : "Начните вводить название вида спорта."}
+            </p>
           )}
         </fieldset>
       </fieldset>

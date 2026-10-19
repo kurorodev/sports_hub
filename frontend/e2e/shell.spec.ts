@@ -55,9 +55,13 @@ test("demo session restores and account switch removes privileges", async ({
   await page.goto("/login");
   await page.getByLabel("Беговой клуб", { exact: false }).check();
   await page.getByRole("button", { name: "Войти в аккаунт" }).click();
-  await page.getByRole("link", { name: "Организация", exact: true }).click();
+  await page.getByRole("link", { name: "Организации", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Разделы организаций" })
+    .getByRole("link", { name: "Мои организации", exact: true })
+    .click();
   await expect(
-    page.getByRole("heading", { name: "Кабинет организации" }),
+    page.getByRole("heading", { name: "Мои организации" }),
   ).toBeVisible();
   expect(
     await page.evaluate(

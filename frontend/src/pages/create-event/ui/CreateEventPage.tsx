@@ -84,7 +84,7 @@ export function CreateEventPage() {
       <section className="feedback page-state">
         <h1>Публикация от организации недоступна</h1>
         <p>Нужна одобренная организация, которую вы представляете.</p>
-        <Link className="button secondary" to="/organization">
+        <Link className="button secondary" to="/organizations?view=mine">
           Проверить мою заявку
         </Link>
       </section>

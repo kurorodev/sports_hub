@@ -69,7 +69,7 @@ for (const width of [375, 768, 1440]) {
       path: `test-results/categories-${width}.png`,
       fullPage: true,
     });
-    await page.goto("/organization");
+    await page.goto("/organizations?view=apply");
     const search = page.getByLabel("Найти вид спорта организации", {
       exact: true,
     });

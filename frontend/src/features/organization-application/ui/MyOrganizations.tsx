@@ -1,28 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   myOrganizationsQuery,
-  organizationKeys,
   OrganizationCard,
   organizationErrorMessage,
   useOrganizationRepository,
 } from "../../../entities/organization";
 import { sessionQuery } from "../../../entities/session";
 import { ErrorState } from "../../../shared/ui/Feedback";
-import { OrganizationApplicationForm } from "./OrganizationApplicationForm";
-export function MyOrganizations({
-  viewerId,
-  sports,
-}: {
-  viewerId: string;
-  sports: { id: string; name: string }[];
-}) {
+export function MyOrganizations({ viewerId }: { viewerId: string }) {
   const repo = useOrganizationRepository();
   const client = useQueryClient();
   const session = useQuery(sessionQuery);
   const query = useQuery(myOrganizationsQuery(repo, viewerId));
-  const [notice, setNotice] = useState("");
   const approved = query.data
     ?.filter((item) => item.status === "APPROVED")
     .map((item) => item.id)
@@ -58,8 +49,8 @@ export function MyOrganizations({
         />
       ) : query.data.length === 0 ? (
         <p className="notice">
-          У вас пока нет организаций. Расскажите о своём клубе или сообществе в
-          заявке ниже.
+          У вас пока нет организаций. Нажмите «Добавить организацию», чтобы
+          подать первую заявку.
         </p>
       ) : (
         <div className="organization-list">
@@ -85,21 +76,6 @@ export function MyOrganizations({
           ))}
         </div>
       )}
-      {notice && (
-        <p className="notice success" role="status">
-          {notice}
-        </p>
-      )}
-      <OrganizationApplicationForm
-        viewerId={viewerId}
-        sports={sports}
-        onCreated={(organization) => {
-          setNotice(
-            `«${organization.name}»: заявка отправлена на рассмотрение.`,
-          );
-          void client.invalidateQueries({ queryKey: organizationKeys.all });
-        }}
-      />
     </>
   );
 }
