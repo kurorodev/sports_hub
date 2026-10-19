@@ -1,0 +1,56 @@
+package ru.dvizh.service;
+
+import java.util.*;
+import com.fasterxml.jackson.databind.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.dvizh.api.*;
+import ru.dvizh.domain.*;
+import ru.dvizh.persistence.Store;
+
+@Service @Transactional(readOnly=true)
+public class ProfileService {
+    private final Store db;private final Access access;private final Views view;private final PatchValidator validator;
+    public ProfileService(Store db,Access access,Views view,PatchValidator validator) {this.db=db;this.access=access;this.view=view;this.validator=validator;}
+    public Api.UserProfile me() { return view.profile(access.user()); }
+    public Api.UserProfile get(UUID id) { return view.profile(db.get(UserEntity.class,id)); }
+    public Api.Rating rating(UUID id) { return view.rating(db.get(UserEntity.class,id)); }
+    public PageResult<Api.RatingLedgerEntry> history(UUID id,int page,int size) {
+        db.get(UserEntity.class,id); int offset=PageResult.offset(page,size);
+        var params=Map.of("user",id);
+        return PageResult.of(db.list(LedgerEntity.class,"e.userId=:user",params,"e.createdAt desc,e.id desc",offset,size).stream().map(view::ledger).toList(),page,size,db.count(LedgerEntity.class,"e.userId=:user",params));
+    }
+    @Transactional public Api.UserProfile patch(JsonNode patch) {
+        validator.validate("ProfilePatch",patch);
+        var u=db.lock(UserEntity.class,access.user().id);
+        if(patch.has("nickname")) {
+            String nickname=patch.path("nickname").asText().strip();
+            if(nickname.length()<3) throw Problem.invalid("Никнейм должен содержать от 3 до 40 символов");
+            String normalized=nickname.toLowerCase(Locale.ROOT);
+            if(db.count(UserEntity.class,"e.normalizedNickname=:name and e.id<>:id",Map.of("name",normalized,"id",u.id))>0)
+                throw Problem.conflict(Api.ErrorCode.CONFLICT,"Никнейм уже занят");
+            u.nickname=nickname;u.normalizedNickname=normalized;
+        }
+        if(patch.has("displayName"))u.displayName=patch.path("displayName").asText().strip();
+        if(patch.has("firstName"))u.firstName=text(patch,"firstName");
+        if(patch.has("lastName"))u.lastName=text(patch,"lastName");
+        if(patch.has("bio"))u.bio=text(patch,"bio");
+        if(patch.has("city"))u.city=text(patch,"city");
+        if(patch.has("preferredTime"))u.preferredTime=text(patch,"preferredTime");
+        if(patch.has("avatarUrl"))u.avatarUrl=text(patch,"avatarUrl");
+        if(patch.has("sportsRoles")) {
+            u.sportsRoles.clear(); for(var role:patch.path("sportsRoles"))u.sportsRoles.add(Api.SportsRole.valueOf(role.asText()));
+        }
+        if(patch.has("sportsPreferences")) {
+            var seen=new HashSet<UUID>(); var prefs=new ArrayList<SportPreference>();
+            for(var pref:patch.path("sportsPreferences")) {
+                UUID sport=UUID.fromString(pref.path("sportId").asText());db.get(SportEntity.class,sport);
+                if(!seen.add(sport))throw Problem.invalid("Вид спорта указан дважды");
+                prefs.add(new SportPreference(sport,Api.ExperienceLevel.valueOf(pref.path("level").asText())));
+            }
+            u.sportsPreferences.clear();u.sportsPreferences.addAll(prefs);
+        }
+        u.updatedAt=java.time.Instant.now();db.flush();return view.profile(u);
+    }
+    static String text(JsonNode node,String field) { return node.path(field).isNull()?null:node.path(field).asText().strip(); }
+}

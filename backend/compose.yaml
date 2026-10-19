@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: dvizh
+      POSTGRES_USER: ${DB_USER:-dvizh}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dvizh_local}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d dvizh"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  backend:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/dvizh
+      DB_USER: ${DB_USER:-dvizh}
+      DB_PASSWORD: ${DB_PASSWORD:-dvizh_local}
+      DEMO_ENABLED: ${DEMO_ENABLED:-true}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    ports:
+      - "${BACKEND_BIND:-127.0.0.1}:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  postgres_data:

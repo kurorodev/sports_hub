@@ -1,0 +1,14 @@
+package ru.dvizh.domain;
+
+import java.time.Instant;
+import java.util.*;
+import jakarta.persistence.*;
+import ru.dvizh.api.Api;
+
+@Entity
+@Table(name="sports")
+public class SportEntity extends BaseEntity {
+    @Column(nullable=false,length=80) public String name;
+    @Column(nullable=false,length=80,unique=true) public String normalizedName;
+    @Column(nullable=false) public boolean isCustom;
+}

@@ -1,0 +1,21 @@
+name: Backend
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - run: mvn -B -ntp -Ppostgres-it verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend
+          path: backend/target/sport-hub-backend-1.0.0.jar
