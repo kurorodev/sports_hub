@@ -89,7 +89,9 @@ for (const width of [320, 375, 768, 1024, 1440]) {
     await page
       .getByLabel("Статус мероприятий", { exact: true })
       .selectOption("UNPUBLISHED");
-    await expect(eventRow).toContainText("Условия встречи требуют уточнения.");
+    await expect(eventRow).not.toContainText(
+      "Условия встречи требуют уточнения.",
+    );
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -107,7 +109,7 @@ for (const width of [320, 375, 768, 1024, 1440]) {
     ).toBeVisible();
     await expect(
       page.getByText("Условия встречи требуют уточнения.", { exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.getByText("Вы участвуете", { exact: true }),
     ).toBeVisible();
@@ -133,7 +135,15 @@ for (const width of [320, 375, 768, 1024, 1440]) {
     await page.goto(url);
     await expect(
       page.getByText("Условия встречи требуют уточнения.", { exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: /^Уведомления/ }).click();
+    await expect(
+      page
+        .getByRole("dialog", { name: "Уведомления" })
+        .locator(".notification-reason")
+        .filter({ hasText: "Условия встречи требуют уточнения." }),
     ).toBeVisible();
+    await page.keyboard.press("Escape");
     await signInAs(page, "org-run");
     await page.goto(`/?q=${encodeURIComponent(event.title)}&includePast=true`);
     await expect(

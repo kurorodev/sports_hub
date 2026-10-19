@@ -46,6 +46,11 @@ function repository(): ModerationRepository {
   };
 }
 describe("moderation core", () => {
+  it("accepts the server status without returning a private moderation reason", async () => {
+    const repo = repository();
+    repo.unpublish = vi.fn(async () => ({ ...event, reason: null }));
+    expect((await moderateContent(repo, action)).kind).toBe("event");
+  });
   it("accepts a 1000-character reason at the upper contract boundary", async () => {
     const reason = "a".repeat(1000);
     const repo = repository();
@@ -87,8 +92,7 @@ describe("moderation core", () => {
   it.each([
     { ...event, id: mockId("other") },
     { ...event, status: "PUBLISHED" as const },
-    { ...event, reason: "Different" },
-  ])("rejects a wrong event/status/reason", async (result) => {
+  ])("rejects a wrong event/status", async (result) => {
     const repo = repository();
     repo.unpublish = vi.fn(async () => result);
     await expect(moderateContent(repo, action)).rejects.toMatchObject({

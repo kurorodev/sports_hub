@@ -20,11 +20,7 @@ export async function moderateContent(
     throw new ModerationFailure("invalid-input");
   if (input.kind === "event") {
     const event = await repo.unpublish(input.id, reason);
-    if (
-      event.id !== input.id ||
-      event.status !== "UNPUBLISHED" ||
-      event.reason !== reason
-    )
+    if (event.id !== input.id || event.status !== "UNPUBLISHED")
       throw new ModerationFailure("invalid-response");
     return { kind: "event" as const, event };
   }

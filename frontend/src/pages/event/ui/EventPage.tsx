@@ -109,7 +109,6 @@ export function EventPage() {
             Запись закрыта ·{" "}
             {event.status === "DRAFT" ? "Черновик" : "Снято с публикации"}
           </strong>
-          {event.moderationReason && <p>{event.moderationReason}</p>}
         </div>
       )}
       <div className="detail-grid">

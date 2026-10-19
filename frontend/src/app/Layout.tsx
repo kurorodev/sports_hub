@@ -1,3 +1,4 @@
+import { NotificationBell } from "../features/notifications";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, UserRound } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
@@ -37,18 +38,26 @@ export function Layout() {
               <NavLink to="/admin">Модерация</NavLink>
             )}
           </nav>
-          <Link
-            className="header-account"
-            to={session.data ? "/profile" : "/login"}
-          >
-            <UserRound size={18} />
-            <span>
-              {session.isPending
-                ? "Сессия…"
-                : (session.data?.user.displayName ?? "Войти")}
-            </span>
-            <ArrowUpRight size={15} />
-          </Link>
+          <div className="header-actions">
+            {session.data && !session.isError && (
+              <NotificationBell
+                key={session.data.user.id}
+                viewerId={session.data.user.id}
+              />
+            )}
+            <Link
+              className="header-account"
+              to={session.data ? "/profile" : "/login"}
+            >
+              <UserRound size={18} />
+              <span>
+                {session.isPending
+                  ? "Сессия…"
+                  : (session.data?.user.displayName ?? "Войти")}
+              </span>
+              <ArrowUpRight size={15} />
+            </Link>
+          </div>
         </div>
       </header>
       {session.isError && (

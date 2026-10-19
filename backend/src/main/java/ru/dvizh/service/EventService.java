@@ -11,8 +11,8 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional(readOnly=true)
 public class EventService {
-    private final Store db;private final Access access;private final Views view;private final PatchValidator validator;private final Clock clock;private final SportsCatalog catalog;
-    public EventService(Store db,Access access,Views view,PatchValidator validator,Clock clock,SportsCatalog catalog) { this.db=db;this.access=access;this.view=view;this.validator=validator;this.clock=clock;this.catalog=catalog; }
+    private final Store db;private final Access access;private final Views view;private final PatchValidator validator;private final Clock clock;private final SportsCatalog catalog;private final NotificationService notifications;
+    public EventService(Store db,Access access,Views view,PatchValidator validator,Clock clock,SportsCatalog catalog,NotificationService notifications) { this.db=db;this.access=access;this.view=view;this.validator=validator;this.clock=clock;this.catalog=catalog;this.notifications=notifications; }
     public List<Api.Sport> sports(String q) {
         return db.list(SportEntity.class,"e.canonicalId is null and lower(e.name) like :q",Map.of("q",like(q)),"e.isCustom asc,e.name asc,e.id asc",0,Integer.MAX_VALUE).stream().map(view::sport).toList();
     }
@@ -32,7 +32,7 @@ public class EventService {
         e.skillLevel=r.skillLevel()==null?Api.EventSkillLevel.ANY:r.skillLevel();e.requirements=r.requirements();e.joinMode=r.joinMode();
         e.maxParticipants=r.maxParticipants();location(e,r.location());
         validateTime(e);e.status=Boolean.FALSE.equals(r.publishNow())?Api.EventStatus.DRAFT:Api.EventStatus.PUBLISHED;
-        e.createdAt=clock.instant();e.updatedAt=e.createdAt;db.add(e);db.flush();return view.event(e);
+        e.createdAt=clock.instant();e.updatedAt=e.createdAt;db.add(e);if(e.status==Api.EventStatus.PUBLISHED)publishedNotification(e);db.flush();return view.event(e);
     }
     private SportEntity resolveSport(Api.SportInput input) {
         if((input.sportId()==null)==(input.customName()==null))throw Problem.invalid("Укажите sportId либо customName");
@@ -53,6 +53,7 @@ public class EventService {
         var e=db.lock(EventEntity.class,id);access.requireOwner(e);
         if(e.status!=Api.EventStatus.DRAFT && e.status!=Api.EventStatus.PUBLISHED)throw Problem.transition();
         if(!e.startsAt.isAfter(clock.instant()))throw Problem.transition();
+        var oldTime=e.startsAt;var oldPlace=Arrays.asList(e.city,e.address,e.latitude,e.longitude);
         if(patch.has("title"))e.title=patch.path("title").asText().strip();
         if(patch.has("description"))e.description=patch.path("description").asText().strip();
         if(patch.has("startsAt"))e.startsAt=OffsetDateTime.parse(patch.path("startsAt").asText()).toInstant();
@@ -71,12 +72,17 @@ public class EventService {
                 throw Problem.conflict(Api.ErrorCode.CONFLICT,"Сначала освободите очередь ожидания; изменение лимита при наличии очереди запрещено");
             e.maxParticipants=max;
         }
-        validateTime(e);e.updatedAt=clock.instant();return view.event(e);
+        validateTime(e);e.updatedAt=clock.instant();
+        if(e.status==Api.EventStatus.PUBLISHED && (!oldTime.equals(e.startsAt) || !oldPlace.equals(Arrays.asList(e.city,e.address,e.latitude,e.longitude))))notifications.updated(e);
+        return view.event(e);
     }
     @Transactional public Api.Event publish(UUID id) {
         var e=db.lock(EventEntity.class,id);access.requireOwner(e);
         if(e.status!=Api.EventStatus.DRAFT)throw Problem.transition();validateTime(e);
-        e.status=Api.EventStatus.PUBLISHED;e.updatedAt=clock.instant();return view.event(e);
+        e.status=Api.EventStatus.PUBLISHED;e.updatedAt=clock.instant();publishedNotification(e);return view.event(e);
+    }
+    private void publishedNotification(EventEntity e) {
+        notifications.send(notifications.owner(e),Api.NotificationType.EVENT_STATUS,"Мероприятие опубликовано",e.title,null,"/events/"+e.id,"published:"+e.id);
     }
     public PageResult<Api.EventCard> search(Map<String,String> filters,int page,int size) {
         var query=filters(filters);

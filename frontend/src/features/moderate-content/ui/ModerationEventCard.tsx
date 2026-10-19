@@ -44,12 +44,6 @@ export function ModerationEventCard({
       <p className="join-note">
         Подтверждённых участников: {event.confirmedParticipants}
       </p>
-      {event.reason && (
-        <p className="organization-reason">
-          <strong>Причина снятия: </strong>
-          {event.reason}
-        </p>
-      )}
       <div className="moderation-links">
         <Link
           className="button secondary"
@@ -65,7 +59,7 @@ export function ModerationEventCard({
         <ModerationReasonForm
           id={event.id}
           action="Снять с публикации"
-          consequence="Событие исчезнет из каталога. Новая запись и новые сообщения закроются; существующие регистрации сохранятся. Организатор и записанные пользователи увидят причину."
+          consequence="Событие исчезнет из каталога. Новая запись и новые сообщения закроются; существующие регистрации сохранятся. Организатор получит причину в личных уведомлениях; записавшиеся узнают об изменении статуса."
           pending={mutation.isPending}
           error={mutation.error}
           onConfirm={(reason) =>

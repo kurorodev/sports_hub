@@ -75,7 +75,7 @@ public class Views {
             "location",new Api.Location(e.city,e.address,e.latitude,e.longitude),"skillLevel",e.skillLevel,"requirements",e.requirements,
             "joinMode",e.joinMode,"maxParticipants",e.maxParticipants,"confirmedCount",registrations(e.id,Api.RegistrationStatus.CONFIRMED),
             "pendingCount",registrations(e.id,Api.RegistrationStatus.PENDING),"spotsLeft",spots(e),"organizer",org,"status",e.status,
-            "moderationReason",e.moderationReason,"viewerRegistrationStatus",viewerStatus(e.id),"viewerIsOrganizer",access.owns(e),
+            "moderationReason",null,"viewerRegistrationStatus",viewerStatus(e.id),"viewerIsOrganizer",access.owns(e),
             "createdAt",e.createdAt,"updatedAt",e.updatedAt));
     }
     public Api.EventCard card(EventEntity e) {

@@ -1,3 +1,10 @@
+import {
+  notificationHandlers,
+  notify,
+  notifyRegistration,
+  notifyUnpublished,
+  mockOwner,
+} from "./notifications";
 import { profilePatchSchema } from "../entities/profile/api/mappers";
 import { saveProfile } from "./profiles";
 import type { EventPreview, Session } from "../shared/api/types";
@@ -76,6 +83,7 @@ const moderationSchema = z
   .strict();
 
 export const handlers = [
+  ...notificationHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...mapHandlers(api, () => makeSession(savedAccount() ?? "")),
   http.get(`${api}/admin/events`, ({ request }) => {
     const session = makeSession(savedAccount() ?? "");
@@ -204,6 +212,7 @@ export const handlers = [
           { status: 409 },
         );
       saveModeration("EVENT", event.id, parsed.data.reason, session.user.id);
+      notifyUnpublished(event, parsed.data.reason);
       return json(
         getEvents(session.user.id).find((item) => item.id === event.id),
       );
@@ -251,6 +260,16 @@ export const handlers = [
         comment.id,
         parsed.data.reason,
         session.user.id,
+      );
+      notify(
+        comment.author.id,
+        "COMMENT_HIDDEN",
+        "Ваш комментарий скрыт модератором",
+        getEvents().find((e) => e.id === comment.eventId)?.title ??
+          "Обсуждение встречи",
+        parsed.data.reason,
+        `/events/${comment.eventId}`,
+        `comment-hidden:${comment.id}`,
       );
       return json(hideComment(comment));
     },
@@ -478,9 +497,23 @@ export const handlers = [
           },
           { status: 409 },
         );
-      return json(
-        decideOrganization(org, parsed.data.decision, parsed.data.reason),
+      const decided = decideOrganization(
+        org,
+        parsed.data.decision,
+        parsed.data.reason,
       );
+      notify(
+        org.createdBy.id,
+        "ORGANIZATION_STATUS",
+        decided.status === "APPROVED"
+          ? "Организация одобрена"
+          : "Заявка организации отклонена",
+        org.name,
+        parsed.data.reason ?? null,
+        "/organization",
+        `organization:${org.id}`,
+      );
+      return json(decided);
     },
   ),
 
@@ -569,9 +602,19 @@ export const handlers = [
         },
         { status: 400 },
       );
-    return json(saveComment(event.id, session.user, parsed.data.text), {
-      status: 201,
-    });
+    const comment = saveComment(event.id, session.user, parsed.data.text);
+    for (const user of new Set(comment.mentions?.map((m) => m.userId)))
+      if (user !== session.user.id)
+        notify(
+          user,
+          "MENTION",
+          "Вас упомянули в обсуждении",
+          event.title,
+          null,
+          `/events/${event.id}`,
+          `mention:${comment.id}`,
+        );
+    return json(comment, { status: 201 });
   }),
   http.get(`${api}/me/profile`, () => {
     const session = makeSession(savedAccount() ?? "");
@@ -888,6 +931,17 @@ export const handlers = [
         },
         { status: 422 },
       );
+    const owner = mockOwner(event);
+    if (owner && event.status === "PUBLISHED")
+      notify(
+        owner,
+        "EVENT_STATUS",
+        "Мероприятие опубликовано",
+        event.title,
+        null,
+        `/events/${event.id}`,
+        `published:${event.id}`,
+      );
     return json(event, { status: 201 });
   }),
   http.get(`${api}/events`, ({ request }) => {
@@ -1066,17 +1120,14 @@ export const handlers = [
           { status: 409 },
         );
       // Validation + append run synchronously in this mock context, including duplicate/capacity checks.
-      return json(
-        saveRegistration(
-          event.id,
-          session.user,
-          event.joinMode === "OPEN" ? "CONFIRMED" : "PENDING",
-          input.data.message,
-        ),
-        {
-          status: 201,
-        },
+      const registration = saveRegistration(
+        event.id,
+        session.user,
+        event.joinMode === "OPEN" ? "CONFIRMED" : "PENDING",
+        input.data.message,
       );
+      notifyRegistration(event, registration, true);
+      return json(registration, { status: 201 });
     },
   ),
   http.get(`${api}/events/:eventId/registrations`, ({ params, request }) => {
@@ -1202,13 +1253,13 @@ export const handlers = [
           { code: "EVENT_FULL", message: "Свободных мест нет" },
           { status: 409 },
         );
-      return json(
-        decideRegistration(
-          registration,
-          parsed.data.decision,
-          parsed.data.reason,
-        ),
+      const decided = decideRegistration(
+        registration,
+        parsed.data.decision,
+        parsed.data.reason,
       );
+      notifyRegistration(event, decided, false);
+      return json(decided);
     },
   ),
 ];

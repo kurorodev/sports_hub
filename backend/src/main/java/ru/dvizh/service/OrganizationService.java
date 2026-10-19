@@ -10,8 +10,8 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional(readOnly=true)
 public class OrganizationService {
-    private final Store db;private final Access access;private final Views view;private final SportsCatalog catalog;private final Clock clock;
-    public OrganizationService(Store db,Access access,Views view,Clock clock,SportsCatalog catalog){this.db=db;this.access=access;this.view=view;this.clock=clock;this.catalog=catalog;}
+    private final Store db;private final Access access;private final Views view;private final SportsCatalog catalog;private final Clock clock;private final NotificationService notifications;
+    public OrganizationService(Store db,Access access,Views view,Clock clock,SportsCatalog catalog,NotificationService notifications){this.db=db;this.access=access;this.view=view;this.clock=clock;this.catalog=catalog;this.notifications=notifications;}
     @Transactional public Api.Organization create(Api.OrganizationCreate r) {
         var org=new OrganizationEntity();org.createdBy=access.user().id;org.name=r.name().strip();org.description=r.description().strip();org.avatarUrl=r.avatarUrl();safeAvatar(org.avatarUrl);
         if(r.sports()!=null) for(UUID sport:r.sports()){if(sport==null)throw Problem.invalid("sports не может содержать null");org.sports.add(catalog.resolve(sport).id);}
@@ -35,6 +35,7 @@ public class OrganizationService {
         if(org.status==Api.OrganizationStatus.APPROVED) {
             var m=new MembershipEntity();m.organizationId=org.id;m.userId=org.createdBy;m.joinedAt=clock.instant();db.add(m);
         }
+        notifications.send(org.createdBy,Api.NotificationType.ORGANIZATION_STATUS,org.status==Api.OrganizationStatus.APPROVED?"Организация одобрена":"Заявка организации отклонена",org.name,request.reason(),"/organization","organization:"+org.id);
         return view.organization(org);
     }
     public void audit(UUID target,String action,String reason) {

@@ -72,6 +72,10 @@ public final class Api {
         if(value==null)return null;
         value=value.strip();return value.startsWith("@")?value.substring(1):value;
     }
+    public enum NotificationType { REGISTRATION_STATUS, NEW_REGISTRATION, ORGANIZATION_STATUS, EVENT_STATUS, EVENT_UNPUBLISHED, COMMENT_HIDDEN, EVENT_UPDATED, EVENT_STARTING, MENTION }
+    public record Notification(UUID id,NotificationType type,String title,String text,String reason,String href,Instant createdAt,Instant readAt) {}
+    public record NotificationPage(List<Notification> items,int page,int size,long total,int totalPages,long unreadCount,Instant asOf) {}
+    public record NotificationsReadRequest(@NotNull Instant through) {}
     public record Mention(UUID userId,String nickname,int start,int end) {}
     public record Session(@NotNull @Valid UserProfile user, @NotNull @Valid List<SystemRole> systemRoles, @NotNull @Valid List<UUID> manageableOrganizationIds, @NotNull String csrfToken, @NotNull Boolean demo) {}
     public record Sport(@NotNull UUID id, @NotNull String name, @NotNull Boolean isCustom, String registryCode) {}

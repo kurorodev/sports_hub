@@ -76,6 +76,7 @@ export function CreateEventForm({
         return;
       await Promise.all([
         client.invalidateQueries({ queryKey: ["events"] }),
+        client.invalidateQueries({ queryKey: ["notifications"] }),
         client.invalidateQueries({ queryKey: ["map", "events"] }),
         client.invalidateQueries({ queryKey: sportsQuery.queryKey }),
       ]);

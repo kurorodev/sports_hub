@@ -10,8 +10,8 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional(readOnly=true)
 public class DiscussionService {
-    private final Store db;private final Access access;private final Views view;private final OrganizationService organizations;private final Clock clock;private final MentionService mentions;
-    public DiscussionService(Store db,Access access,Views view,OrganizationService organizations,Clock clock,MentionService mentions){this.db=db;this.access=access;this.view=view;this.organizations=organizations;this.clock=clock;this.mentions=mentions;}
+    private final Store db;private final Access access;private final Views view;private final OrganizationService organizations;private final Clock clock;private final MentionService mentions;private final NotificationService notifications;
+    public DiscussionService(Store db,Access access,Views view,OrganizationService organizations,Clock clock,MentionService mentions,NotificationService notifications){this.db=db;this.access=access;this.view=view;this.organizations=organizations;this.clock=clock;this.mentions=mentions;this.notifications=notifications;}
     public PageResult<Api.Comment> list(UUID eventId,boolean admin,int page,int size) {
         if(admin)access.requireAdmin();else {if(eventId==null)throw Problem.notFound();access.eventVisible(db.get(EventEntity.class,eventId));}
         var p=new HashMap<String,Object>();String condition="1=1";
@@ -22,18 +22,20 @@ public class DiscussionService {
     @Transactional public Api.Comment create(UUID eventId,Api.CommentCreate request) {
         var u=access.user();var e=db.lock(EventEntity.class,eventId);access.eventVisible(e);
         if(e.status!=Api.EventStatus.PUBLISHED)throw Problem.conflict(Api.ErrorCode.EVENT_NOT_AVAILABLE,"Обсуждение доступно только у опубликованного события");
-        var c=new CommentEntity();c.eventId=eventId;c.authorId=u.id;c.text=request.text().strip();c.mentions=mentions.resolve(c.text);c.createdAt=clock.instant();c.updatedAt=c.createdAt;db.add(c);return view.comment(c);
+        var c=new CommentEntity();c.eventId=eventId;c.authorId=u.id;c.text=request.text().strip();c.mentions=mentions.resolve(c.text);c.createdAt=clock.instant();c.updatedAt=c.createdAt;db.add(c);
+        c.mentions.stream().map(m -> m.userId).distinct().filter(id -> !id.equals(u.id)).forEach(id -> notifications.send(id,Api.NotificationType.MENTION,"Вас упомянули в обсуждении",e.title,null,"/events/"+e.id,"mention:"+c.id));
+        return view.comment(c);
     }
     @Transactional public Api.Comment hide(UUID id,Api.ModerationRequest request) {
-        access.requireAdmin();var c=db.lock(CommentEntity.class,id);
+        access.requireAdmin();var candidate=db.get(CommentEntity.class,id);db.lock(EventEntity.class,candidate.eventId);var c=db.refreshLocked(candidate);
         if(c.status!=Api.CommentStatus.VISIBLE)throw Problem.transition();c.status=Api.CommentStatus.HIDDEN;c.moderationReason=request.reason();c.updatedAt=clock.instant();
-        organizations.audit(c.id,"COMMENT_HIDDEN",request.reason());return view.comment(c);
+        organizations.audit(c.id,"COMMENT_HIDDEN",request.reason());notifications.send(c.authorId,Api.NotificationType.COMMENT_HIDDEN,"Ваш комментарий скрыт модератором",db.get(EventEntity.class,c.eventId).title,request.reason(),"/events/"+c.eventId,"comment-hidden:"+c.id);return view.comment(c);
     }
     @Transactional public Api.Event unpublish(UUID id,Api.ModerationRequest request) {
         access.requireAdmin();var e=db.lock(EventEntity.class,id);if(e.status!=Api.EventStatus.PUBLISHED)throw Problem.transition();
         e.status=Api.EventStatus.UNPUBLISHED;e.moderationReason=request.reason();e.updatedAt=clock.instant();
         // Registrations remain as an audit trail. Previously granted points are retained;
         // new verification is forbidden. This policy is documented in decisions.md.
-        organizations.audit(e.id,"EVENT_UNPUBLISHED",request.reason());return view.event(e);
+        organizations.audit(e.id,"EVENT_UNPUBLISHED",request.reason());notifications.unpublished(e,request.reason());return view.event(e);
     }
 }
