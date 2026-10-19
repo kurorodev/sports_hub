@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useMapParams } from "./use-map-params";
 import { MapPin, ArrowUpRight, X } from "lucide-react";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
+import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import {
   listOnlyFilters,
   readMapView,
@@ -185,9 +186,10 @@ export function MapPage() {
       </p>
       <div className="map-toolbar">
         <MapSearch onSelect={setCenter} />
-        <label className="form-field">
-          Вид спорта на карте
+        <div className="form-field">
+          <label htmlFor="map-sport">Вид спорта на карте</label>
           <select
+            id="map-sport"
             value={sportId}
             onChange={(event) => setParam("sportId", event.target.value)}
           >
@@ -198,30 +200,18 @@ export function MapPage() {
               </option>
             ))}
           </select>
-        </label>
+        </div>
         <details
           className="map-date-filters"
           open={Boolean(params.get("from") || params.get("to"))}
         >
           <summary>Даты встреч (UTC)</summary>
           <div>
-            <label className="form-field">
-              Дата от (UTC)
-              <input
-                type="date"
-                value={params.get("from") ?? ""}
-                onChange={(event) => setParam("from", event.target.value)}
-              />
-            </label>
-            <label className="form-field">
-              Дата до (UTC)
-              <input
-                type="date"
-                min={params.get("from") ?? undefined}
-                value={params.get("to") ?? ""}
-                onChange={(event) => setParam("to", event.target.value)}
-              />
-            </label>
+            <DateRangeFields
+              from={params.get("from") ?? ""}
+              to={params.get("to") ?? ""}
+              onChange={setParam}
+            />
           </div>
         </details>
         <fieldset className="map-layers">

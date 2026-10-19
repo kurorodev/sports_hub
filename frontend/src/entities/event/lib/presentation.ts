@@ -31,6 +31,7 @@ export function participantCount(count: number, limit?: number | null) {
 export function sportImage(name: string) {
   const key: Record<string, string> = {
     бег: "running",
+    "легкая атлетика": "running",
     баскетбол: "basketball",
     теннис: "tennis",
     шахматы: "chess",

@@ -509,6 +509,20 @@ button:disabled {
   font-size: 12px;
   font-weight: 650;
 }
+.filter-fields > .form-field {
+  margin-bottom: 0;
+}
+.filter-fields > .form-field > label {
+  font-size: 12px;
+  font-weight: 650;
+}
+.filter-fields .form-field input,
+.filter-fields .form-field select {
+  min-height: 44px;
+  padding: 8px 10px;
+  border-color: var(--color-outline);
+  font-size: 12px;
+}
 .filter-fields select,
 .filter-fields input:not([type="checkbox"]) {
   width: 100%;
@@ -1926,6 +1940,8 @@ input[type="radio"] {
   margin-top: var(--space-5);
 }
 .organization-sports {
+  max-height: 320px;
+  overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
@@ -1948,6 +1964,9 @@ input[type="radio"] {
   width: 18px;
   height: 18px;
   accent-color: var(--color-ink);
+}
+.organization-sports label[hidden] {
+  display: none;
 }
 .organization-search {
   display: grid;
@@ -2568,3 +2587,306 @@ input[type="radio"] {
   min-height: 200px;
   padding: 24px;
 }
+/* Public and own profiles share the same identity and sport details. */
+.person-link {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--color-outline);
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
+.person-link:hover {
+  text-decoration-color: var(--color-ink);
+}
+.profile-page {
+  padding-block: var(--space-8) var(--space-12);
+  max-width: 1000px;
+  margin-inline: auto;
+}
+.profile-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block: var(--space-6);
+}
+.profile-toolbar > div {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.profile-summary,
+.profile-form {
+  padding: clamp(20px, 4vw, 40px);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.profile-identity {
+  display: flex;
+  gap: var(--space-6);
+  align-items: center;
+}
+.profile-identity > div:last-child {
+  min-width: 0;
+}
+.profile-identity h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.15;
+  margin-block: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 112px;
+  height: 112px;
+  border-radius: var(--radius-card);
+  background: var(--color-brand);
+  color: var(--color-ink);
+  font-size: 48px;
+  font-weight: 800;
+  overflow: hidden;
+}
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-handle {
+  color: var(--color-ink-muted);
+  overflow-wrap: anywhere;
+}
+.profile-role-list {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+}
+.profile-chip {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 650;
+}
+.profile-facts {
+  display: flex;
+  gap: var(--space-4) var(--space-6);
+  flex-wrap: wrap;
+  margin-block: var(--space-8);
+}
+.profile-facts p {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.profile-facts svg {
+  flex-shrink: 0;
+  color: var(--color-ink-muted);
+}
+.profile-summary h2 {
+  font-size: 22px;
+  margin-bottom: var(--space-3);
+}
+.profile-summary section + section {
+  margin-top: var(--space-8);
+}
+.profile-about p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.profile-preferences {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  padding: 0;
+  gap: var(--space-3);
+  list-style: none;
+}
+.profile-preferences li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-control);
+  overflow-wrap: anywhere;
+}
+.profile-preferences span {
+  color: var(--color-ink-muted);
+}
+.profile-rating {
+  display: flex;
+  align-items: start;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-outline);
+}
+.profile-rating svg {
+  flex-shrink: 0;
+}
+.profile-rating p {
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  margin-top: var(--space-2);
+}
+.profile-public-link {
+  text-align: center;
+  margin-top: var(--space-6);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.profile-form > h1 {
+  font-size: 28px;
+  margin-bottom: var(--space-2);
+}
+.profile-form > p {
+  margin-bottom: var(--space-6);
+}
+.profile-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--space-8);
+  min-width: 0;
+}
+.profile-form legend {
+  font-size: 20px;
+  font-weight: 750;
+  margin-bottom: var(--space-4);
+}
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.profile-form-grid .form-field {
+  min-width: 0;
+}
+.profile-form textarea {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-ink-muted);
+  border-radius: var(--radius-control);
+  resize: vertical;
+}
+.profile-role-options,
+.profile-sport-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-3);
+}
+.profile-role-options label,
+.profile-sport-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.profile-role-options input,
+.profile-sport-options input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-ink);
+  flex-shrink: 0;
+}
+.profile-preference-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: end;
+  margin-top: var(--space-3);
+}
+.profile-preference-row .form-field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.profile-form-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .profile-identity {
+    align-items: start;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 36px;
+  }
+  .profile-toolbar {
+    align-items: stretch;
+  }
+  .profile-toolbar > div,
+  .profile-toolbar .button {
+    width: 100%;
+  }
+  .profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .profile-preference-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .profile-form-actions .button {
+    width: 100%;
+  }
+}
+
+/* Signup and participation conditions share the existing form/card tokens. */
+.signup-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-5);
+}
+.signup-fields input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.auth-switch {
+  margin-top: var(--space-5);
+  color: var(--color-ink-muted);
+}
+.auth-switch a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.event-requirements {
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.event-requirements h2 {
+  margin-top: 0;
+}
+.event-requirements p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-bottom: 0;
+}
+
+.demo-login-heading { margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-outline); }
+.mention-input { position: relative; min-width: 0; }
+.mention-input textarea { width: 100%; }
+.mention-options { padding: 4px; margin: 4px 0 0; list-style: none; border: 1px solid var(--color-outline); border-radius: 12px; background: var(--color-surface); max-height: 240px; overflow-y: auto; }
+.mention-options button { width: 100%; text-align: left; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 10px; border: 0; border-radius: 8px; background: transparent; overflow-wrap: anywhere; }
+.mention-options [aria-selected="true"] button { background: var(--color-brand); color: var(--color-ink); }
+.mention-options span, .comment-handle { color: var(--color-ink-muted); font-size: 0.875rem; }
+.mention-link { color: var(--color-ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }

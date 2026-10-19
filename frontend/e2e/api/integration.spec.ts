@@ -17,6 +17,10 @@ for (const width of [375, 768, 1440]) {
     const ownerSession = await (
       await page.request.get("/api/v1/session")
     ).json();
+    const sportsBefore = await (
+      await page.request.get("/api/v1/sports")
+    ).json();
+    expect(sportsBefore).toHaveLength(201);
     const cookie = (await context.cookies()).find(
       (item) => item.name === "SPORT_SESSION",
     );
@@ -30,9 +34,7 @@ for (const width of [375, 768, 1440]) {
     await page
       .getByLabel("Вид спорта", { exact: true })
       .selectOption("__custom__");
-    await page
-      .getByLabel("Название нового вида спорта", { exact: true })
-      .fill(sport);
+    await page.getByLabel("Название активности", { exact: true }).fill(sport);
     await page
       .getByLabel("О встрече", { exact: true })
       .fill("Встречаемся у входа в парк и вместе бежим в спокойном темпе.");
@@ -56,6 +58,11 @@ for (const width of [375, 768, 1440]) {
     expect(created.status()).toBe(201);
     expect(created.fromServiceWorker()).toBe(false);
     const event = await created.json();
+    expect(event.sport.name).toBe("Другое");
+    expect(event.customSportName).toBe(sport);
+    expect(await (await page.request.get("/api/v1/sports")).json()).toEqual(
+      sportsBefore,
+    );
     expect(event.organizer.id).toBe(ownerSession.user.id);
     expect(Date.parse(event.startsAt)).toBe(
       Date.parse(`${date}T18:30:00+07:00`),

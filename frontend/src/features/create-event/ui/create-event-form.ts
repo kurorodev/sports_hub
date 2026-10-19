@@ -54,6 +54,7 @@ export function toEventInput(
   return {
     title: values.title,
     description: values.description,
+    requirements: values.requirements?.trim() || null,
     location: values.location,
     skillLevel: values.skillLevel,
     eventKind: values.eventKind,
@@ -82,6 +83,7 @@ export const serverFieldNames: Record<
 > = {
   title: "title",
   description: "description",
+  requirements: "requirements",
   "sport.sportId": "sportChoice",
   "sport.customName": "customSportName",
   sport: "sportChoice",

@@ -216,7 +216,11 @@ describe("discussion UI", () => {
     expect(
       screen.getByRole("button", { name: "Отправляем сообщение…" }),
     ).toBeDisabled();
-    expect(await screen.findByText("<script>alert(1)</script>")).toBeVisible();
+    expect(
+      await screen.findByText("<script>alert(1)</script>", {
+        selector: ".comment-text",
+      }),
+    ).toBeVisible();
     expect(document.querySelector(".comment-text script")).toBeNull();
     expect(getComments()).toHaveLength(1);
   });
@@ -249,7 +253,9 @@ describe("discussion UI", () => {
       screen.getByRole("button", { name: "Отправить сообщение" }),
     );
     expect(await screen.findByText("Страница 2 из 2")).toBeVisible();
-    expect(await screen.findByText("Новый вопрос")).toBeVisible();
+    expect(
+      await screen.findByText("Новый вопрос", { selector: ".comment-text" }),
+    ).toBeVisible();
     expect(
       within(
         screen.getByRole("list", { name: "Обсуждение встречи" }),

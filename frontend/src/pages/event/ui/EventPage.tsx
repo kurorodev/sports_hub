@@ -98,6 +98,9 @@ export function EventPage() {
           <span className="owner-label">Вы организатор</span>
         )}
         <span className="eyebrow muted">{event.sport.name} · Иллюстрация</span>
+        {event.customSportName && (
+          <p className="field-hint">Активность: {event.customSportName}</p>
+        )}
         <h1>{event.title}</h1>
       </div>
       {event.status !== "PUBLISHED" && (
@@ -119,6 +122,15 @@ export function EventPage() {
             height="360"
           />
           <p className="detail-description">{event.description}</p>
+          {event.requirements?.trim() && (
+            <section
+              className="event-requirements"
+              aria-labelledby="event-requirements-heading"
+            >
+              <h2 id="event-requirements-heading">Условия участия</h2>
+              <p>{event.requirements}</p>
+            </section>
+          )}
           <EventLocation
             location={event.location}
             eventId={event.id}
@@ -176,7 +188,9 @@ export function EventPage() {
                 {event.organizer.name}
               </Link>
             ) : (
-              event.organizer.name
+              <Link className="person-link" to={`/users/${event.organizer.id}`}>
+                {event.organizer.name}
+              </Link>
             )}
           </p>
           <div className="detail-condition">

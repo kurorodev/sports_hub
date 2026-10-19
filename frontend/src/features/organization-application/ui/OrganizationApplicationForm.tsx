@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -45,10 +46,17 @@ export function OrganizationApplicationForm({
       if (client.getQueryData(sessionQuery.queryKey)?.user.id !== viewerId)
         return;
       form.reset();
+      setSportSearch("");
       onCreated(organization);
     },
   });
   const error = form.formState.errors;
+  const [sportSearch, setSportSearch] = useState("");
+  const visibleSports = sports.filter((sport) =>
+    sport.name
+      .toLocaleLowerCase("ru")
+      .includes(sportSearch.trim().toLocaleLowerCase("ru")),
+  );
   return (
     <form
       className="organization-form"
@@ -93,10 +101,22 @@ export function OrganizationApplicationForm({
             }
           />
         </FormField>
+        <FormField
+          id="organization-sport-search"
+          label="Найти вид спорта организации"
+        >
+          <input
+            id="organization-sport-search"
+            type="search"
+            value={sportSearch}
+            onChange={(event) => setSportSearch(event.target.value)}
+            placeholder="Например, шахматы"
+          />
+        </FormField>
         <fieldset className="organization-sports">
           <legend>Виды спорта (необязательно)</legend>
           {sports.map((sport) => (
-            <label key={sport.id}>
+            <label key={sport.id} hidden={!visibleSports.includes(sport)}>
               <input
                 type="checkbox"
                 value={sport.id}
@@ -105,6 +125,9 @@ export function OrganizationApplicationForm({
               {sport.name}
             </label>
           ))}
+          {visibleSports.length === 0 && (
+            <p role="status">По этому запросу виды спорта не найдены.</p>
+          )}
         </fieldset>
       </fieldset>
       <p className="join-note">

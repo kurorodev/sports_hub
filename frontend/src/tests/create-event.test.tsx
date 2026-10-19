@@ -22,6 +22,7 @@ import { mockId } from "../mocks/database";
 const input: CreateEventInput = {
   title: "Петанк в парке",
   description: "Играем в петанк, объясним правила и вместе потренируемся.",
+  requirements: "Вода и удобная обувь.\n<script>Обычный текст</script>",
   sport: { customName: "Петанк" },
   organizer: { type: "USER", id: mockId("user-alex") },
   startsAt: "2026-11-07T18:30:00+07:00",
@@ -64,11 +65,12 @@ async function fillForm() {
     input.title,
   );
   await user.selectOptions(screen.getByLabelText("Вид спорта"), "__custom__");
-  await user.type(
-    screen.getByLabelText("Название нового вида спорта"),
-    "Петанк",
-  );
+  await user.type(screen.getByLabelText("Название активности"), "Петанк");
   await user.type(screen.getByLabelText("О встрече"), input.description);
+  await user.type(
+    screen.getByLabelText("Условия участия"),
+    input.requirements!,
+  );
   await user.type(screen.getByLabelText("Город"), input.location.city);
   await user.type(
     screen.getByLabelText("Место встречи"),
@@ -96,14 +98,17 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("S1 mock API", () => {
-  it("publishes a new sport and event visible to another account with correct ownership", async () => {
+  it("publishes an Other activity visible to another account without growing categories", async () => {
     await signIn();
     const created = await createEvent(input);
     expect(created).toMatchObject({
+      requirements: input.requirements,
       status: "PUBLISHED",
       confirmedCount: 0,
       viewerIsOrganizer: true,
       startsAt: input.startsAt,
+      sport: expect.objectContaining({ name: "Другое" }),
+      customSportName: "Петанк",
     });
     await signIn("user-maria");
     const catalog = await request<Page<EventPreview>>(
@@ -178,7 +183,7 @@ describe("S1 mock API", () => {
     await signIn();
     setCsrfToken("stale-token");
     await expect(createEvent(input)).rejects.toMatchObject({ status: 403 });
-    expect(await request<Sport[]>("/sports")).toHaveLength(4);
+    expect(await request<Sport[]>("/sports")).toHaveLength(201);
   });
 
   it.each([
@@ -205,7 +210,7 @@ describe("S1 mock API", () => {
           ]),
         },
       });
-      expect(await request<Sport[]>("/sports")).toHaveLength(4);
+      expect(await request<Sport[]>("/sports")).toHaveLength(201);
     },
   );
 });
@@ -232,7 +237,7 @@ describe("S1 creation UI", () => {
       "aria-invalid",
       "true",
     );
-    expect(await request<Sport[]>("/sports")).toHaveLength(4);
+    expect(await request<Sport[]>("/sports")).toHaveLength(201);
   });
 
   it("preserves form data on server failure, prevents double submission and succeeds after retry", async () => {
@@ -266,6 +271,9 @@ describe("S1 creation UI", () => {
     );
     expect(screen.getByText("Встреча опубликована")).toBeInTheDocument();
     expect(screen.getByText("Вы организатор")).toBeInTheDocument();
+    const conditions = screen.getByRole("region", { name: "Условия участия" });
+    expect(conditions.textContent).toContain(input.requirements);
+    expect(conditions.querySelector("script")).toBeNull();
   });
 
   it("attaches server validation to its field and retains entered values", async () => {

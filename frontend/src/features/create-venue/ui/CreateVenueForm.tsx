@@ -86,9 +86,9 @@ export function CreateVenueForm({
             {errors.name.message}
           </p>
         )}
-        <label className="form-field">
-          Вид спорта площадки
-          <select {...form.register("sportId")}>
+        <div className="form-field">
+          <label htmlFor="venue-sport">Вид спорта площадки</label>
+          <select id="venue-sport" {...form.register("sportId")}>
             <option value="">Любой спорт</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
@@ -96,7 +96,7 @@ export function CreateVenueForm({
               </option>
             ))}
           </select>
-        </label>
+        </div>
         <Controller
           control={form.control}
           name="location"

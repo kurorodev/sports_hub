@@ -9,7 +9,7 @@ export async function applyOrganizationUi(page: Page, name: string) {
     .fill(
       "Помогаем начинающим полюбить спорт. Собираемся в парке и тренируемся вместе.",
     );
-  await page.getByLabel("Бег", { exact: true }).check();
+  await page.getByLabel("Легкая атлетика", { exact: true }).check();
   const response = page.waitForResponse(
     (r) =>
       r.url().endsWith("/api/v1/organizations") &&
@@ -41,7 +41,7 @@ export async function publishOrganizationEvent(page: Page, title: string) {
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
   await page
     .getByLabel("Вид спорта", { exact: true })
-    .selectOption({ label: "Бег" });
+    .selectOption({ label: "Легкая атлетика" });
   await page
     .getByLabel("О встрече", { exact: true })
     .fill(

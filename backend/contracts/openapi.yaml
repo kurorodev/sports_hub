@@ -29,6 +29,111 @@ tags:
 security:
 - cookieAuth: []
 paths:
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      operationId: registerAccount
+      summary: Создать аккаунт с паролем и войти
+      security: []
+      description: Работает независимо от DEMO_ENABLED. При успехе заменяет сессию и выдаёт Session/CSRF и HttpOnly-cookie.
+        Никнейм принимается с @ или без, регистр не учитывается. Ошибки не заменяют текущую сессию. До 60 auth-запросов
+        в минуту на IP экземпляра.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegistrationRequest'
+      responses:
+        '201':
+          description: Сессия установлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '409':
+          $ref: '#/components/responses/409'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      operationId: loginAccount
+      summary: Войти по никнейму и паролю
+      security: []
+      description: Работает независимо от DEMO_ENABLED. При успехе заменяет сессию и выдаёт Session/CSRF и HttpOnly-cookie.
+        Никнейм принимается с @ или без, регистр не учитывается. Ошибки не заменяют текущую сессию. До 60 auth-запросов
+        в минуту на IP экземпляра.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+      responses:
+        '200':
+          description: Сессия установлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '409':
+          $ref: '#/components/responses/409'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /auth/session:
+    delete:
+      tags:
+      - Auth
+      operationId: logoutAccount
+      summary: Завершить текущую сессию (нужен CSRF)
+      responses:
+        '204':
+          description: Сессия завершена
+        '403':
+          $ref: '#/components/responses/403'
+  /users:
+    get:
+      tags:
+      - Profile
+      operationId: searchUsers
+      summary: Подсказки пользователей по началу никнейма
+      security: []
+      parameters:
+      - name: nicknamePrefix
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 41
+        description: С @ или без, латиница/цифры/_/-. До 8 публичных пользователей, сортировка по никнейму.
+      responses:
+        '200':
+          description: Совпадения
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 8
+                items:
+                  $ref: '#/components/schemas/PublicUser'
+        '400':
+          $ref: '#/components/responses/400'
   /health:
     get:
       tags:
@@ -194,7 +299,7 @@ paths:
       - Catalog
       summary: Справочник видов спорта
       operationId: getSports
-      description: ''
+      description: Фиксированный справочник ВРВС и единственная категория Другое. Пользовательские события не расширяют справочник.
       responses:
         '200':
           description: Успешный ответ
@@ -471,7 +576,7 @@ paths:
       summary: Создать мероприятие
       operationId: postEvents
       description: USER вправе создать личное событие; организация — только APPROVED и при наличии полномочий текущего
-        пользователя. publishNow по умолчанию true. При customName новый спорт сохраняется в БД без правки кода.
+        пользователя. publishNow по умолчанию true. При customName событие относится к категории Другое, а название активности сохраняется только у события.
       responses:
         '201':
           description: Успешный ответ
@@ -2187,6 +2292,66 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
   schemas:
+    AuthRegistrationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - nickname
+      - displayName
+      - password
+      properties:
+        nickname:
+          type: string
+          pattern: ^@?[A-Za-z0-9_-]{3,40}$
+          maxLength: 41
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          minLength: 8
+          maxLength: 128
+    AuthLoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - nickname
+      - password
+      properties:
+        nickname:
+          type: string
+          minLength: 1
+          maxLength: 41
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+    Mention:
+      type: object
+      required:
+      - userId
+      - nickname
+      - start
+      - end
+      properties:
+        userId:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        start:
+          type: integer
+          minimum: 0
+        end:
+          type: integer
+          minimum: 1
+      description: Снимок @nickname и стабильный userId; start/end — UTF-16 offsets в сохранённом тексте, end не включается.
+        Известные упоминания определяет сервер при отправке. Неизвестные остаются обычным текстом; это не уведомления.
     SystemRole:
       type: string
       enum:
@@ -2432,7 +2597,8 @@ components:
         nickname:
           type: string
           minLength: 3
-          maxLength: 40
+          maxLength: 41
+          pattern: ^@?[A-Za-z0-9_-]{3,40}$
         displayName:
           type: string
           minLength: 1
@@ -2561,13 +2727,18 @@ components:
         name:
           type: string
         isCustom:
+          description: true только для категории Другое.
           type: boolean
+        registryCode:
+          type: string
+          nullable: true
+          description: Код ВРВС; null для категории Другое.
       required:
       - id
       - name
       - isCustom
     SportInput:
-      description: 'Ровно один вариант: sportId существующего направления ИЛИ customName нового.'
+      description: 'Ровно один вариант: sportId из справочника ИЛИ customName активности категории Другое. customName не создаёт общую категорию.'
       oneOf:
       - type: object
         properties:
@@ -2807,6 +2978,11 @@ components:
     Event:
       type: object
       properties:
+        customSportName:
+          type: string
+          nullable: true
+          maxLength: 80
+          description: Название активности внутри категории Другое, не отдельный вид спорта.
         id:
           type: string
           format: uuid
@@ -2891,6 +3067,11 @@ components:
     EventCard:
       type: object
       properties:
+        customSportName:
+          type: string
+          nullable: true
+          maxLength: 80
+          description: Название активности внутри категории Другое, не отдельный вид спорта.
         id:
           type: string
           format: uuid
@@ -3009,6 +3190,10 @@ components:
     Comment:
       type: object
       properties:
+        mentions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mention'
         id:
           type: string
           format: uuid
@@ -3253,6 +3438,10 @@ components:
     Message:
       type: object
       properties:
+        mentions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mention'
         id:
           type: string
           format: uuid

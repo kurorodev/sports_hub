@@ -8,6 +8,7 @@ import { ApiError, errorMessage } from "../../../shared/api/client";
 import type { Session, Sport } from "../../../shared/api/types";
 import { LocationPicker } from "../../../shared/ui/LocationPicker";
 import { FormField } from "../../../shared/ui/FormField";
+import { useCurrentDate } from "../../../shared/hooks/use-current-date";
 import { createEvent, sportsQuery } from "../../../entities/event";
 import {
   customSportValue,
@@ -37,6 +38,7 @@ export function CreateEventForm({
       organizerChoice: initialOrganizationId ?? "__personal__",
       title: "",
       description: "",
+      requirements: "",
       sportChoice: "",
       customSportName: "",
       date: "",
@@ -51,6 +53,11 @@ export function CreateEventForm({
   });
   const sportChoice = useWatch({ control: form.control, name: "sportChoice" });
   const joinMode = useWatch({ control: form.control, name: "joinMode" });
+  const timezoneOffset = useWatch({
+    control: form.control,
+    name: "timezoneOffset",
+  });
+  const today = useCurrentDate(timezoneOffset);
   const mutation = useMutation({
     mutationFn: (values: EventFormValues) => {
       if (
@@ -156,12 +163,14 @@ export function CreateEventForm({
                   required
                 >
                   <option value="">Выберите спорт</option>
-                  {sports.map((sport) => (
-                    <option key={sport.id} value={sport.id}>
-                      {sport.name}
-                    </option>
-                  ))}
-                  <option value={customSportValue}>Свой вид спорта</option>
+                  {sports
+                    .filter((sport) => !sport.isCustom)
+                    .map((sport) => (
+                      <option key={sport.id} value={sport.id}>
+                        {sport.name}
+                      </option>
+                    ))}
+                  <option value={customSportValue}>Другое</option>
                 </select>
               </FormField>
               <FormField
@@ -180,8 +189,8 @@ export function CreateEventForm({
             {sportChoice === customSportValue && (
               <FormField
                 id="custom-sport"
-                label="Название нового вида спорта"
-                hint="Любая дисциплина: от петанка до алтимата."
+                label="Название активности"
+                hint="Опишите свой вариант. Встреча останется в категории «Другое» и не создаст новую категорию."
                 error={errors.customSportName?.message}
               >
                 <input
@@ -192,7 +201,7 @@ export function CreateEventForm({
                   )}
                   {...form.register("customSportName")}
                   maxLength={80}
-                  placeholder="Например, алтимат"
+                  placeholder="Например, петанк в парке"
                   required
                 />
               </FormField>
@@ -214,6 +223,23 @@ export function CreateEventForm({
                 maxLength={5000}
                 placeholder="Расскажите, что ждёт участников…"
                 required
+              />
+            </FormField>
+            <FormField
+              id="event-requirements"
+              label="Условия участия"
+              hint="Что взять с собой, какая подготовка нужна? Необязательно, до 2000 символов."
+              error={errors.requirements?.message}
+            >
+              <textarea
+                {...accessibility(
+                  "event-requirements",
+                  errors.requirements?.message,
+                  true,
+                )}
+                {...form.register("requirements")}
+                rows={3}
+                maxLength={2000}
               />
             </FormField>
           </fieldset>
@@ -245,8 +271,11 @@ export function CreateEventForm({
               >
                 <input
                   {...accessibility("event-date", errors.date?.message)}
-                  {...form.register("date")}
+                  {...form.register("date", {
+                    onChange: () => void form.trigger("date"),
+                  })}
                   type="date"
+                  min={today}
                   required
                 />
               </FormField>

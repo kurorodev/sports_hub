@@ -15,7 +15,7 @@ export async function setupModerationEvent(page: Page, title: string) {
     const sports: Sport[] = await (
       await fetch("/api/v1/sports", { credentials: "include" })
     ).json();
-    const sport = sports.find((item) => item.name === "Бег") ?? sports[0];
+    const sport = sports.find((item) => item.name === "Легкая атлетика") ?? sports[0];
     const body: EventCreate = {
       title: name,
       description:
@@ -52,7 +52,9 @@ export async function sendDiscussion(page: Page, text: string) {
   await page
     .getByRole("button", { name: "Отправить сообщение", exact: true })
     .click();
-  await expect(page.getByText(text, { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".comment-text").getByText(text, { exact: true }),
+  ).toBeVisible();
 }
 export async function findModerationEvent(page: Page, title: string) {
   await page.goto("/admin?section=events");

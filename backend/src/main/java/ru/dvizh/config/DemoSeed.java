@@ -30,7 +30,7 @@ public class DemoSeed implements ApplicationRunner {
         var pending=user("org-pending","Представитель «Новый старт»",false,Api.SportsRole.SPORTS_ORGANIZER);
         var rejected=user("org-rejected","Представитель «Вектор»",false,Api.SportsRole.SPORTS_ORGANIZER);
         var admin=user("admin","Администратор ДВИЖ",true);
-        var football=sport("football","Футбол");var running=sport("running","Бег");var chess=sport("chess","Шахматы");
+        var football=sport("football","Футбол");var running=sport("running","Легкая атлетика");var chess=sport("chess","Шахматы");
         a.sportsPreferences.add(new SportPreference(football.id,Api.ExperienceLevel.AMATEUR));a.preferredTime="EVENING";
         b.sportsPreferences.add(new SportPreference(running.id,Api.ExperienceLevel.BEGINNER));b.preferredTime="MORNING";
         var club=organization("club-approved","Клуб «Темп»",approved,Api.OrganizationStatus.APPROVED,football,admin);
@@ -85,7 +85,7 @@ public class DemoSeed implements ApplicationRunner {
         }
     }
     private UserEntity user(String account,String name,boolean admin,Api.SportsRole... roles){var u=new UserEntity();u.nickname=account;u.normalizedNickname=account;u.displayName=name;u.admin=admin;u.demoAccount=account;u.city="Красноярск";u.sportsRoles.addAll(List.of(roles));return save(u,"user-"+account);}
-    private SportEntity sport(String key,String name){var s=new SportEntity();s.name=name;s.normalizedName=name.toLowerCase(Locale.ROOT);return save(s,"sport-"+key);}
+    private SportEntity sport(String key,String name){return db.first(SportEntity.class,"e.canonicalId is null and e.name=:name",Map.of("name",name)).orElseThrow();}
     private OrganizationEntity organization(String key,String name,UserEntity owner,Api.OrganizationStatus status,SportEntity sport,UserEntity admin){var o=new OrganizationEntity();o.name=name;o.description="Демонстрационное спортивное объединение для совместных занятий";o.createdBy=owner.id;o.status=status;o.sports.add(sport.id);if(status!=Api.OrganizationStatus.PENDING){o.decidedAt=clock.instant();o.decidedBy=admin.id;}if(status==Api.OrganizationStatus.REJECTED)o.decisionReason="Добавьте подробное описание деятельности";return save(o,key);}
     private EventEntity event(String key,String title,UserEntity owner,OrganizationEntity org,SportEntity sport,Api.JoinMode mode,Api.EventKind kind,Integer capacity,int days){var e=new EventEntity();e.title=title;e.description="Совместная спортивная встреча. Приходите знакомиться и заниматься вместе.";e.sportId=sport.id;e.joinMode=mode;e.eventKind=kind;e.maxParticipants=capacity;e.startsAt=clock.instant().plus(days,java.time.temporal.ChronoUnit.DAYS);e.endsAt=e.startsAt.plusSeconds(7200);e.city="Красноярск";e.address="Спортивная площадка, ул. Дружбы, 10";e.requirements="Удобная одежда и вода";e.organizerUserId=owner==null?null:owner.id;e.organizerOrganizationId=org==null?null:org.id;e.status=Api.EventStatus.PUBLISHED;return save(e,key);}
     private RegistrationEntity registration(String key,EventEntity e,UserEntity u,Api.RegistrationStatus status){var r=new RegistrationEntity();r.eventId=e.id;r.userId=u.id;r.status=status;if(status==Api.RegistrationStatus.REJECTED)r.decisionReason="Места в учебной группе закончились";return save(r,key);}

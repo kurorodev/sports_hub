@@ -57,6 +57,9 @@ export function EventCard({
             <ArrowUpRight size={20} />
           </Link>
         </h3>
+        {event.customSportName && (
+          <p className="field-hint">{event.customSportName}</p>
+        )}
         <p className="event-info">
           <CalendarDays size={16} />
           <time dateTime={event.startsAt}>{eventDate(event.startsAt)}</time>
@@ -74,7 +77,9 @@ export function EventCard({
               {event.organizer.name}
             </Link>
           ) : (
-            <span>{event.organizer.name}</span>
+            <Link className="person-link" to={`/users/${event.organizer.id}`}>
+              {event.organizer.name}
+            </Link>
           )}
         </div>
         <div className="card-bottom">

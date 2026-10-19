@@ -14,6 +14,7 @@ import { EventCard } from "../../../entities/event";
 import { errorMessage } from "../../../shared/api/client";
 import { EmptyState, ErrorState, Skeletons } from "../../../shared/ui/Feedback";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
+import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -21,7 +22,16 @@ export function CatalogPage() {
   const sports = useQuery(sportsQuery);
   const sportOptions = [
     { id: "", name: "Все виды спорта" },
-    ...(sports.data ?? []),
+    ...(sports.data ?? []).filter((sport) =>
+      [
+        "Легкая атлетика",
+        "Баскетбол",
+        "Футбол",
+        "Теннис",
+        "Шахматы",
+        "Другое",
+      ].includes(sport.name),
+    ),
   ];
   const setFilter = (key: string, value: string) => {
     setParams((current) => {
@@ -164,23 +174,28 @@ export function CatalogPage() {
                 )}
               </summary>
               <div className="filter-fields">
-                <label>
-                  Дата от (UTC)
-                  <input
-                    type="date"
-                    value={params.get("from") ?? ""}
-                    onChange={(event) => setFilter("from", event.target.value)}
-                  />
-                </label>
-                <label>
-                  Дата до (UTC)
-                  <input
-                    type="date"
-                    min={params.get("from") ?? undefined}
-                    value={params.get("to") ?? ""}
-                    onChange={(event) => setFilter("to", event.target.value)}
-                  />
-                </label>
+                <div className="form-field">
+                  <label htmlFor="catalog-sport">Категория спорта</label>
+                  <select
+                    id="catalog-sport"
+                    value={params.get("sportId") ?? ""}
+                    onChange={(event) =>
+                      setFilter("sportId", event.target.value)
+                    }
+                  >
+                    <option value="">Все виды спорта</option>
+                    {(sports.data ?? []).map((sport) => (
+                      <option key={sport.id} value={sport.id}>
+                        {sport.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <DateRangeFields
+                  from={params.get("from") ?? ""}
+                  to={params.get("to") ?? ""}
+                  onChange={setFilter}
+                />
                 <label>
                   Уровень
                   <select

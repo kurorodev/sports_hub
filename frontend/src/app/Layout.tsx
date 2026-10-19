@@ -37,7 +37,10 @@ export function Layout() {
               <NavLink to="/admin">Модерация</NavLink>
             )}
           </nav>
-          <Link className="header-account" to="/login">
+          <Link
+            className="header-account"
+            to={session.data ? "/profile" : "/login"}
+          >
             <UserRound size={18} />
             <span>
               {session.isPending

@@ -19,7 +19,7 @@ export function setupMapEvent(page: Page, title: string, startsAt: string) {
       const body: EventCreate = {
         title: input.title,
         description: "Встречаемся на площади, знакомимся и начинаем пробежку.",
-        sport: { sportId: sports.find((item) => item.name === "Бег")!.id },
+        sport: { sportId: sports.find((item) => item.name === "Легкая атлетика")!.id },
         startsAt: input.startsAt,
         location: {
           city: "Самара",

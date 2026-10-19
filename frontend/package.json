@@ -16,7 +16,9 @@
     "api:generate": "openapi-typescript ../backend/contracts/openapi.yaml --default-non-nullable false -o src/shared/api/generated/schema.d.ts",
     "api:check": "openapi-typescript ../backend/contracts/openapi.yaml --default-non-nullable false -o src/shared/api/generated/schema.d.ts --check",
     "dev:mock": "vite --mode mock",
-    "test:e2e:api": "playwright test --config playwright.api.config.ts"
+    "test:e2e:api": "playwright test --config playwright.api.config.ts",
+    "sports:generate": "node scripts/sync-sports.mjs",
+    "sports:check": "node scripts/sync-sports.mjs --check"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.0",

@@ -14,11 +14,11 @@ public class SessionService {
     public SessionService(Store db,Views view,@Value("${app.demo-enabled}") boolean demo){this.db=db;this.view=view;this.demo=demo;}
     private void requireDemo(){if(!demo)throw Problem.notFound();}
     public List<Api.DemoAccount> accounts() {
-        requireDemo();return db.list(UserEntity.class,"e.demoAccount is not null",Map.of(),"e.demoAccount asc",0,Integer.MAX_VALUE).stream()
+        requireDemo();return db.list(UserEntity.class,"e.demoAccount is not null and e.passwordHash is null",Map.of(),"e.demoAccount asc",0,Integer.MAX_VALUE).stream()
             .map(u -> new Api.DemoAccount(u.demoAccount,u.displayName,roles(u),u.sportsRoles.stream().sorted().toList())).toList();
     }
     public UUID login(String account) {
-        requireDemo();return db.first(UserEntity.class,"e.demoAccount=:account",Map.of("account",account)).orElseThrow(Problem::notFound).id;
+        requireDemo();return db.first(UserEntity.class,"e.demoAccount=:account and e.passwordHash is null",Map.of("account",account)).orElseThrow(Problem::notFound).id;
     }
     @Transactional public UUID register(Api.DemoRegistrationRequest request) {
         requireDemo();

@@ -9,6 +9,7 @@ import ru.dvizh.service.ProfileService;
 public class ProfileController {
     private final ProfileService profiles;
     public ProfileController(ProfileService profiles){this.profiles=profiles;}
+    @GetMapping("/users") public java.util.List<Api.PublicUser> search(@RequestParam String nicknamePrefix){return profiles.search(nicknamePrefix);}
     @GetMapping("/me/profile") public Api.UserProfile me(){return profiles.me();}
     @PatchMapping("/me/profile") public Api.UserProfile patch(@RequestBody JsonNode patch){return profiles.patch(patch);}
     @GetMapping("/users/{userId}") public Api.UserProfile get(@PathVariable UUID userId){return profiles.get(userId);}

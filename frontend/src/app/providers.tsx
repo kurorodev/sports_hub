@@ -1,3 +1,6 @@
+import { createHttpProfileRepository } from "../entities/profile/api/http-profile-repository";
+import { ProfileRepositoryProvider } from "../entities/profile";
+import type { ProfileRepository } from "../entities/profile/model";
 import { createHttpModerationRepository } from "../entities/moderation/api/http-moderation-repository";
 import { ModerationRepositoryProvider } from "../entities/moderation";
 import type { ModerationRepository } from "../entities/moderation/model";
@@ -13,6 +16,21 @@ import { createHttpRegistrationRepository } from "../entities/registration/api/h
 import { RegistrationRepositoryProvider } from "../entities/registration";
 import type { RegistrationRepository } from "../entities/registration/model";
 import { request } from "../shared/api/client";
+
+const profileRepository = createHttpProfileRepository(request);
+export function ProfileServices({
+  children,
+  repository = profileRepository,
+}: {
+  children: ReactNode;
+  repository?: ProfileRepository;
+}) {
+  return (
+    <ProfileRepositoryProvider repository={repository}>
+      {children}
+    </ProfileRepositoryProvider>
+  );
+}
 
 const moderationRepository = createHttpModerationRepository(request);
 export function ModerationServices({
@@ -85,16 +103,18 @@ export function ApplicationProviders({ children }: { children: ReactNode }) {
       }),
   );
   return (
-    <ModerationServices>
-      <OrganizationServices>
-        <DiscussionServices>
-          <RegistrationServices>
-            <QueryClientProvider client={client}>
-              {children}
-            </QueryClientProvider>
-          </RegistrationServices>
-        </DiscussionServices>
-      </OrganizationServices>
-    </ModerationServices>
+    <ProfileServices>
+      <ModerationServices>
+        <OrganizationServices>
+          <DiscussionServices>
+            <RegistrationServices>
+              <QueryClientProvider client={client}>
+                {children}
+              </QueryClientProvider>
+            </RegistrationServices>
+          </DiscussionServices>
+        </OrganizationServices>
+      </ModerationServices>
+    </ProfileServices>
   );
 }

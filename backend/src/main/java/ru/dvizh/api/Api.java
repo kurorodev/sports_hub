@@ -46,7 +46,7 @@ public final class Api {
     public record PublicUser(@NotNull UUID id, @NotNull String nickname, @NotNull String displayName, String avatarUrl, @NotNull @Valid List<SportsRole> sportsRoles, @NotNull @Valid Rank rank, @NotNull @Min(0) Integer ratingPoints) {}
     public record SportsPreference(@NotNull UUID sportId, @NotNull @Valid ExperienceLevel level) {}
     public record UserProfile(@NotNull UUID id, @NotNull String nickname, @NotNull String displayName, String avatarUrl, @NotNull @Valid List<SportsRole> sportsRoles, @NotNull @Valid Rank rank, @NotNull @Min(0) Integer ratingPoints, @Size(max = 80) String firstName, @Size(max = 80) String lastName, @Size(max = 1000) String bio, String city, @NotNull @Valid List<SportsPreference> sportsPreferences, String preferredTime, @NotNull Instant createdAt) {}
-    public record ProfilePatch(@NotBlank @Size(min = 3, max = 40) String nickname, @NotBlank @Size(min = 1, max = 100) String displayName, @Size(max = 80) String firstName, @Size(max = 80) String lastName, @Size(max = 1000) String bio, String avatarUrl, @Size(max = 100) String city, @Valid List<SportsRole> sportsRoles, @Valid List<SportsPreference> sportsPreferences, String preferredTime) {}
+    public record ProfilePatch(@NotBlank @Size(min = 3, max = 41) @Pattern(regexp="@?[A-Za-z0-9_-]{3,40}") String nickname, @NotBlank @Size(min = 1, max = 100) String displayName, @Size(max = 80) String firstName, @Size(max = 80) String lastName, @Size(max = 1000) String bio, String avatarUrl, @Size(max = 100) String city, @Valid List<SportsRole> sportsRoles, @Valid List<SportsPreference> sportsPreferences, String preferredTime) {}
     public record DemoAccount(@NotNull String id, @NotNull String label, @NotNull @Valid List<SystemRole> systemRoles, @NotNull @Valid List<SportsRole> sportsRoles) {}
     public record DemoLoginRequest(@NotNull String accountId) {}
     public record DemoRegistrationRequest(
@@ -57,8 +57,24 @@ public final class Api {
             displayName=displayName==null?null:displayName.strip();
         }
     }
+    public record AuthRegistrationRequest(
+        @JsonDeserialize(using=StrictStringDeserializer.class) @NotBlank @Pattern(regexp="[A-Za-z0-9_-]{3,40}") String nickname,
+        @JsonDeserialize(using=StrictStringDeserializer.class) @NotBlank @Size(min=1,max=100) String displayName,
+        @JsonDeserialize(using=StrictStringDeserializer.class) @NotBlank @Size(min=8,max=128) String password) {
+        public AuthRegistrationRequest {nickname=handle(nickname);displayName=displayName==null?null:displayName.strip();}
+    }
+    public record AuthLoginRequest(
+        @JsonDeserialize(using=StrictStringDeserializer.class) @NotBlank @Size(max=41) String nickname,
+        @JsonDeserialize(using=StrictStringDeserializer.class) @NotBlank @Size(max=128) String password) {
+        public AuthLoginRequest {nickname=handle(nickname);}
+    }
+    private static String handle(String value) {
+        if(value==null)return null;
+        value=value.strip();return value.startsWith("@")?value.substring(1):value;
+    }
+    public record Mention(UUID userId,String nickname,int start,int end) {}
     public record Session(@NotNull @Valid UserProfile user, @NotNull @Valid List<SystemRole> systemRoles, @NotNull @Valid List<UUID> manageableOrganizationIds, @NotNull String csrfToken, @NotNull Boolean demo) {}
-    public record Sport(@NotNull UUID id, @NotNull String name, @NotNull Boolean isCustom) {}
+    public record Sport(@NotNull UUID id, @NotNull String name, @NotNull Boolean isCustom, String registryCode) {}
     public record Location(@NotNull @NotBlank @Size(min = 1, max = 120) String city, @NotNull @NotBlank @Size(min = 1, max = 300) String address, @DecimalMin("-90") @DecimalMax("90") Double latitude, @DecimalMin("-180") @DecimalMax("180") Double longitude) {}
     public record OrganizerRef(@NotNull @Valid OrganizerType type, @NotNull UUID id) {}
     public record OrganizerSummary(@NotNull @Valid OrganizerType type, @NotNull UUID id, @NotNull String name, String avatarUrl) {}
@@ -67,13 +83,13 @@ public final class Api {
     public record OrganizationDecisionRequest(@NotNull @Valid Decision decision, @Size(min = 3, max = 1000) String reason) {}
     public record EventCreate(@NotNull @NotBlank @Size(min = 3, max = 160) String title, @NotNull @NotBlank @Size(min = 10, max = 5000) String description, @Valid EventKind eventKind, @NotNull @Valid SportInput sport, @NotNull Instant startsAt, Instant endsAt, @NotNull @Valid Location location, @Valid EventSkillLevel skillLevel, @Size(max = 2000) String requirements, @NotNull @Valid JoinMode joinMode, @Min(2) @Max(10000) Integer maxParticipants, @NotNull @Valid OrganizerRef organizer, Boolean publishNow) {}
     public record EventPatch(@NotBlank @Size(min = 3, max = 160) String title, @NotBlank @Size(min = 10, max = 5000) String description, Instant startsAt, Instant endsAt, @Valid Location location, @Valid EventSkillLevel skillLevel, @Size(max = 2000) String requirements, @Min(2) @Max(10000) Integer maxParticipants) {}
-    public record Event(@NotNull UUID id, @NotNull String title, @NotNull String description, @NotNull @Valid EventKind eventKind, @NotNull @Valid Sport sport, @NotNull Instant startsAt, Instant endsAt, @NotNull @Valid Location location, @NotNull @Valid EventSkillLevel skillLevel, String requirements, @NotNull @Valid JoinMode joinMode, Integer maxParticipants, @NotNull @Min(0) Integer confirmedCount, @NotNull @Min(0) Integer pendingCount, @Min(0) Integer spotsLeft, @NotNull @Valid OrganizerSummary organizer, @NotNull @Valid EventStatus status, String moderationReason, String viewerRegistrationStatus, @NotNull Boolean viewerIsOrganizer, @NotNull Instant createdAt, @NotNull Instant updatedAt) {}
-    public record EventCard(@NotNull UUID id, @NotNull String title, @NotNull @Valid EventKind eventKind, @NotNull @Valid Sport sport, @NotNull Instant startsAt, @NotNull @Valid Location location, @NotNull @Valid EventSkillLevel skillLevel, @NotNull @Valid JoinMode joinMode, @NotNull @Valid OrganizerSummary organizer, Integer maxParticipants, @NotNull Integer confirmedCount, Integer spotsLeft, String viewerRegistrationStatus) {}
+    public record Event(@NotNull UUID id, @NotNull String title, @NotNull String description, @NotNull @Valid EventKind eventKind, @NotNull @Valid Sport sport, @NotNull Instant startsAt, Instant endsAt, @NotNull @Valid Location location, @NotNull @Valid EventSkillLevel skillLevel, String requirements, @NotNull @Valid JoinMode joinMode, Integer maxParticipants, @NotNull @Min(0) Integer confirmedCount, @NotNull @Min(0) Integer pendingCount, @Min(0) Integer spotsLeft, @NotNull @Valid OrganizerSummary organizer, @NotNull @Valid EventStatus status, String moderationReason, String viewerRegistrationStatus, @NotNull Boolean viewerIsOrganizer, @NotNull Instant createdAt, @NotNull Instant updatedAt, String customSportName) {}
+    public record EventCard(@NotNull UUID id, @NotNull String title, @NotNull @Valid EventKind eventKind, @NotNull @Valid Sport sport, @NotNull Instant startsAt, @NotNull @Valid Location location, @NotNull @Valid EventSkillLevel skillLevel, @NotNull @Valid JoinMode joinMode, @NotNull @Valid OrganizerSummary organizer, Integer maxParticipants, @NotNull Integer confirmedCount, Integer spotsLeft, String viewerRegistrationStatus, String customSportName) {}
     public record RegistrationCreate(@Size(max = 1000) String message) {}
     public record Registration(@NotNull UUID id, @NotNull UUID eventId, @NotNull @Valid PublicUser user, @NotNull @Valid RegistrationStatus status, String message, String decisionReason, @NotNull Instant createdAt, @NotNull Instant updatedAt, Instant decidedAt) {}
     public record RegistrationDecisionRequest(@NotNull @Valid Decision decision, @Size(max = 1000) String reason) {}
     public record CommentCreate(@NotNull @NotBlank @Size(min = 1, max = 2000) String text) {}
-    public record Comment(@NotNull UUID id, @NotNull UUID eventId, @NotNull @Valid PublicUser author, @NotNull String text, @NotNull @Valid CommentStatus status, @NotNull Instant createdAt, @NotNull Instant updatedAt) {}
+    public record Comment(@NotNull UUID id, @NotNull UUID eventId, @NotNull @Valid PublicUser author, @NotNull String text, @NotNull @Valid CommentStatus status, @NotNull Instant createdAt, @NotNull Instant updatedAt, List<Mention> mentions) {}
     public record ModerationRequest(@NotNull @NotBlank @Size(min = 3, max = 1000) String reason) {}
     public record TeamStatus(@NotNull UUID eventId, Integer maxParticipants, @NotNull Integer confirmedCount, @NotNull Integer pendingCount, @NotNull Integer waitlistedCount, Integer spotsLeft, String viewerStatus, @NotNull Boolean joinAvailable, @NotNull Boolean waitlistAvailable) {}
     public record RecommendedEvent(@NotNull @Valid EventCard event, @NotNull @Min(0) @Max(100) Integer score, @NotNull @Valid List<MatchReason> matchReasons) {}
@@ -83,7 +99,7 @@ public final class Api {
     public record AssignRefereeRequest(@NotNull UUID userId) {}
     public record Conversation(@NotNull UUID id, @NotNull @Valid ConversationType type, String title, UUID organizationId, @NotNull @Valid List<PublicUser> participants, Instant lastMessageAt, @NotNull Instant createdAt) {}
     public record MessageCreate(@NotNull @NotBlank @Size(min = 1, max = 3000) String text) {}
-    public record Message(@NotNull UUID id, @NotNull UUID conversationId, @NotNull @Valid PublicUser author, @NotNull String text, @NotNull Instant createdAt) {}
+    public record Message(@NotNull UUID id, @NotNull UUID conversationId, @NotNull @Valid PublicUser author, @NotNull String text, @NotNull Instant createdAt, List<Mention> mentions) {}
     public record Membership(@NotNull UUID organizationId, @NotNull @Valid PublicUser user, @NotNull @Valid MembershipStatus status, @NotNull Instant joinedAt) {}
     public record Health(@NotNull String status, @NotNull String service, @NotNull String version) {}
     public record PagedEvents(@NotNull @Valid List<EventCard> items, @NotNull @Min(0) Integer page, @NotNull @Min(1) Integer size, @NotNull @Min(0) Integer total, @NotNull @Min(0) Integer totalPages) {}
