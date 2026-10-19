@@ -168,16 +168,16 @@ test("guest enters organization application after login and invalid profile URL 
 }) => {
   await page.goto("/organizations");
   await page
-    .getByRole("link", { name: "Моя организация / заявка", exact: true })
+    .getByRole("link", { name: "Добавить организацию", exact: true })
     .click();
   await page
-    .getByRole("link", { name: "Выбрать аккаунт", exact: true })
+    .getByRole("link", { name: "Войти в аккаунт", exact: true })
     .click();
   await page.locator('input[value="user-maria"]').check();
   await page
     .getByRole("button", { name: "Войти в аккаунт", exact: true })
     .click();
-  await expect(page).toHaveURL("/organization");
+  await expect(page).toHaveURL("/organizations?view=apply");
   await expect(
     page.getByLabel("Название организации", { exact: true }),
   ).toBeVisible();

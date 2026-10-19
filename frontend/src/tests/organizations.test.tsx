@@ -14,7 +14,7 @@ import { resetMockSession } from "../mocks/handlers";
 import { getOrganizations } from "../mocks/organizations";
 import { MyOrganizations } from "../features/organization-application";
 import { CreateEventPage } from "../pages/create-event";
-import { OrganizationPage } from "../pages/organizations";
+import { OrganizationPage, OrganizationsPage } from "../pages/organizations";
 import { AdminOrganizations } from "../features/review-organizations";
 import { OrganizationDecisionCard } from "../features/review-organizations/ui/OrganizationDecisionCard";
 import { OrganizationRepositoryProvider } from "../entities/organization";
@@ -256,17 +256,69 @@ describe("organization UI", () => {
       "Моя встреча клуба",
     );
   });
+  it("keeps the public directory available and returns guests to the correct view after login", async () => {
+    mount(<OrganizationsPage />, "/organizations");
+    const user = userEvent.setup();
+    await screen.findByLabelText("Название или описание организации");
+    const navigation = screen.getByRole("navigation", {
+      name: "Разделы организаций",
+    });
+    await user.click(
+      within(navigation).getByRole("link", { name: "Мои организации" }),
+    );
+    expect(
+      screen.getByRole("link", { name: "Войти в аккаунт" }),
+    ).toHaveAttribute("href", "/login?next=organization");
+    expect(
+      screen.queryByLabelText("Название организации"),
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("link", { name: "Добавить организацию" }),
+    );
+    expect(
+      screen.getByRole("link", { name: "Войти в аккаунт" }),
+    ).toHaveAttribute("href", "/login?next=organization-apply");
+  });
+  it("preserves directory search when switching between catalogue and owned organizations", async () => {
+    await login();
+    mount(<OrganizationsPage />, "/organizations?q=Темп");
+    const user = userEvent.setup();
+    const navigation = screen.getByRole("navigation", {
+      name: "Разделы организаций",
+    });
+    expect(
+      await screen.findByLabelText("Название или описание организации"),
+    ).toHaveValue("Темп");
+    await user.click(
+      within(navigation).getByRole("link", { name: "Мои организации" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Мои организации" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByLabelText("Название организации"),
+    ).not.toBeInTheDocument();
+    await user.click(
+      within(navigation).getByRole("link", { name: "Все организации" }),
+    );
+    expect(
+      await screen.findByLabelText("Название или описание организации"),
+    ).toHaveValue("Темп");
+  });
   it("allows an ordinary user to apply, prevents duplicates while pending and clears only after 201", async () => {
-    const session = await login();
+    await login();
     server.use(
       http.post("/api/v1/organizations", async () => {
         await delay(150);
         return HttpResponse.json({}, { status: 503 });
       }),
     );
-    mount(<MyOrganizations viewerId={session.user.id} sports={[]} />);
+    mount(<OrganizationsPage />, "/organizations?view=apply");
     const user = userEvent.setup();
-    await user.type(screen.getByLabelText("Название организации"), input.name);
+    await user.type(
+      await screen.findByLabelText("Название организации"),
+      input.name,
+    );
     await user.type(
       screen.getByLabelText("О вашей организации"),
       input.description,
@@ -290,7 +342,9 @@ describe("organization UI", () => {
     expect(
       await screen.findByText(/заявка отправлена на рассмотрение/),
     ).toBeVisible();
-    expect(screen.getByLabelText("Название организации")).toHaveValue("");
+    expect(
+      screen.queryByLabelText("Название организации"),
+    ).not.toBeInTheDocument();
     expect(await screen.findByText("Заявка на рассмотрении")).toBeVisible();
   });
   it("requires refusal reason, restores focus after cancel and preserves reason after failure", async () => {
@@ -360,9 +414,7 @@ describe("organization UI", () => {
   it("refreshes the server session after the server grants approval", async () => {
     const session = await login();
     const org = await apply();
-    const client = mount(
-      <MyOrganizations viewerId={session.user.id} sports={[]} />,
-    );
+    const client = mount(<MyOrganizations viewerId={session.user.id} />);
     await screen.findByText("Заявка на рассмотрении");
     await login("admin");
     await decide(org.id);

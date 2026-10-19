@@ -106,7 +106,7 @@ describe("P0 shell and catalog", () => {
 
   it("denies admin route access for an ordinary user", async () => {
     await switchAccount("user-alex");
-    mount(<WorkspacePage kind="admin" />);
+    mount(<WorkspacePage />);
     expect(
       await screen.findByRole("heading", { name: "Нет доступа" }),
     ).toBeInTheDocument();

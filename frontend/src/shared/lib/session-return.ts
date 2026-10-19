@@ -7,6 +7,8 @@ export function sessionReturn(
   fallback = "/",
 ) {
   const next = params.get("next");
+  if (next === "organization-apply")
+    return { to: "/organizations?view=apply", state: undefined };
   const mapReturn = safeMapReturn(state);
   const eventId = params.get("eventId") ?? "";
   const to =
@@ -17,7 +19,7 @@ export function sessionReturn(
         : next === "map"
           ? (mapReturn ?? "/map")
           : next === "organization"
-            ? "/organization"
+            ? "/organizations?view=mine"
             : next === "create-event"
               ? "/events/new"
               : ["join-event", "event-discussion"].includes(next ?? "") &&

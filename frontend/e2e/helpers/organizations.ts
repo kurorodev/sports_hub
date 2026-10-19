@@ -2,13 +2,19 @@ import { expect, type Page } from "@playwright/test";
 import type { OrganizationDto } from "../../src/shared/api/types";
 
 export async function applyOrganizationUi(page: Page, name: string) {
-  await page.goto("/organization");
+  await page.goto("/organizations?view=mine");
+  await page
+    .getByRole("link", { name: "Добавить организацию", exact: true })
+    .click();
   await page.getByLabel("Название организации", { exact: true }).fill(name);
   await page
     .getByLabel("О вашей организации", { exact: true })
     .fill(
       "Помогаем начинающим полюбить спорт. Собираемся в парке и тренируемся вместе.",
     );
+  await page
+    .getByLabel("Найти вид спорта организации", { exact: true })
+    .fill("атлетика");
   await page.getByLabel("Легкая атлетика", { exact: true }).check();
   const response = page.waitForResponse(
     (r) =>

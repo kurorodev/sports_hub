@@ -1,6 +1,6 @@
 import { ProfilePage } from "../pages/profile";
 import { RegisterPage } from "../pages/register";
-import { createBrowserRouter } from "react-router-dom";
+import { Navigate, createBrowserRouter } from "react-router-dom";
 import { OrganizationsPage, OrganizationPage } from "../pages/organizations";
 import { Layout } from "./Layout";
 import { CatalogPage } from "../pages/catalog";
@@ -34,8 +34,11 @@ export const router = createBrowserRouter([
       { path: "/users/:userId", element: <ProfilePage /> },
       { path: "/organizations", element: <OrganizationsPage /> },
       { path: "/organizations/:organizationId", element: <OrganizationPage /> },
-      { path: "/organization", element: <WorkspacePage kind="organization" /> },
-      { path: "/admin", element: <WorkspacePage kind="admin" /> },
+      {
+        path: "/organization",
+        element: <Navigate to="/organizations?view=mine" replace />,
+      },
+      { path: "/admin", element: <WorkspacePage /> },
       { path: "*", element: <NotFound /> },
     ],
   },
