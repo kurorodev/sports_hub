@@ -1874,6 +1874,34 @@ input[type="radio"] {
   justify-content: space-between;
   margin-block: var(--space-6);
 }
+.organization-toolbar > .form-field {
+  margin-bottom: 0;
+}
+.organization-toolbar .organization-search > label {
+  font-size: 14px;
+  font-weight: 750;
+}
+.organization-toolbar .organization-search input {
+  min-height: 48px;
+}
+@media (min-width: 768px) {
+  .organization-toolbar .organization-search > div {
+    flex-wrap: nowrap;
+  }
+  .organization-toolbar .organization-search input {
+    flex-basis: 0;
+  }
+}
+@media (max-width: 767px) {
+  .organization-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .organization-toolbar > .organization-search {
+    flex: none;
+    max-width: none;
+  }
+}
 .organization-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
