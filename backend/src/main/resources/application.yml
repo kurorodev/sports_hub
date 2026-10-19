@@ -38,6 +38,7 @@ management:
   endpoints.web.exposure.include: health,info
   endpoint.health.show-details: never
 app:
+  geoapify-api-key: ${GEOAPIFY_API_KEY:}
   demo-enabled: ${DEMO_ENABLED:false}
   cors-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
   rating:

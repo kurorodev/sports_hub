@@ -153,3 +153,34 @@ compose.yaml                             PostgreSQL и backend
 ```
 
 Архитектура и модель: [docs/architecture.md](docs/architecture.md). Использованные технические источники: [Spring Boot system requirements](https://docs.spring.io/spring-boot/3.5/system-requirements.html) и [Spring Security CSRF](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html).
+
+## Карты и геокодинг
+
+Новые публичные GET: `/api/v1/geo/suggest?q=...&city=...&limit=5`, `/geo/reverse?latitude=...&longitude=...`, `/map/events?bbox=...`, `/map/venues?bbox=...`. Полный контракт и типы — `contracts/openapi.yaml`. `bbox` всегда **west,south,east,north**, охват до 10° на ось. `limit` 1–500 (по умолчанию 300), `sportId` — необязательный UUID. События дополнительно принимают `from/to` с timezone; возвращаются только будущие PUBLISHED с обеими координатами, по startsAt/id. `truncated=true` требует приблизить карту.
+
+Миграция `V2__sports_map.sql` добавляет площадки, историю оценок и индексы; V1 и пользовательские события не изменяются. POST `/map/venues` и `/map/venues/{venueId}/reports` требуют прежние cookie-сессию и CSRF. Автор берётся из сессии и не публикуется в ответах. Ограничения: 3 новые площадки/час/аккаунт; совпадающее имя ближе 30 м — 409; оценка конкретной площадки одним пользователем раз в 10 минут — 429 с Retry-After. Повторные отчёты сериализованы блокировкой площадки. Защита от дублей — предварительная проверка, не строгая пространственная уникальность при создании разными пользователями одновременно.
+
+LOW/MEDIUM/HIGH — субъективные оценки очевидцев; peopleCount (0–1000) не определяет уровень. Свежими считаются последние оценки каждого пользователя за 90 минут (граница исключена); итог — верхняя медиана. UNKNOWN означает отсутствие свежих данных. История сохраняется; lastReportedAt может быть устаревшим, reportsCount учитывает уникальных свежих авторов. validUntil — ближайшее истечение оценки в агрегате, после которого результат надо перечитать. Время задаётся серверным Clock. Площадки и отчёты для окна загружаются пакетно. Проекция мероприятий переиспользует существующий Views.card() и наследует его дополнительные запросы.
+
+Для настоящих адресов задайте `GEOAPIFY_API_KEY` в `backend/.env` (Compose передаёт его приложению), затем пересоздайте backend. Без ключа приложение стартует, только геомаршруты возвращают структурированную 503. Карта и ручное создание событий остаются доступны. Геоадаптер использует [Geoapify autocomplete](https://apidocs.geoapify.com/docs/geocoding/address-autocomplete/) и [reverse](https://apidocs.geoapify.com/docs/geocoding/reverse-geocoding/), русский язык, URL encoding, connect timeout 3 с / request timeout 4 с, cache 5 минут / до 512 записей, общий бюджет 120 обращений к поставщику/минуту на экземпляр. Ошибки поставщика, включая 429, нормализуются в 503. Ключ не передаётся frontend и не включается в сообщения ошибок. Публичный Nominatim не используется. При больших нагрузках нужны распределённые лимиты/кеш и ограничения по клиентам на reverse proxy.
+
+Демо-площадки явно отмечены как условные объекты возле площади Куйбышева; исходная опорная координата сверена с [Wikidata](https://www.wikidata.org/wiki/Q4365616). Они не обозначают реальные спортивные сооружения. Seed идемпотентен, запускается только с DEMO_ENABLED=true, добавляет недостающие объекты без перезаписи существующих; свежие оценки не «оживляются» на каждом старте.
+
+Примеры после запуска (получение сессии и csrf — как в разделе демовхода):
+
+```sh
+curl 'http://localhost:8080/api/v1/map/venues?bbox=49.8,53.0,50.4,53.5&limit=300'
+curl 'http://localhost:8080/api/v1/map/events?bbox=49.8,53.0,50.4,53.5'
+curl -G 'http://localhost:8080/api/v1/geo/suggest' --data-urlencode 'q=площадь Куйбышева' --data-urlencode 'city=Самара'
+curl 'http://localhost:8080/api/v1/geo/reverse?latitude=53.195561&longitude=50.101022'
+curl -b cookies.txt -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' \
+  -d '{"name":"Площадка для игры","location":{"city":"Самара","address":"площадь Куйбышева","latitude":53.195561,"longitude":50.101022}}' \
+  'http://localhost:8080/api/v1/map/venues'
+curl -b cookies.txt -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' \
+  -d '{"level":"LOW","peopleCount":5}' \
+  "http://localhost:8080/api/v1/map/venues/$venueId/reports"
+```
+
+Подложка Leaflet настраивается отдельно во frontend через VITE_MAP_TILE_URL / VITE_MAP_TILE_ATTRIBUTION; OSM по умолчанию используется для демонагрузки с обязательной атрибуцией и без предзагрузки. Подробнее: [frontend/docs/MAPS.md](../frontend/docs/MAPS.md).
+
+Перед POST-примерами получите cookie и csrfToken: `curl -c cookies.txt -H 'Content-Type: application/json' -d '{"accountId":"athlete-a"}' http://localhost:8080/api/v1/demo/session`. В переменную `csrf` запишите возвращённый csrfToken, в `venueId` — UUID созданной площадки. Для браузерных тестов `cd frontend && npm run test:e2e:api` добавьте `http://127.0.0.1:5174` в CORS_ORIGINS и оставьте GEOAPIFY_API_KEY пустым: сценарии карт проверяют ручной fallback на настоящем Java API.

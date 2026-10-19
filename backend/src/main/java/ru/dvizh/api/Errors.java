@@ -16,7 +16,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class Errors {
     private static final Logger log=LoggerFactory.getLogger(Errors.class);
     @ExceptionHandler(Problem.class)
-    ResponseEntity<Api.ApiError> problem(Problem e,HttpServletRequest req) { return response(e.status,e.code,e.getMessage(),List.of(),req); }
+    ResponseEntity<Api.ApiError> problem(Problem e,HttpServletRequest req) {
+        var result=response(e.status,e.code,e.getMessage(),List.of(),req);
+        if(e.retryAfter!=null) return ResponseEntity.status(e.status).header("Retry-After",e.retryAfter.toString()).body(result.getBody());
+        return result;
+    }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<Api.ApiError> validation(MethodArgumentNotValidException e,HttpServletRequest req) {
         return response(400,Api.ErrorCode.VALIDATION_ERROR,"Проверьте поля запроса",e.getBindingResult().getFieldErrors().stream()
