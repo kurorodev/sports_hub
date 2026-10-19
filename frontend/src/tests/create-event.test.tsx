@@ -64,10 +64,7 @@ async function fillForm() {
     input.title,
   );
   await user.selectOptions(screen.getByLabelText("Вид спорта"), "__custom__");
-  await user.type(
-    screen.getByLabelText("Название нового вида спорта"),
-    "Петанк",
-  );
+  await user.type(screen.getByLabelText("Название активности"), "Петанк");
   await user.type(screen.getByLabelText("О встрече"), input.description);
   await user.type(screen.getByLabelText("Город"), input.location.city);
   await user.type(
@@ -96,7 +93,7 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("S1 mock API", () => {
-  it("publishes a new sport and event visible to another account with correct ownership", async () => {
+  it("publishes an Other activity visible to another account without growing categories", async () => {
     await signIn();
     const created = await createEvent(input);
     expect(created).toMatchObject({
@@ -104,6 +101,8 @@ describe("S1 mock API", () => {
       confirmedCount: 0,
       viewerIsOrganizer: true,
       startsAt: input.startsAt,
+      sport: expect.objectContaining({ name: "Другое" }),
+      customSportName: "Петанк",
     });
     await signIn("user-maria");
     const catalog = await request<Page<EventPreview>>(
@@ -178,7 +177,7 @@ describe("S1 mock API", () => {
     await signIn();
     setCsrfToken("stale-token");
     await expect(createEvent(input)).rejects.toMatchObject({ status: 403 });
-    expect(await request<Sport[]>("/sports")).toHaveLength(4);
+    expect(await request<Sport[]>("/sports")).toHaveLength(201);
   });
 
   it.each([
@@ -205,7 +204,7 @@ describe("S1 mock API", () => {
           ]),
         },
       });
-      expect(await request<Sport[]>("/sports")).toHaveLength(4);
+      expect(await request<Sport[]>("/sports")).toHaveLength(201);
     },
   );
 });
@@ -232,7 +231,7 @@ describe("S1 creation UI", () => {
       "aria-invalid",
       "true",
     );
-    expect(await request<Sport[]>("/sports")).toHaveLength(4);
+    expect(await request<Sport[]>("/sports")).toHaveLength(201);
   });
 
   it("preserves form data on server failure, prevents double submission and succeeds after retry", async () => {

@@ -57,6 +57,9 @@ export function EventCard({
             <ArrowUpRight size={20} />
           </Link>
         </h3>
+        {event.customSportName && (
+          <p className="field-hint">{event.customSportName}</p>
+        )}
         <p className="event-info">
           <CalendarDays size={16} />
           <time dateTime={event.startsAt}>{eventDate(event.startsAt)}</time>

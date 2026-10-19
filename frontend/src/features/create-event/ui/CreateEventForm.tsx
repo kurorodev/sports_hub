@@ -162,12 +162,14 @@ export function CreateEventForm({
                   required
                 >
                   <option value="">Выберите спорт</option>
-                  {sports.map((sport) => (
-                    <option key={sport.id} value={sport.id}>
-                      {sport.name}
-                    </option>
-                  ))}
-                  <option value={customSportValue}>Свой вид спорта</option>
+                  {sports
+                    .filter((sport) => !sport.isCustom)
+                    .map((sport) => (
+                      <option key={sport.id} value={sport.id}>
+                        {sport.name}
+                      </option>
+                    ))}
+                  <option value={customSportValue}>Другое</option>
                 </select>
               </FormField>
               <FormField
@@ -186,8 +188,8 @@ export function CreateEventForm({
             {sportChoice === customSportValue && (
               <FormField
                 id="custom-sport"
-                label="Название нового вида спорта"
-                hint="Любая дисциплина: от петанка до алтимата."
+                label="Название активности"
+                hint="Опишите свой вариант. Встреча останется в категории «Другое» и не создаст новую категорию."
                 error={errors.customSportName?.message}
               >
                 <input
@@ -198,7 +200,7 @@ export function CreateEventForm({
                   )}
                   {...form.register("customSportName")}
                   maxLength={80}
-                  placeholder="Например, алтимат"
+                  placeholder="Например, петанк в парке"
                   required
                 />
               </FormField>

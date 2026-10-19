@@ -592,7 +592,16 @@ export const handlers = [
       ? json(session)
       : json({ code: "UNAUTHENTICATED", message: "Войдите" }, { status: 401 });
   }),
-  http.get(`${api}/sports`, () => json(getSports())),
+  http.get(`${api}/sports`, ({ request }) => {
+    const q = new URL(request.url).searchParams
+      .get("q")
+      ?.toLocaleLowerCase("ru");
+    return json(
+      getSports().filter(
+        (sport) => !q || sport.name.toLocaleLowerCase("ru").includes(q),
+      ),
+    );
+  }),
   http.post(`${api}/events`, async ({ request }) => {
     const session = makeSession(savedAccount() ?? "");
     if (!session)
@@ -655,7 +664,7 @@ export const handlers = [
           details: [
             {
               field: "sport.sportId",
-              message: "Выберите спорт из списка или добавьте свой",
+              message: "Выберите вид спорта или категорию «Другое»",
             },
           ],
         },
@@ -670,10 +679,14 @@ export const handlers = [
       (event) =>
         event.status === "PUBLISHED" &&
         (!q ||
-          `${event.title} ${event.description}`
+          `${event.title} ${event.description} ${event.customSportName ?? ""}`
             .toLocaleLowerCase("ru")
             .includes(q)) &&
         (!p.get("sportId") || event.sport.id === p.get("sportId")) &&
+        (!p.get("sport") ||
+          `${event.sport.name} ${event.customSportName ?? ""}`
+            .toLocaleLowerCase("ru")
+            .includes(p.get("sport")!.toLocaleLowerCase("ru"))) &&
         (!p.get("city") || event.location.city === p.get("city")) &&
         (!p.get("skillLevel") || event.skillLevel === p.get("skillLevel")) &&
         (!p.get("joinMode") || event.joinMode === p.get("joinMode")) &&

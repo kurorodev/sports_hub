@@ -194,7 +194,7 @@ paths:
       - Catalog
       summary: Справочник видов спорта
       operationId: getSports
-      description: ''
+      description: Фиксированный справочник ВРВС и единственная категория Другое. Пользовательские события не расширяют справочник.
       responses:
         '200':
           description: Успешный ответ
@@ -471,7 +471,7 @@ paths:
       summary: Создать мероприятие
       operationId: postEvents
       description: USER вправе создать личное событие; организация — только APPROVED и при наличии полномочий текущего
-        пользователя. publishNow по умолчанию true. При customName новый спорт сохраняется в БД без правки кода.
+        пользователя. publishNow по умолчанию true. При customName событие относится к категории Другое, а название активности сохраняется только у события.
       responses:
         '201':
           description: Успешный ответ
@@ -2561,13 +2561,18 @@ components:
         name:
           type: string
         isCustom:
+          description: true только для категории Другое.
           type: boolean
+        registryCode:
+          type: string
+          nullable: true
+          description: Код ВРВС; null для категории Другое.
       required:
       - id
       - name
       - isCustom
     SportInput:
-      description: 'Ровно один вариант: sportId существующего направления ИЛИ customName нового.'
+      description: 'Ровно один вариант: sportId из справочника ИЛИ customName активности категории Другое. customName не создаёт общую категорию.'
       oneOf:
       - type: object
         properties:
@@ -2807,6 +2812,11 @@ components:
     Event:
       type: object
       properties:
+        customSportName:
+          type: string
+          nullable: true
+          maxLength: 80
+          description: Название активности внутри категории Другое, не отдельный вид спорта.
         id:
           type: string
           format: uuid
@@ -2891,6 +2901,11 @@ components:
     EventCard:
       type: object
       properties:
+        customSportName:
+          type: string
+          nullable: true
+          maxLength: 80
+          description: Название активности внутри категории Другое, не отдельный вид спорта.
         id:
           type: string
           format: uuid

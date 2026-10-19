@@ -10,8 +10,8 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional(readOnly=true)
 public class ProfileService {
-    private final Store db;private final Access access;private final Views view;private final PatchValidator validator;
-    public ProfileService(Store db,Access access,Views view,PatchValidator validator) {this.db=db;this.access=access;this.view=view;this.validator=validator;}
+    private final Store db;private final Access access;private final Views view;private final PatchValidator validator;private final SportsCatalog catalog;
+    public ProfileService(Store db,Access access,Views view,PatchValidator validator,SportsCatalog catalog) {this.db=db;this.access=access;this.view=view;this.validator=validator;this.catalog=catalog;}
     public Api.UserProfile me() { return view.profile(access.user()); }
     public Api.UserProfile get(UUID id) { return view.profile(db.get(UserEntity.class,id)); }
     public Api.Rating rating(UUID id) { return view.rating(db.get(UserEntity.class,id)); }
@@ -44,7 +44,7 @@ public class ProfileService {
         if(patch.has("sportsPreferences")) {
             var seen=new HashSet<UUID>(); var prefs=new ArrayList<SportPreference>();
             for(var pref:patch.path("sportsPreferences")) {
-                UUID sport=UUID.fromString(pref.path("sportId").asText());db.get(SportEntity.class,sport);
+                UUID sport=catalog.resolve(UUID.fromString(pref.path("sportId").asText())).id;
                 if(!seen.add(sport))throw Problem.invalid("Вид спорта указан дважды");
                 prefs.add(new SportPreference(sport,Api.ExperienceLevel.valueOf(pref.path("level").asText())));
             }

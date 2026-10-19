@@ -11,6 +11,7 @@ public class EventEntity extends BaseEntity {
     @Column(nullable=false,length=160) public String title;
     @Column(nullable=false,length=5000) public String description;
     @Column(nullable=false) public UUID sportId;
+    @Column(length=80) public String customSportName;
     @Column(nullable=false,length=30) @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR) @Enumerated(EnumType.STRING) public Api.EventKind eventKind = Api.EventKind.ACTIVITY;
     @Column(nullable=false) public Instant startsAt;
     public Instant endsAt;

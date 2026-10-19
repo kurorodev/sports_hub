@@ -90,7 +90,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Справочник видов спорта */
+        /**
+         * Справочник видов спорта
+         * @description Фиксированный справочник ВРВС и единственная категория Другое. Пользовательские события не расширяют справочник.
+         */
         get: operations["getSports"];
         put?: never;
         post?: never;
@@ -187,7 +190,7 @@ export interface paths {
         put?: never;
         /**
          * Создать мероприятие
-         * @description USER вправе создать личное событие; организация — только APPROVED и при наличии полномочий текущего пользователя. publishNow по умолчанию true. При customName новый спорт сохраняется в БД без правки кода.
+         * @description USER вправе создать личное событие; организация — только APPROVED и при наличии полномочий текущего пользователя. publishNow по умолчанию true. При customName событие относится к категории Другое, а название активности сохраняется только у события.
          */
         post: operations["postEvents"];
         delete?: never;
@@ -1050,9 +1053,12 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            /** @description true только для категории Другое. */
             isCustom: boolean;
+            /** @description Код ВРВС; null для категории Другое. */
+            registryCode?: string | null;
         };
-        /** @description Ровно один вариант: sportId существующего направления ИЛИ customName нового. */
+        /** @description Ровно один вариант: sportId из справочника ИЛИ customName активности категории Другое. customName не создаёт общую категорию. */
         SportInput: {
             /** Format: uuid */
             sportId: string;
@@ -1140,6 +1146,8 @@ export interface components {
             maxParticipants?: number | null;
         };
         Event: {
+            /** @description Название активности внутри категории Другое, не отдельный вид спорта. */
+            customSportName?: string | null;
             /** Format: uuid */
             id: string;
             title: string;
@@ -1170,6 +1178,8 @@ export interface components {
             updatedAt: string;
         };
         EventCard: {
+            /** @description Название активности внутри категории Другое, не отдельный вид спорта. */
+            customSportName?: string | null;
             /** Format: uuid */
             id: string;
             title: string;

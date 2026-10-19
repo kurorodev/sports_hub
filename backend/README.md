@@ -202,3 +202,7 @@ curl -b cookies.txt -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json'
 Подложка Leaflet настраивается отдельно во frontend через VITE_MAP_TILE_URL / VITE_MAP_TILE_ATTRIBUTION; OSM по умолчанию используется для демонагрузки с обязательной атрибуцией и без предзагрузки. Подробнее: [frontend/docs/MAPS.md](../frontend/docs/MAPS.md).
 
 Перед POST-примерами получите cookie и csrfToken: `curl -c cookies.txt -H 'Content-Type: application/json' -d '{"accountId":"athlete-a"}' http://localhost:8080/api/v1/demo/session`. В переменную `csrf` запишите возвращённый csrfToken, в `venueId` — UUID созданной площадки. Для браузерных тестов `cd frontend && npm run test:e2e:api` добавьте `http://127.0.0.1:5174` в CORS_ORIGINS и оставьте GEOAPIFY_API_KEY пустым: сценарии карт проверяют ручной fallback на настоящем Java API.
+
+## Спортивные категории
+
+[Фиксированный справочник ВРВС + «Другое»](docs/sports-catalog.md): источник и версия данных, миграция V3 без удаления событий, семантика `customName` и проверки. Пользовательский ввод сохраняется в `Event.customSportName`, не создаёт общие виды спорта.

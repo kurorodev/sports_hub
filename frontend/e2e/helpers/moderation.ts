@@ -15,7 +15,7 @@ export async function setupModerationEvent(page: Page, title: string) {
     const sports: Sport[] = await (
       await fetch("/api/v1/sports", { credentials: "include" })
     ).json();
-    const sport = sports.find((item) => item.name === "Бег") ?? sports[0];
+    const sport = sports.find((item) => item.name === "Легкая атлетика") ?? sports[0];
     const body: EventCreate = {
       title: name,
       description:

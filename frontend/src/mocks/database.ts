@@ -1,3 +1,4 @@
+import registry from "./generated/sports-registry.json";
 import { getModerationRecords } from "./moderation";
 import { getOrganizations } from "./organizations";
 import type {
@@ -365,6 +366,10 @@ export function saveRegistration(
 export function getEvents(viewerId?: string): EventPreview[] {
   const created: EventPreview[] = readStore().events.map((record) => ({
     ...record.input,
+    customSportName:
+      "customName" in record.input.sport
+        ? record.input.sport.customName.trim().replace(/\s+/g, " ")
+        : null,
     id: record.id,
     sport: record.sport,
     skillLevel: record.input.skillLevel ?? "ANY",
@@ -412,6 +417,15 @@ export function getEvents(viewerId?: string): EventPreview[] {
     ).length;
     return {
       ...event,
+      sport: canonicalSport(event.sport),
+      customSportName: canonicalSport(event.sport).isCustom
+        ? "customSportName" in event &&
+          typeof event.customSportName === "string"
+          ? event.customSportName
+          : event.sport.name !== "Другое"
+            ? event.sport.name
+            : null
+        : null,
       ...(moderation
         ? {
             status: "UNPUBLISHED" as const,
@@ -430,13 +444,41 @@ export function getEvents(viewerId?: string): EventPreview[] {
     };
   });
 }
+const legacySportKeys: Record<string, string> = {
+  "Легкая атлетика": "running",
+  Баскетбол: "basketball",
+  Теннис: "tennis",
+  Шахматы: "chess",
+};
+const catalog: Sport[] = [
+  ...registry.sports.map((sport) => ({
+    id: mockId(
+      legacySportKeys[sport.name] ?? `vrvs:${sport.registryCode.slice(0, 3)}`,
+    ),
+    name: sport.name,
+    registryCode: sport.registryCode,
+    isCustom: false,
+  })),
+  {
+    id: mockId("sport-other"),
+    name: "Другое",
+    isCustom: true,
+    registryCode: null,
+  },
+];
 export function getSports(): Sport[] {
-  return [
-    ...new Map(
-      getEvents().map((event) => [event.sport.id, event.sport]),
-    ).values(),
-  ];
+  return catalog;
 }
+function canonicalSport(sport: Sport): Sport {
+  const name = sport.name === "Бег" ? "Легкая атлетика" : sport.name;
+  return (
+    catalog.find(
+      (item) =>
+        item.id === sport.id || normalize(item.name) === normalize(name),
+    ) ?? catalog[catalog.length - 1]
+  );
+}
+
 function normalize(name: string) {
   return name.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru");
 }
@@ -449,13 +491,7 @@ export function saveEvent(
   const sport =
     "sportId" in selection
       ? getSports().find((item) => item.id === selection.sportId)
-      : (getSports().find(
-          (item) => normalize(item.name) === normalize(selection.customName),
-        ) ?? {
-          id: crypto.randomUUID(),
-          name: selection.customName.trim().replace(/\s+/g, " "),
-          isCustom: true,
-        });
+      : catalog[catalog.length - 1];
   if (!sport) return undefined;
   const id = crypto.randomUUID();
   const next = {

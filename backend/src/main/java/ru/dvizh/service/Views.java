@@ -46,7 +46,7 @@ public class Views {
         int count=(int)db.count(ParticipationEntity.class,"e.userId=:user and e.status='VERIFIED'",Map.of("user",u.id));
         return new Api.Rating(u.id,points,rank(points),count,"v1");
     }
-    public Api.Sport sport(SportEntity s) { return new Api.Sport(s.id,s.name,s.isCustom); }
+    public Api.Sport sport(SportEntity s) { return new Api.Sport(s.id,s.name,s.isCustom,s.registryCode); }
     public Api.Organization organization(OrganizationEntity o) {
         return dto(Api.Organization.class,fields("id",o.id,"name",o.name,"description",o.description,"avatarUrl",o.avatarUrl,
             "sports",o.sports.stream().sorted().map(id -> sport(db.get(SportEntity.class,id))).toList(),"status",o.status,
@@ -71,7 +71,7 @@ public class Views {
             org=new Api.OrganizerSummary(Api.OrganizerType.ORGANIZATION,o.id,o.name,o.avatarUrl);
         }
         return dto(Api.Event.class,fields("id",e.id,"title",e.title,"description",e.description,"eventKind",e.eventKind,
-            "sport",sport(db.get(SportEntity.class,e.sportId)),"startsAt",e.startsAt,"endsAt",e.endsAt,
+            "customSportName",e.customSportName,"sport",sport(db.get(SportEntity.class,e.sportId)),"startsAt",e.startsAt,"endsAt",e.endsAt,
             "location",new Api.Location(e.city,e.address,e.latitude,e.longitude),"skillLevel",e.skillLevel,"requirements",e.requirements,
             "joinMode",e.joinMode,"maxParticipants",e.maxParticipants,"confirmedCount",registrations(e.id,Api.RegistrationStatus.CONFIRMED),
             "pendingCount",registrations(e.id,Api.RegistrationStatus.PENDING),"spotsLeft",spots(e),"organizer",org,"status",e.status,
@@ -80,7 +80,7 @@ public class Views {
     }
     public Api.EventCard card(EventEntity e) {
         var detail=event(e);
-        return new Api.EventCard(detail.id(),detail.title(),detail.eventKind(),detail.sport(),detail.startsAt(),detail.location(),detail.skillLevel(),detail.joinMode(),detail.organizer(),detail.maxParticipants(),detail.confirmedCount(),detail.spotsLeft(),detail.viewerRegistrationStatus());
+        return new Api.EventCard(detail.id(),detail.title(),detail.eventKind(),detail.sport(),detail.startsAt(),detail.location(),detail.skillLevel(),detail.joinMode(),detail.organizer(),detail.maxParticipants(),detail.confirmedCount(),detail.spotsLeft(),detail.viewerRegistrationStatus(),detail.customSportName());
     }
     public Api.Registration registration(RegistrationEntity r) {
         return new Api.Registration(r.id,r.eventId,user(r.userId),r.status,r.message,r.decisionReason,r.createdAt,r.updatedAt,r.decidedAt);

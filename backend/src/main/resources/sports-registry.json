@@ -1,0 +1,1009 @@
+{
+  "sourceUrl": "https://sshpgo.profiedu.ru/file/download?id=415",
+  "sourcePage": "https://sshpgo.profiedu.ru/sveden/document",
+  "sourceLabel": "Всероссийский реестр видов спорта на 7.10.2025",
+  "retrievedAt": "2026-10-20",
+  "sourceSha256": "5418363a4cf68658aa27943b055116fa558afe9b35892e010f8fa9f6fb2cfabd",
+  "sports": [
+    {
+      "name": "Авиамодельный спорт",
+      "registryCode": "1520001411Я",
+      "section": 2
+    },
+    {
+      "name": "Авиационные гонки",
+      "registryCode": "0590001411Л",
+      "section": 2
+    },
+    {
+      "name": "Автомобильный спорт",
+      "registryCode": "1660005511Я",
+      "section": 2
+    },
+    {
+      "name": "Автомодельный спорт",
+      "registryCode": "1470001411Я",
+      "section": 1
+    },
+    {
+      "name": "Айкидо",
+      "registryCode": "0700001411Я",
+      "section": 2
+    },
+    {
+      "name": "Акробатический рок-н-ролл",
+      "registryCode": "1500001411Я",
+      "section": 2
+    },
+    {
+      "name": "Альпинизм",
+      "registryCode": "0550005611Я",
+      "section": 2
+    },
+    {
+      "name": "Американский футбол",
+      "registryCode": "0610002311Г",
+      "section": 2
+    },
+    {
+      "name": "Армейский рукопашный бой",
+      "registryCode": "1220001122А",
+      "section": 4
+    },
+    {
+      "name": "Армейское тактико-стрелковое многоборье",
+      "registryCode": "1840001121Г",
+      "section": 4
+    },
+    {
+      "name": "Армрестлинг",
+      "registryCode": "0990001411Я",
+      "section": 2
+    },
+    {
+      "name": "Бадминтон",
+      "registryCode": "0240002611Я",
+      "section": 2
+    },
+    {
+      "name": "Баскетбол",
+      "registryCode": "0140002611Я",
+      "section": 2
+    },
+    {
+      "name": "Бейсбол",
+      "registryCode": "0180002611Я",
+      "section": 2
+    },
+    {
+      "name": "Биатлон",
+      "registryCode": "0400005611Я",
+      "section": 2
+    },
+    {
+      "name": "Бильярдный спорт",
+      "registryCode": "0620002511Я",
+      "section": 2
+    },
+    {
+      "name": "Бобслей",
+      "registryCode": "0330003611Я",
+      "section": 2
+    },
+    {
+      "name": "Бодибилдинг",
+      "registryCode": "1640001411Я",
+      "section": 2
+    },
+    {
+      "name": "Бокс",
+      "registryCode": "0250008611Я",
+      "section": 2
+    },
+    {
+      "name": "Борьба на поясах",
+      "registryCode": "0540001411Я",
+      "section": 2
+    },
+    {
+      "name": "Боулинг",
+      "registryCode": "0630002511Я",
+      "section": 2
+    },
+    {
+      "name": "Боулспорт",
+      "registryCode": "1410001511Я",
+      "section": 1
+    },
+    {
+      "name": "Брейкинг",
+      "registryCode": "1920001611Я",
+      "section": 2
+    },
+    {
+      "name": "Велосипедный спорт",
+      "registryCode": "0080001611Я",
+      "section": 2
+    },
+    {
+      "name": "Вертолетный спорт",
+      "registryCode": "1540001411Л",
+      "section": 2
+    },
+    {
+      "name": "Водно-моторный спорт",
+      "registryCode": "1480001511Я",
+      "section": 2
+    },
+    {
+      "name": "Водно-спасательное многоборье",
+      "registryCode": "0600001411Л",
+      "section": 1
+    },
+    {
+      "name": "Водное поло",
+      "registryCode": "0050002611Я",
+      "section": 2
+    },
+    {
+      "name": "Воднолыжный спорт",
+      "registryCode": "0640001511Я",
+      "section": 2
+    },
+    {
+      "name": "Военно-прикладной спорт",
+      "registryCode": "11200051М1Г",
+      "section": 4
+    },
+    {
+      "name": "Военно-спортивное многоборье",
+      "registryCode": "11000051М1Г",
+      "section": 4
+    },
+    {
+      "name": "Воздухоплавательный спорт",
+      "registryCode": "1550001411Я",
+      "section": 2
+    },
+    {
+      "name": "Воздушная гимнастика",
+      "registryCode": "1930001411Я",
+      "section": 2
+    },
+    {
+      "name": "Воздушно-силовая атлетика",
+      "registryCode": "1760001411Л",
+      "section": 2
+    },
+    {
+      "name": "Волейбол",
+      "registryCode": "0120002611Я",
+      "section": 2
+    },
+    {
+      "name": "Восточное боевое единоборство",
+      "registryCode": "1180001311Я",
+      "section": 2
+    },
+    {
+      "name": "Всестилевое каратэ",
+      "registryCode": "0900001411Я",
+      "section": 2
+    },
+    {
+      "name": "Гандбол",
+      "registryCode": "0110002611Я",
+      "section": 2
+    },
+    {
+      "name": "Гиревой спорт",
+      "registryCode": "0650001411Я",
+      "section": 2
+    },
+    {
+      "name": "Го",
+      "registryCode": "0970002411Я",
+      "section": 2
+    },
+    {
+      "name": "Гольф",
+      "registryCode": "0660002611Я",
+      "section": 2
+    },
+    {
+      "name": "Гонки дронов (беспилотных воздушных судов)",
+      "registryCode": "1940001311Я",
+      "section": 2
+    },
+    {
+      "name": "Гонки на охотничьих лыжах",
+      "registryCode": "1130003214Я",
+      "section": 3
+    },
+    {
+      "name": "Гонки с препятствиями",
+      "registryCode": "1790001411Л",
+      "section": 2
+    },
+    {
+      "name": "Горнолыжный спорт",
+      "registryCode": "0060003611Я",
+      "section": 2
+    },
+    {
+      "name": "Городошный спорт",
+      "registryCode": "0670002411Я",
+      "section": 2
+    },
+    {
+      "name": "Гребля на байдарках и каноэ",
+      "registryCode": "0280008611Я",
+      "section": 2
+    },
+    {
+      "name": "Гребля на шлюпках",
+      "registryCode": "1110001121А",
+      "section": 4
+    },
+    {
+      "name": "Гребно-парусное двоеборье",
+      "registryCode": "1090001121А",
+      "section": 4
+    },
+    {
+      "name": "Гребной слалом",
+      "registryCode": "0930001611Я",
+      "section": 2
+    },
+    {
+      "name": "Гребной спорт",
+      "registryCode": "0270001611Я",
+      "section": 2
+    },
+    {
+      "name": "Дартс",
+      "registryCode": "0680002411Я",
+      "section": 2
+    },
+    {
+      "name": "Джиу-джитсу",
+      "registryCode": "0290001411Я",
+      "section": 2
+    },
+    {
+      "name": "Джутайдо",
+      "registryCode": "1970001411Я",
+      "section": 1
+    },
+    {
+      "name": "Дзюдо",
+      "registryCode": "0350001611Я",
+      "section": 2
+    },
+    {
+      "name": "Ездовой спорт",
+      "registryCode": "0710005411Я",
+      "section": 2
+    },
+    {
+      "name": "Зимнее плавание",
+      "registryCode": "1900001412Л",
+      "section": 2
+    },
+    {
+      "name": "Капоэйра",
+      "registryCode": "1230001411Я",
+      "section": 1
+    },
+    {
+      "name": "Каратэ",
+      "registryCode": "1750001511Я",
+      "section": 2
+    },
+    {
+      "name": "Кендо",
+      "registryCode": "1530001411Я",
+      "section": 2
+    },
+    {
+      "name": "Керешу",
+      "registryCode": "0570001215А",
+      "section": 3
+    },
+    {
+      "name": "Кикбоксинг",
+      "registryCode": "0950001411Я",
+      "section": 2
+    },
+    {
+      "name": "Кинологический спорт",
+      "registryCode": "0730005411Я",
+      "section": 2
+    },
+    {
+      "name": "Киокусинкай",
+      "registryCode": "1730001411Я",
+      "section": 2
+    },
+    {
+      "name": "Киокушин",
+      "registryCode": "1880001411Я",
+      "section": 2
+    },
+    {
+      "name": "Комплексное единоборство",
+      "registryCode": "10500011Ф2Г",
+      "section": 4
+    },
+    {
+      "name": "Компьютерный спорт",
+      "registryCode": "1240002411Л",
+      "section": 2
+    },
+    {
+      "name": "Конный спорт",
+      "registryCode": "0150001611Я",
+      "section": 2
+    },
+    {
+      "name": "Конькобежный спорт",
+      "registryCode": "0450003611Я",
+      "section": 2
+    },
+    {
+      "name": "Корэш",
+      "registryCode": "1590001411А",
+      "section": 2
+    },
+    {
+      "name": "Крикет",
+      "registryCode": "1800002511Л",
+      "section": 1
+    },
+    {
+      "name": "Кудо",
+      "registryCode": "1430001411Я",
+      "section": 2
+    },
+    {
+      "name": "Кёрлинг",
+      "registryCode": "0360004611Я",
+      "section": 2
+    },
+    {
+      "name": "Лазерный бой",
+      "registryCode": "1950001311Я",
+      "section": 1
+    },
+    {
+      "name": "Лапта",
+      "registryCode": "0780002311Я",
+      "section": 2
+    },
+    {
+      "name": "Легкая атлетика",
+      "registryCode": "0020001611Я",
+      "section": 2
+    },
+    {
+      "name": "Лыжное двоеборье",
+      "registryCode": "0370005611Я",
+      "section": 2
+    },
+    {
+      "name": "Лыжные гонки",
+      "registryCode": "0310005611Я",
+      "section": 2
+    },
+    {
+      "name": "Мас-рестлинг",
+      "registryCode": "1710001213Я",
+      "section": 3
+    },
+    {
+      "name": "Международное военно-спортивное многоборье",
+      "registryCode": "1030001121Л",
+      "section": 4
+    },
+    {
+      "name": "Метание",
+      "registryCode": "0000000001А",
+      "section": 1
+    },
+    {
+      "name": "Микрофутзал",
+      "registryCode": "1860002411Я",
+      "section": 2
+    },
+    {
+      "name": "Многоборье готов к труду и обороне",
+      "registryCode": "1960001311Я",
+      "section": 2
+    },
+    {
+      "name": "Многоборье кинологов",
+      "registryCode": "13500011Р1Л",
+      "section": 4
+    },
+    {
+      "name": "Многоборье спасателей мчс россии",
+      "registryCode": "0940001131Ф",
+      "section": 4
+    },
+    {
+      "name": "Морское многоборье",
+      "registryCode": "1440001411Я",
+      "section": 2
+    },
+    {
+      "name": "Мотоциклетный спорт",
+      "registryCode": "0910007511Я",
+      "section": 2
+    },
+    {
+      "name": "Муайтай",
+      "registryCode": "0170001511Я",
+      "section": 2
+    },
+    {
+      "name": "Нарды",
+      "registryCode": "0690002411Л",
+      "section": 2
+    },
+    {
+      "name": "Настольный теннис",
+      "registryCode": "0040002611Я",
+      "section": 2
+    },
+    {
+      "name": "Падел",
+      "registryCode": "1810002411Л",
+      "section": 2
+    },
+    {
+      "name": "Парашютный спорт",
+      "registryCode": "1620005411Я",
+      "section": 2
+    },
+    {
+      "name": "Парусный спорт",
+      "registryCode": "0380005611Я",
+      "section": 2
+    },
+    {
+      "name": "Пауэрлифтинг",
+      "registryCode": "0740001411Я",
+      "section": 2
+    },
+    {
+      "name": "Перетягивание каната",
+      "registryCode": "1270001511Я",
+      "section": 2
+    },
+    {
+      "name": "Пилонный спорт",
+      "registryCode": "1870001411Я",
+      "section": 2
+    },
+    {
+      "name": "Плавание",
+      "registryCode": "0070001611Я",
+      "section": 2
+    },
+    {
+      "name": "Планерный спорт",
+      "registryCode": "1560001411Я",
+      "section": 2
+    },
+    {
+      "name": "Подводный спорт",
+      "registryCode": "1460008511Я",
+      "section": 2
+    },
+    {
+      "name": "Пожарно-спасательный спорт",
+      "registryCode": "16700011Л1Я",
+      "section": 4
+    },
+    {
+      "name": "Полиатлон",
+      "registryCode": "0750005411Я",
+      "section": 2
+    },
+    {
+      "name": "Практическая стрельба",
+      "registryCode": "1190001412Я",
+      "section": 2
+    },
+    {
+      "name": "Прыжки в воду",
+      "registryCode": "0390001611Я",
+      "section": 2
+    },
+    {
+      "name": "Прыжки на батуте",
+      "registryCode": "0210001611Я",
+      "section": 2
+    },
+    {
+      "name": "Прыжки на лыжах с трамплина",
+      "registryCode": "0410005611Я",
+      "section": 2
+    },
+    {
+      "name": "Пулевая стрельба",
+      "registryCode": "0440001611Я",
+      "section": 2
+    },
+    {
+      "name": "Пэйнтбол",
+      "registryCode": "0760002211Я",
+      "section": 2
+    },
+    {
+      "name": "Радиоспорт",
+      "registryCode": "1450001411Я",
+      "section": 2
+    },
+    {
+      "name": "Рафтинг",
+      "registryCode": "1740001411Я",
+      "section": 2
+    },
+    {
+      "name": "Регби",
+      "registryCode": "0770002611Я",
+      "section": 2
+    },
+    {
+      "name": "Регбол",
+      "registryCode": "1420001311М",
+      "section": 1
+    },
+    {
+      "name": "Роллер спорт",
+      "registryCode": "1280008511Я",
+      "section": 2
+    },
+    {
+      "name": "Роуп скиппинг (спортивная скакалка)",
+      "registryCode": "1780001411Я",
+      "section": 2
+    },
+    {
+      "name": "Рукопашный бой",
+      "registryCode": "1000001411Я",
+      "section": 2
+    },
+    {
+      "name": "Рыболовный спорт",
+      "registryCode": "0920005411Г",
+      "section": 2
+    },
+    {
+      "name": "Сават",
+      "registryCode": "1210001411Я",
+      "section": 2
+    },
+    {
+      "name": "Самбо",
+      "registryCode": "0790001511Я",
+      "section": 2
+    },
+    {
+      "name": "Самолетный спорт",
+      "registryCode": "1600001411Л",
+      "section": 2
+    },
+    {
+      "name": "Санный спорт",
+      "registryCode": "0490003611Я",
+      "section": 2
+    },
+    {
+      "name": "Северное многоборье",
+      "registryCode": "1720005311Я",
+      "section": 2
+    },
+    {
+      "name": "Серфинг",
+      "registryCode": "1370001611Л",
+      "section": 2
+    },
+    {
+      "name": "Силовой спорт",
+      "registryCode": "1980001411Л",
+      "section": 1
+    },
+    {
+      "name": "Силовой экстрим",
+      "registryCode": "1850001411Я",
+      "section": 2
+    },
+    {
+      "name": "Синхронное плавание",
+      "registryCode": "0230001611Я",
+      "section": 2
+    },
+    {
+      "name": "Скалолазание",
+      "registryCode": "0800001611Я",
+      "section": 2
+    },
+    {
+      "name": "Сквош",
+      "registryCode": "1390002611Я",
+      "section": 2
+    },
+    {
+      "name": "Скейтбординг",
+      "registryCode": "1170001611Л",
+      "section": 2
+    },
+    {
+      "name": "Служебно-боевая стрельба",
+      "registryCode": "0100001151М",
+      "section": 4
+    },
+    {
+      "name": "Служебно-прикладной спорт",
+      "registryCode": "1060001141Л",
+      "section": 4
+    },
+    {
+      "name": "Служебно-прикладной спорт фсо россии",
+      "registryCode": "1290005191Л",
+      "section": 4
+    },
+    {
+      "name": "Служебно-прикладной спорт фтс россии",
+      "registryCode": "1080001161М",
+      "section": 4
+    },
+    {
+      "name": "Служебное двоеборье",
+      "registryCode": "13000051Ю1Л",
+      "section": 4
+    },
+    {
+      "name": "Служебное единоборство",
+      "registryCode": "13600011Н1Л",
+      "section": 4
+    },
+    {
+      "name": "Служебное многоборье",
+      "registryCode": "13100011С1М",
+      "section": 4
+    },
+    {
+      "name": "Служебный биатлон",
+      "registryCode": "13300051Э1Л",
+      "section": 4
+    },
+    {
+      "name": "Смешанное боевое единоборство (мма)",
+      "registryCode": "0720001411А",
+      "section": 2
+    },
+    {
+      "name": "Сноуборд",
+      "registryCode": "0420003611Я",
+      "section": 2
+    },
+    {
+      "name": "Современное пятиборье",
+      "registryCode": "0190001611Я",
+      "section": 2
+    },
+    {
+      "name": "Софтбол",
+      "registryCode": "0430002611Б",
+      "section": 2
+    },
+    {
+      "name": "Спасательный спорт",
+      "registryCode": "1260001131М",
+      "section": 4
+    },
+    {
+      "name": "Спорт глухих",
+      "registryCode": "1140007711Я",
+      "section": 2
+    },
+    {
+      "name": "Спорт лиц с интеллектуальными нарушениями",
+      "registryCode": "1490007711Я",
+      "section": 2
+    },
+    {
+      "name": "Спорт лиц с поражением ода",
+      "registryCode": "1160007711Я",
+      "section": 2
+    },
+    {
+      "name": "Спорт сверхлегкой авиации",
+      "registryCode": "1580001411Я",
+      "section": 2
+    },
+    {
+      "name": "Спорт слепых",
+      "registryCode": "1150007711Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивная акробатика",
+      "registryCode": "0810001511Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивная аэробика",
+      "registryCode": "0820001411Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивная борьба",
+      "registryCode": "0260001611Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивная гимнастика",
+      "registryCode": "0160001611Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивная йога",
+      "registryCode": "1570001411Л",
+      "section": 1
+    },
+    {
+      "name": "Спортивно-прикладное собаководство",
+      "registryCode": "0980005311Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивное метание ножа",
+      "registryCode": "0090001411Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивное ориентирование",
+      "registryCode": "0830005511Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивное программирование",
+      "registryCode": "1010001311Я",
+      "section": 2
+    },
+    {
+      "name": "Спортивный бридж",
+      "registryCode": "0960002511Я",
+      "section": 1
+    },
+    {
+      "name": "Спортивный туризм",
+      "registryCode": "0840005411Я",
+      "section": 2
+    },
+    {
+      "name": "Стендовая стрельба",
+      "registryCode": "0460001611Я",
+      "section": 2
+    },
+    {
+      "name": "Страйкбол",
+      "registryCode": "0340002311Г",
+      "section": 2
+    },
+    {
+      "name": "Стрельба из арбалета",
+      "registryCode": "0850001411Я",
+      "section": 2
+    },
+    {
+      "name": "Стрельба из боевого ручного стрелкового оружия",
+      "registryCode": "13200011Я1Л",
+      "section": 4
+    },
+    {
+      "name": "Стрельба из лука",
+      "registryCode": "0220005611Я",
+      "section": 2
+    },
+    {
+      "name": "Стрельба из штатного или табельного оружия",
+      "registryCode": "1070001121Л",
+      "section": 4
+    },
+    {
+      "name": "Стрельба на дальние дистанции",
+      "registryCode": "1890001411М",
+      "section": 2
+    },
+    {
+      "name": "Судомодельный спорт",
+      "registryCode": "1510001411Я",
+      "section": 2
+    },
+    {
+      "name": "Сумо",
+      "registryCode": "1700001511Я",
+      "section": 2
+    },
+    {
+      "name": "Таврели",
+      "registryCode": "0560002218Я",
+      "section": 3
+    },
+    {
+      "name": "Танцевальный спорт",
+      "registryCode": "0860001511Я",
+      "section": 2
+    },
+    {
+      "name": "Теннис",
+      "registryCode": "0130002611Я",
+      "section": 2
+    },
+    {
+      "name": "Триатлон",
+      "registryCode": "0300005611Я",
+      "section": 2
+    },
+    {
+      "name": "Тхэквондо",
+      "registryCode": "0470001611Я",
+      "section": 2
+    },
+    {
+      "name": "Тхэквондо гтф",
+      "registryCode": "1820001411Я",
+      "section": 2
+    },
+    {
+      "name": "Тхэквондо итф",
+      "registryCode": "1020001411Я",
+      "section": 2
+    },
+    {
+      "name": "Тхэквондо мфт",
+      "registryCode": "1830001411Я",
+      "section": 2
+    },
+    {
+      "name": "Тяжелая атлетика",
+      "registryCode": "0480001611Я",
+      "section": 2
+    },
+    {
+      "name": "Универсальный бой",
+      "registryCode": "1650005411Я",
+      "section": 2
+    },
+    {
+      "name": "Ушу",
+      "registryCode": "0870001511Я",
+      "section": 2
+    },
+    {
+      "name": "Фехтование",
+      "registryCode": "0200001611Я",
+      "section": 2
+    },
+    {
+      "name": "Фигурное катание на коньках",
+      "registryCode": "0500003611Я",
+      "section": 2
+    },
+    {
+      "name": "Фиджитал спорт (функционально-цифровой спорт)",
+      "registryCode": "1910008311Л",
+      "section": 2
+    },
+    {
+      "name": "Фитнес-аэробика",
+      "registryCode": "1250001311Я",
+      "section": 2
+    },
+    {
+      "name": "Флаинг диск",
+      "registryCode": "0530002411Я",
+      "section": 1
+    },
+    {
+      "name": "Флорбол",
+      "registryCode": "1380002411Я",
+      "section": 2
+    },
+    {
+      "name": "Фристайл",
+      "registryCode": "0510003611Я",
+      "section": 2
+    },
+    {
+      "name": "Функциональное многоборье",
+      "registryCode": "1340001311Я",
+      "section": 2
+    },
+    {
+      "name": "Футбол",
+      "registryCode": "0010002611Я",
+      "section": 2
+    },
+    {
+      "name": "Футбол лиц с заболеванием цп",
+      "registryCode": "1200002711А",
+      "section": 2
+    },
+    {
+      "name": "Хапкидо",
+      "registryCode": "1770001411А",
+      "section": 2
+    },
+    {
+      "name": "Хапсагай",
+      "registryCode": "1690001213А",
+      "section": 3
+    },
+    {
+      "name": "Хоккей",
+      "registryCode": "0030006611Я",
+      "section": 2
+    },
+    {
+      "name": "Хоккей на траве",
+      "registryCode": "0320002611Я",
+      "section": 2
+    },
+    {
+      "name": "Хоккей с мячом",
+      "registryCode": "1400004511Я",
+      "section": 2
+    },
+    {
+      "name": "Художественная гимнастика",
+      "registryCode": "0520001611Я",
+      "section": 2
+    },
+    {
+      "name": "Хуреш",
+      "registryCode": "1610001216А",
+      "section": 3
+    },
+    {
+      "name": "Чир спорт",
+      "registryCode": "1040001511Я",
+      "section": 2
+    },
+    {
+      "name": "Шахбокс",
+      "registryCode": "1990001411Я",
+      "section": 1
+    },
+    {
+      "name": "Шахматы",
+      "registryCode": "0880002511Я",
+      "section": 2
+    },
+    {
+      "name": "Шашки",
+      "registryCode": "0890002411Я",
+      "section": 2
+    },
+    {
+      "name": "Шодсанлат",
+      "registryCode": "1630001217Я",
+      "section": 3
+    },
+    {
+      "name": "Эстетическая гимнастика",
+      "registryCode": "0580001411Б",
+      "section": 2
+    },
+    {
+      "name": "Якутские национальные прыжки",
+      "registryCode": "1680001213А",
+      "section": 3
+    }
+  ]
+}

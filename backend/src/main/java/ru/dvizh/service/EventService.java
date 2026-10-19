@@ -11,10 +11,10 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional(readOnly=true)
 public class EventService {
-    private final Store db;private final Access access;private final Views view;private final PatchValidator validator;private final Clock clock;
-    public EventService(Store db,Access access,Views view,PatchValidator validator,Clock clock) { this.db=db;this.access=access;this.view=view;this.validator=validator;this.clock=clock; }
+    private final Store db;private final Access access;private final Views view;private final PatchValidator validator;private final Clock clock;private final SportsCatalog catalog;
+    public EventService(Store db,Access access,Views view,PatchValidator validator,Clock clock,SportsCatalog catalog) { this.db=db;this.access=access;this.view=view;this.validator=validator;this.clock=clock;this.catalog=catalog; }
     public List<Api.Sport> sports(String q) {
-        return db.list(SportEntity.class,"lower(e.name) like :q",Map.of("q",like(q)),"e.name asc,e.id asc",0,Integer.MAX_VALUE).stream().map(view::sport).toList();
+        return db.list(SportEntity.class,"e.canonicalId is null and lower(e.name) like :q",Map.of("q",like(q)),"e.isCustom asc,e.name asc,e.id asc",0,Integer.MAX_VALUE).stream().map(view::sport).toList();
     }
     @Transactional public Api.Event create(Api.EventCreate r) {
         var actor=access.user();
@@ -27,6 +27,7 @@ public class EventService {
             if(!access.represents(org))throw Problem.forbidden();access.approved(org);e.organizerOrganizationId=org.id;
         }
         e.title=r.title().strip();e.description=r.description().strip();e.sportId=resolveSport(r.sport()).id;
+        if(r.sport().customName()!=null)e.customSportName=r.sport().customName().strip().replaceAll("\\s+"," ");
         e.eventKind=r.eventKind()==null?Api.EventKind.ACTIVITY:r.eventKind();e.startsAt=r.startsAt();e.endsAt=r.endsAt();
         e.skillLevel=r.skillLevel()==null?Api.EventSkillLevel.ANY:r.skillLevel();e.requirements=r.requirements();e.joinMode=r.joinMode();
         e.maxParticipants=r.maxParticipants();location(e,r.location());
@@ -35,13 +36,10 @@ public class EventService {
     }
     private SportEntity resolveSport(Api.SportInput input) {
         if((input.sportId()==null)==(input.customName()==null))throw Problem.invalid("Укажите sportId либо customName");
-        if(input.sportId()!=null)return db.get(SportEntity.class,input.sportId());
+        if(input.sportId()!=null)return catalog.resolve(input.sportId());
         String name=input.customName().strip().replaceAll("\\s+"," ");
         if(name.length()<2 || name.length()>80)throw Problem.invalid("Название спорта: от 2 до 80 символов");
-        String normalized=name.toLowerCase(Locale.ROOT);
-        return db.first(SportEntity.class,"e.normalizedName=:name",Map.of("name",normalized)).orElseGet(() -> {
-            var sport=new SportEntity();sport.name=name;sport.normalizedName=normalized;sport.isCustom=true;return db.add(sport);
-        });
+        return catalog.other();
     }
     private void location(EventEntity e,Api.Location l) { e.city=l.city().strip();e.address=l.address().strip();e.latitude=l.latitude();e.longitude=l.longitude(); }
     private void validateTime(EventEntity e) {
@@ -90,9 +88,9 @@ public class EventService {
         for(String key:f.keySet())if(!allowed.contains(key))throw Problem.invalid("Неизвестный фильтр: "+key);
         StringBuilder where=new StringBuilder("e.status=:published");var p=new HashMap<String,Object>();p.put("published",Api.EventStatus.PUBLISHED);
         if(!bool(f,"includePast",false)) { where.append(" and e.startsAt>=:now");p.put("now",clock.instant()); }
-        if(has(f,"q")) { where.append(" and (lower(e.title) like :q or lower(e.description) like :q)");p.put("q",like(f.get("q"))); }
-        if(has(f,"sportId")) { where.append(" and e.sportId=:sportId");p.put("sportId",uuid(f.get("sportId"))); }
-        if(has(f,"sport")) { where.append(" and e.sportId in (select s.id from SportEntity s where lower(s.name) like :sport)");p.put("sport",like(f.get("sport"))); }
+        if(has(f,"q")) { where.append(" and (lower(e.title) like :q or lower(e.description) like :q or lower(e.customSportName) like :q)");p.put("q",like(f.get("q"))); }
+        if(has(f,"sportId")) { where.append(" and e.sportId=:sportId");p.put("sportId",catalog.resolve(uuid(f.get("sportId"))).id); }
+        if(has(f,"sport")) { where.append(" and (e.sportId in (select s.id from SportEntity s where lower(s.name) like :sport) or lower(e.customSportName) like :sport)");p.put("sport",like(f.get("sport"))); }
         if(has(f,"city")) { where.append(" and lower(e.city)=:city");p.put("city",f.get("city").strip().toLowerCase(Locale.ROOT)); }
         Instant from=has(f,"from")?instant(f.get("from")):null,to=has(f,"to")?instant(f.get("to")):null;
         if(from!=null && to!=null && from.isAfter(to))throw Problem.invalid("from должен быть раньше to");
@@ -117,7 +115,7 @@ public class EventService {
         return details(condition,p,"e.createdAt desc,e.id asc",page,size);
     }
     public PageResult<Api.Event> admin(String q,Api.EventStatus status,int page,int size) {
-        access.requireAdmin();String condition="(lower(e.title) like :q or lower(e.description) like :q)";Map<String,Object> p=new HashMap<>(Map.of("q",like(q)));
+        access.requireAdmin();String condition="(lower(e.title) like :q or lower(e.description) like :q or lower(e.customSportName) like :q)";Map<String,Object> p=new HashMap<>(Map.of("q",like(q)));
         if(status!=null){condition+=" and e.status=:status";p.put("status",status);}
         return details(condition,p,"e.createdAt desc,e.id asc",page,size);
     }

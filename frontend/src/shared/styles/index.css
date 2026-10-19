@@ -509,6 +509,20 @@ button:disabled {
   font-size: 12px;
   font-weight: 650;
 }
+.filter-fields > .form-field {
+  margin-bottom: 0;
+}
+.filter-fields > .form-field > label {
+  font-size: 12px;
+  font-weight: 650;
+}
+.filter-fields .form-field input,
+.filter-fields .form-field select {
+  min-height: 44px;
+  padding: 8px 10px;
+  border-color: var(--color-outline);
+  font-size: 12px;
+}
 .filter-fields select,
 .filter-fields input:not([type="checkbox"]) {
   width: 100%;
@@ -1926,6 +1940,8 @@ input[type="radio"] {
   margin-top: var(--space-5);
 }
 .organization-sports {
+  max-height: 320px;
+  overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
@@ -1948,6 +1964,9 @@ input[type="radio"] {
   width: 18px;
   height: 18px;
   accent-color: var(--color-ink);
+}
+.organization-sports label[hidden] {
+  display: none;
 }
 .organization-search {
   display: grid;

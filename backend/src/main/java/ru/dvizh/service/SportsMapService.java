@@ -13,9 +13,9 @@ import ru.dvizh.persistence.Store;
 
 @Service @Transactional
 public class SportsMapService {
-    private final Store db; private final Access access; private final Views views; private final Clock clock;
+    private final Store db; private final Access access; private final Views views; private final Clock clock; private final SportsCatalog catalog;
     @PersistenceContext private EntityManager em;
-    public SportsMapService(Store db,Access access,Views views,Clock clock) { this.db=db;this.access=access;this.views=views;this.clock=clock; }
+    public SportsMapService(Store db,Access access,Views views,Clock clock,SportsCatalog catalog) { this.db=db;this.access=access;this.views=views;this.clock=clock;this.catalog=catalog; }
     @Transactional(readOnly=true)
     public Api.MapEventsResponse events(String bbox, UUID sportId, int limit, Instant from, Instant to) {
         var bounds=MapBounds.parse(bbox); MapBounds.limit(limit);
@@ -24,7 +24,7 @@ public class SportsMapService {
         var params=bounds.parameters(); params.put("status",Api.EventStatus.PUBLISHED); params.put("from",from==null||from.isBefore(now)?now:from);
         String condition=MapBounds.CONDITION+" and e.status=:status and e.startsAt>=:from";
         if(to!=null) {condition+=" and e.startsAt<=:to"; params.put("to",to);}
-        if(sportId!=null) {condition+=" and e.sportId=:sport"; params.put("sport",sportId);}
+        if(sportId!=null) {condition+=" and e.sportId=:sport"; params.put("sport",catalog.resolve(sportId).id);}
         var rows=db.list(EventEntity.class,condition,params,"e.startsAt asc,e.id asc",0,limit+1);
         return new Api.MapEventsResponse(rows.stream().limit(limit).map(views::card).toList(),rows.size()>limit);
     }
@@ -32,7 +32,7 @@ public class SportsMapService {
     public Api.MapVenuesResponse venues(String bbox, UUID sportId,int limit) {
         var params=MapBounds.parse(bbox).parameters(); MapBounds.limit(limit);
         String condition=MapBounds.CONDITION;
-        if(sportId!=null){condition+=" and e.sportId=:sport";params.put("sport",sportId);}
+        if(sportId!=null){condition+=" and e.sportId=:sport";params.put("sport",catalog.resolve(sportId).id);}
         var rows=db.list(VenueEntity.class,condition,params,"e.id asc",0,limit+1);
         return new Api.MapVenuesResponse(items(rows.stream().limit(limit).toList()),rows.size()>limit);
     }
@@ -45,12 +45,12 @@ public class SportsMapService {
         if(name.length()<3) throw Problem.invalid("Название — от 3 символов");
         String normalized=name.toLowerCase(Locale.ROOT);
         var loc=input.location(); MapBounds.coordinates(loc.latitude(),loc.longitude());
-        if(input.sportId()!=null) db.get(SportEntity.class,input.sportId());
+        UUID category=input.sportId()==null?null:catalog.resolve(input.sportId()).id;
         var matches=db.list(VenueEntity.class,"e.normalizedName=:name and e.latitude between :south and :north",
             Map.of("name",normalized,"south",loc.latitude()-0.0003,"north",loc.latitude()+0.0003));
         for(var v:matches) if(distance(v.latitude,v.longitude,loc.latitude(),loc.longitude())<=30)
             throw Problem.conflict(Api.ErrorCode.CONFLICT,"Такая площадка уже есть рядом");
-        var v=new VenueEntity();v.name=name;v.normalizedName=normalized;v.sportId=input.sportId();
+        var v=new VenueEntity();v.name=name;v.normalizedName=normalized;v.sportId=category;
         v.city=loc.city().trim();v.address=loc.address().trim();v.latitude=loc.latitude();v.longitude=loc.longitude();v.createdBy=user.id;
         v.createdAt=now;v.updatedAt=now;db.add(v);db.flush();
         return items(List.of(v)).getFirst();

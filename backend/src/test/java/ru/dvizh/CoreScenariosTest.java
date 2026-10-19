@@ -14,9 +14,10 @@ class CoreScenariosTest extends ApiTestSupport {
     @Test void s1_createNewSportFindAndValidateOwner() throws Exception {
         var a=login("athlete-a");var b=login("athlete-b");String event=createEvent(a,"OPEN",10);
         var detail=getJson(b,"/events/"+event);
-        assertThat(detail.path("sport").path("name").asText()).isEqualTo("Флорбол");
+        assertThat(detail.path("sport").path("name").asText()).isEqualTo("Другое");
         assertThat(detail.path("organizer").path("id").asText()).isEqualTo(a.id());
         assertThat(getJson(b,"/events?sport=Флорбол&city=Самара").path("items").toString()).contains(event);
+        assertThat(detail.path("customSportName").asText()).isEqualTo("Флорбол");
         call(b,"PATCH","/events/"+event,Map.of("title","Чужая правка"),403);
         call(a,"PATCH","/events/"+event,Map.of("organizer",Map.of("id",b.id())),400);
         call(null,"GET","/events?page=-1",null,400);

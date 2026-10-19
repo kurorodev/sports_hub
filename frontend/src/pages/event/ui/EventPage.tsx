@@ -98,6 +98,9 @@ export function EventPage() {
           <span className="owner-label">Вы организатор</span>
         )}
         <span className="eyebrow muted">{event.sport.name} · Иллюстрация</span>
+        {event.customSportName && (
+          <p className="field-hint">Активность: {event.customSportName}</p>
+        )}
         <h1>{event.title}</h1>
       </div>
       {event.status !== "PUBLISHED" && (

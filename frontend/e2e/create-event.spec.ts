@@ -17,7 +17,7 @@ async function fillEvent(page: Page, title: string, sport: string) {
     .getByLabel("Вид спорта", { exact: true })
     .selectOption("__custom__");
   await page
-    .getByLabel("Название нового вида спорта", { exact: true })
+    .getByLabel("Название активности", { exact: true })
     .fill(sport);
   await page
     .getByLabel("О встрече", { exact: true })
@@ -62,7 +62,7 @@ for (const width of [375, 768, 1440]) {
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     await signIn(page, "Мария");
-    await page.getByRole("button", { name: sport, exact: true }).click();
+    await page.getByRole("button", { name: "Другое", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: title, exact: true }),
     ).toBeVisible();

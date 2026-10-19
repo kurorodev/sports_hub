@@ -186,9 +186,10 @@ export function MapPage() {
       </p>
       <div className="map-toolbar">
         <MapSearch onSelect={setCenter} />
-        <label className="form-field">
-          Вид спорта на карте
+        <div className="form-field">
+          <label htmlFor="map-sport">Вид спорта на карте</label>
           <select
+            id="map-sport"
             value={sportId}
             onChange={(event) => setParam("sportId", event.target.value)}
           >
@@ -199,7 +200,7 @@ export function MapPage() {
               </option>
             ))}
           </select>
-        </label>
+        </div>
         <details
           className="map-date-filters"
           open={Boolean(params.get("from") || params.get("to"))}

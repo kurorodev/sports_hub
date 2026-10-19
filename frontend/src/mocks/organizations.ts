@@ -14,7 +14,7 @@ function seed(): OrganizationDto {
     name: "Беговой клуб «Темп»",
     description:
       "Открытый клуб для совместных пробежек и знакомства со спортом.",
-    sports: [{ id: mockId("running"), name: "Бег", isCustom: false }],
+    sports: [{ id: mockId("running"), name: "Легкая атлетика", isCustom: false }],
     status: "APPROVED",
     createdBy: mockUser("org-run", "Беговой клуб «Темп»"),
     createdAt: "2026-10-01T12:00:00Z",
