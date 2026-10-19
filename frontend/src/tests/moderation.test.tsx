@@ -37,10 +37,10 @@ async function login(id = "user-alex") {
   setCsrfToken(session.csrfToken);
   return session;
 }
-async function event() {
+async function event(title = "Тренировка для модерации") {
   const session = await login();
   return createEvent({
-    title: "Тренировка для модерации",
+    title,
     description: "Совместная пробежка для начинающих у входа в парк.",
     sport: { sportId: mockId("running") },
     startsAt: "2026-12-01T12:00:00Z",
@@ -429,7 +429,7 @@ describe("moderation UI", () => {
     const e = await event();
     for (let i = 0; i < 12; i++)
       await postComment(e.id, `Комментарий автора ${i}`);
-    const other = await event();
+    const other = await event("Отдельное мероприятие для фильтра");
     await postComment(other.id, "Другое мероприятие");
     await login("user-maria");
     await postComment(e.id, "Другой пользователь");
@@ -437,18 +437,13 @@ describe("moderation UI", () => {
     mount(<AdminComments viewerId={mockId("admin")} />);
     const user = userEvent.setup();
     await user.type(
-      screen.getByLabelText("Поиск пользователя по никнейму"),
-      "user-alex",
+      screen.getByRole("combobox", { name: "Пользователь" }),
+      "@u",
     );
-    await screen.findByRole("option", { name: /Александр/ });
-    await user.selectOptions(
-      screen.getByLabelText("Пользователь", { exact: true }),
-      mockId("user-alex"),
-    );
-    await screen.findAllByRole("option", { name: e.title });
-    await user.selectOptions(
-      screen.getByLabelText("Мероприятие", { exact: true }),
-      e.id,
+    await user.click(await screen.findByRole("option", { name: /Александр/ }));
+    await user.type(screen.getByRole("combobox", { name: "Мероприятие" }), "Т");
+    await user.click(
+      await screen.findByRole("option", { name: new RegExp(e.title) }),
     );
     await user.click(screen.getByLabelText("Последние 10 комментариев"));
     await user.click(screen.getByLabelText("За последние 24 часа"));
@@ -472,6 +467,55 @@ describe("moderation UI", () => {
     await waitFor(() =>
       expect(screen.getByText("Найдено комментариев: 14")).toBeVisible(),
     );
+  });
+  it("explains nickname-only search, handles no matches and retries, and supports keyboard selection", async () => {
+    const e = await event("Яркая тренировка для поиска");
+    await postComment(e.id, "Сообщение выбранного автора");
+    await login("user-maria");
+    await postComment(e.id, "Сообщение второго автора");
+    await login("admin");
+    mount(<AdminComments viewerId={mockId("admin")} />);
+    const user = userEvent.setup();
+    const authorSearch = screen.getByRole("combobox", { name: "Пользователь" });
+    expect(screen.getByText(/Ищите только по никнейму @user/)).toBeVisible();
+    await user.type(authorSearch, "Александр");
+    expect(await screen.findByText(/Никнейм вводится латиницей/)).toBeVisible();
+    await user.clear(authorSearch);
+    await user.type(authorSearch, "@user-a");
+    await screen.findByRole("option", { name: /Александр/ });
+    await user.keyboard("{ArrowDown}{Enter}");
+    await screen.findByRole("button", { name: "Сбросить: Пользователь" });
+    expect(authorSearch).toHaveAttribute("aria-expanded", "false");
+    const eventSearch = screen.getByRole("combobox", { name: "Мероприятие" });
+    await user.type(eventSearch, "Несуществующее название");
+    expect(await screen.findByText(/Мероприятия не найдены/)).toBeVisible();
+    server.use(
+      http.get("/api/v1/admin/events", () =>
+        HttpResponse.json({}, { status: 503 }),
+      ),
+    );
+    await user.clear(eventSearch);
+    await user.type(eventSearch, "Я");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Не удалось загрузить варианты",
+    );
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Повторить поиск" }));
+    await screen.findByRole("option", { name: /Яркая тренировка/ });
+    await user.click(eventSearch);
+    await user.keyboard("{ArrowDown}{Enter}");
+    await waitFor(() =>
+      expect(screen.getByText("Найдено комментариев: 1")).toBeVisible(),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Сбросить: Пользователь" }),
+    );
+    await waitFor(() =>
+      expect(screen.getByText("Найдено комментариев: 2")).toBeVisible(),
+    );
+    expect(
+      screen.getByRole("button", { name: "Сбросить: Мероприятие" }),
+    ).toBeVisible();
   });
   it("keeps existing participation and shows the server reason on direct unpublished access", async () => {
     const e = await event();

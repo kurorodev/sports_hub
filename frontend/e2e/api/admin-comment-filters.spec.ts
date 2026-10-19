@@ -3,7 +3,7 @@ import { signInAs } from "../helpers/approval";
 import { setupModerationEvent } from "../helpers/moderation";
 import type { Session } from "../../src/shared/api/types";
 
-for (const width of [375, 1440]) {
+for (const width of [320, 375, 768, 1440]) {
   test(`Java admin comment filters combine and survive reload at ${width}px`, async ({
     page,
   }) => {
@@ -41,27 +41,36 @@ for (const width of [375, 1440]) {
     expect(posted.status()).toBe(201);
     await signInAs(page, "admin");
     await page.goto("/admin?section=comments");
-    await page.getByLabel("Поиск мероприятия по названию").fill(event.title);
-    await expect(
-      page.locator(`#comment-event option[value="${event.id}"]`),
-    ).toHaveCount(1);
-    await page
-      .getByLabel("Мероприятие", { exact: true })
-      .selectOption(event.id);
+    const eventSearch = page.getByRole("combobox", { name: "Мероприятие" });
+    const userSearch = page.getByRole("combobox", { name: "Пользователь" });
+    await eventSearch.fill("Ф");
+    const eventOption = page.getByRole("option", {
+      name: new RegExp(event.title),
+    });
+    await expect(eventOption).toBeVisible();
+    await page.screenshot({
+      path: `test-results/admin-comment-search-${width}.png`,
+      fullPage: true,
+    });
+    await eventOption.click();
     await expect(page.getByText("Найдено комментариев: 13")).toBeVisible();
-    await page
-      .getByLabel("Поиск пользователя по никнейму")
-      .fill(author.user.nickname);
     await expect(
-      page.locator(`#comment-author option[value="${author.user.id}"]`),
-    ).toHaveCount(1);
-    await page
-      .getByLabel("Пользователь", { exact: true })
-      .selectOption(author.user.id);
+      page.getByText(
+        "Ищите только по никнейму @user. По имени и фамилии поиск не работает.",
+      ),
+    ).toBeVisible();
+    await userSearch.fill(`@${author.user.nickname[0]}`);
+    const authorOption = page.getByRole("option", {
+      name: `${author.user.displayName} @${author.user.nickname}`,
+      exact: true,
+    });
+    await expect(authorOption).toBeVisible();
+    await authorOption.click();
     await expect(page.getByText("Найдено комментариев: 12")).toBeVisible();
+    // Both settings may be changed immediately, without losing the preceding URL update.
     await page.getByLabel("Последние 10 комментариев").click();
-    await expect(page.getByLabel("Последние 10 комментариев")).toBeChecked();
     await page.getByLabel("За последние 24 часа").click();
+    await expect(page.getByLabel("Последние 10 комментариев")).toBeChecked();
     await expect(page.getByLabel("За последние 24 часа")).toBeChecked();
     await expect(page.getByText("Найдено комментариев: 10")).toBeVisible();
     await expect(page.locator(".moderation-text")).toHaveCount(10);
@@ -72,12 +81,22 @@ for (const width of [375, 1440]) {
       page.getByText("Сообщение другого автора", { exact: true }),
     ).toHaveCount(0);
     await page.reload();
-    await expect(page.getByLabel("Пользователь", { exact: true })).toHaveValue(
-      author.user.id,
-    );
-    await expect(page.getByLabel("Мероприятие", { exact: true })).toHaveValue(
-      event.id,
-    );
+    await expect(
+      page.getByRole("button", { name: "Сбросить: Пользователь" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Сбросить: Мероприятие" }),
+    ).toBeVisible();
+    await expect(
+      page
+        .locator(".comment-search-selection")
+        .filter({ hasText: author.user.nickname }),
+    ).toBeVisible();
+    await expect(
+      page
+        .locator(".comment-search-selection")
+        .filter({ hasText: event.title }),
+    ).toBeVisible();
     await expect(page.getByLabel("Последние 10 комментариев")).toBeChecked();
     await expect(page.getByLabel("За последние 24 часа")).toBeChecked();
     await expect(page.locator(".moderation-text")).toHaveCount(10);
@@ -90,7 +109,20 @@ for (const width of [375, 1440]) {
       path: `test-results/admin-comment-filters-${width}.png`,
       fullPage: true,
     });
-    await page.getByLabel("Пользователь", { exact: true }).selectOption("");
+    await page
+      .locator(".comment-filter-panel")
+      .screenshot({ path: `test-results/admin-comment-panel-${width}.png` });
+    if (width >= 768) {
+      const inputs = await Promise.all([
+        eventSearch.boundingBox(),
+        userSearch.boundingBox(),
+      ]);
+      expect(Math.abs(inputs[0]!.y - inputs[1]!.y)).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(inputs[0]!.height - inputs[1]!.height),
+      ).toBeLessThanOrEqual(1);
+    }
+    await page.getByRole("button", { name: "Сбросить: Пользователь" }).click();
     await expect(
       page.getByText("Сообщение другого автора", { exact: true }),
     ).toBeVisible();

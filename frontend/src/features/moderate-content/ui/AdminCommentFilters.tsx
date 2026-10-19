@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Clock3, ListFilter, RefreshCw, SlidersHorizontal } from "lucide-react";
 import {
   moderationEventsQuery,
   useModerationRepository,
@@ -8,7 +9,7 @@ import { request } from "../../../shared/api/client";
 import type { EventPreview, UserProfileDto } from "../../../shared/api/types";
 import { searchUsers } from "../../../shared/api/user-search";
 import { isUuid } from "../../../shared/lib/identifiers";
-import { ErrorState } from "../../../shared/ui/Feedback";
+import { CommentFilterSearch } from "./CommentFilterSearch";
 
 export function AdminCommentFilters({
   viewerId,
@@ -17,6 +18,9 @@ export function AdminCommentFilters({
   latest,
   last24Hours,
   onChange,
+  onRefresh,
+  refreshing,
+  valid,
 }: {
   viewerId: string;
   eventId: string;
@@ -24,24 +28,31 @@ export function AdminCommentFilters({
   latest: boolean;
   last24Hours: boolean;
   onChange: (changes: Record<string, string>) => void;
+  onRefresh: () => void;
+  refreshing: boolean;
+  valid: boolean;
 }) {
   const repo = useModerationRepository();
   const [userSearch, setUserSearch] = useState("");
   const [eventSearch, setEventSearch] = useState("");
   const [eventPage, setEventPage] = useState(0);
   const prefix = userSearch.trim().replace(/^@/, "");
+  const validPrefix = /^[A-Za-z0-9_-]{1,40}$/.test(prefix);
   const users = useQuery({
     queryKey: ["moderation", "user-options", viewerId, prefix],
     queryFn: ({ signal }) => searchUsers(prefix, signal),
-    enabled: /^[A-Za-z0-9_-]{1,40}$/.test(prefix),
+    enabled: validPrefix,
+    staleTime: 30000,
     retry: false,
   });
-  const events = useQuery(
-    moderationEventsQuery(repo, viewerId, {
+  const events = useQuery({
+    ...moderationEventsQuery(repo, viewerId, {
       q: eventSearch.trim(),
       page: eventPage,
     }),
-  );
+    refetchInterval: false,
+    staleTime: 30000,
+  });
   const selectedUser = useQuery({
     queryKey: ["moderation", "selected-user", viewerId, authorId],
     queryFn: ({ signal }) =>
@@ -56,143 +67,169 @@ export function AdminCommentFilters({
     enabled: isUuid(eventId),
     retry: false,
   });
+  const chosenUser =
+    selectedUser.data ?? users.data?.find((user) => user.id === authorId);
+  const chosenEvent =
+    selectedEvent.data ??
+    events.data?.items.find((event) => event.id === eventId);
+  const activeCount = [authorId, eventId, latest, last24Hours].filter(
+    Boolean,
+  ).length;
   return (
-    <div className="comment-filters">
-      <div className="form-field">
-        <label htmlFor="comment-user-search">
-          Поиск пользователя по никнейму
-        </label>
-        <input
-          id="comment-user-search"
-          value={userSearch}
-          onChange={(e) => setUserSearch(e.target.value)}
-          placeholder="Начните вводить @никнейм"
-        />
-        <label htmlFor="comment-author">Пользователь</label>
-        <select
-          id="comment-author"
-          value={authorId}
-          onChange={(e) => onChange({ authorId: e.target.value })}
-        >
-          <option value="">Все пользователи</option>
-          {authorId && !users.data?.some((u) => u.id === authorId) && (
-            <option value={authorId}>
-              {selectedUser.data
-                ? `${selectedUser.data.displayName} (@${selectedUser.data.nickname})`
-                : "Выбранный пользователь"}
-            </option>
-          )}
-          {users.data?.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.displayName} (@{user.nickname})
-            </option>
-          ))}
-        </select>
-        {users.isFetching && <p role="status">Ищем пользователей…</p>}
-        {users.isSuccess && users.data.length === 0 && (
-          <p className="field-hint">Пользователи не найдены.</p>
-        )}
-        {users.isError && (
-          <ErrorState error={users.error} retry={() => void users.refetch()} />
+    <div className="comment-filter-panel">
+      <div className="comment-filter-heading">
+        <SlidersHorizontal size={19} aria-hidden="true" />
+        <h3>Фильтры комментариев</h3>
+        {activeCount > 0 && (
+          <span className="comment-filter-count">Выбрано: {activeCount}</span>
         )}
       </div>
-      <div className="form-field">
-        <label htmlFor="comment-event-search">
-          Поиск мероприятия по названию
-        </label>
-        <input
-          id="comment-event-search"
+      <div className="comment-filter-grid">
+        <CommentFilterSearch
+          label="Пользователь"
+          hint="Ищите только по никнейму @user. По имени и фамилии поиск не работает."
+          placeholder="@user"
+          value={userSearch}
+          onSearch={setUserSearch}
+          choices={
+            validPrefix
+              ? (users.data ?? []).map((user) => ({
+                  id: user.id,
+                  label: user.displayName,
+                  detail: `@${user.nickname}`,
+                }))
+              : []
+          }
+          selectedId={authorId}
+          selectedLabel={
+            chosenUser
+              ? `${chosenUser.displayName} (@${chosenUser.nickname})`
+              : undefined
+          }
+          allLabel="Все пользователи"
+          onSelect={(id) => onChange({ authorId: id })}
+          loading={validPrefix && users.isFetching}
+          emptyMessage={
+            !prefix
+              ? "Введите хотя бы один символ никнейма после @."
+              : !validPrefix
+                ? "Никнейм вводится латиницей: @user. По имени поиск недоступен."
+                : "Пользователи не найдены. Проверьте никнейм."
+          }
+          error={validPrefix && users.isError}
+          onRetry={() => void users.refetch()}
+        />
+        <CommentFilterSearch
+          label="Мероприятие"
+          hint="Начните вводить название — варианты появятся уже с первой буквы."
+          placeholder="Название мероприятия"
           value={eventSearch}
-          onChange={(e) => {
-            setEventSearch(e.target.value);
+          onSearch={(value) => {
+            setEventSearch(value);
             setEventPage(0);
           }}
-          placeholder="Введите название мероприятия"
-        />
-        <label htmlFor="comment-event">Мероприятие</label>
-        <select
-          id="comment-event"
-          value={eventId}
-          onChange={(e) => onChange({ eventId: e.target.value })}
-        >
-          <option value="">Все мероприятия</option>
-          {eventId && !events.data?.items.some((e) => e.id === eventId) && (
-            <option value={eventId}>
-              {selectedEvent.data?.title ?? "Выбранное мероприятие"}
-            </option>
-          )}
-          {events.data?.items.map((event) => (
-            <option key={event.id} value={event.id}>
-              {event.title}
-            </option>
-          ))}
-        </select>
-        {events.isFetching && <p role="status">Ищем мероприятия…</p>}
-        {events.isSuccess && events.data.items.length === 0 && (
-          <p className="field-hint">Мероприятия не найдены.</p>
-        )}
-        {events.data &&
-          (events.data.totalCount > events.data.pageSize || eventPage > 0) && (
-            <div className="pagination" aria-label="Выбор мероприятий">
-              <button
-                type="button"
-                className="button secondary"
-                disabled={eventPage === 0 || events.isFetching}
-                onClick={() => setEventPage((page) => page - 1)}
+          choices={(events.data?.items ?? []).map((event) => ({
+            id: event.id,
+            label: event.title,
+            detail: `${event.city} · ${new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(event.startsAt))}`,
+          }))}
+          selectedId={eventId}
+          selectedLabel={chosenEvent?.title}
+          allLabel="Все мероприятия"
+          onSelect={(id) => onChange({ eventId: id })}
+          loading={events.isFetching}
+          emptyMessage="Мероприятия не найдены. Попробуйте другую часть названия."
+          error={events.isError}
+          onRetry={() => void events.refetch()}
+          footer={
+            events.data &&
+            (events.data.totalCount > events.data.pageSize || eventPage > 0) ? (
+              <div
+                className="comment-search-pages"
+                aria-label="Выбор мероприятий"
               >
-                Предыдущие мероприятия
-              </button>
-              <button
-                type="button"
-                className="button secondary"
-                disabled={
-                  events.isFetching ||
-                  (eventPage + 1) * events.data.pageSize >=
+                <button
+                  type="button"
+                  disabled={eventPage === 0}
+                  onClick={() => setEventPage((page) => page - 1)}
+                >
+                  Назад
+                </button>
+                <span>Страница {eventPage + 1}</span>
+                <button
+                  type="button"
+                  disabled={
+                    (eventPage + 1) * events.data.pageSize >=
                     events.data.totalCount
-                }
-                onClick={() => setEventPage((page) => page + 1)}
-              >
-                Следующие мероприятия
-              </button>
-            </div>
-          )}
-        {events.isError && (
-          <ErrorState
-            error={events.error}
-            retry={() => void events.refetch()}
-          />
-        )}
-      </div>
-      <label className="comment-filter-toggle">
-        <input
-          type="checkbox"
-          checked={latest}
-          onChange={(e) => onChange({ latest: e.target.checked ? "true" : "" })}
-        />
-        Последние 10 комментариев
-      </label>
-      <label className="comment-filter-toggle">
-        <input
-          type="checkbox"
-          checked={last24Hours}
-          onChange={(e) =>
-            onChange({ last24Hours: e.target.checked ? "true" : "" })
+                  }
+                  onClick={() => setEventPage((page) => page + 1)}
+                >
+                  Далее
+                </button>
+              </div>
+            ) : undefined
           }
         />
-        За последние 24 часа
-      </label>
-      <button
-        type="button"
-        className="button secondary"
-        onClick={() => {
-          setUserSearch("");
-          setEventSearch("");
-          setEventPage(0);
-          onChange({ eventId: "", authorId: "", latest: "", last24Hours: "" });
-        }}
-      >
-        Сбросить фильтры
-      </button>
+      </div>
+      <div className="comment-filter-options">
+        <label
+          className={`comment-filter-toggle ${latest ? "is-checked" : ""}`}
+        >
+          <input
+            type="checkbox"
+            checked={latest}
+            onChange={(event) =>
+              onChange({ latest: event.target.checked ? "true" : "" })
+            }
+          />
+          <ListFilter size={18} aria-hidden="true" />
+          <span>Последние 10 комментариев</span>
+        </label>
+        <label
+          className={`comment-filter-toggle ${last24Hours ? "is-checked" : ""}`}
+        >
+          <input
+            type="checkbox"
+            checked={last24Hours}
+            onChange={(event) =>
+              onChange({ last24Hours: event.target.checked ? "true" : "" })
+            }
+          />
+          <Clock3 size={18} aria-hidden="true" />
+          <span>За последние 24 часа</span>
+        </label>
+      </div>
+      <div className="comment-filter-footer">
+        <p>Фильтры применяются сразу. Оба ограничения можно включить вместе.</p>
+        <div className="comment-filter-actions">
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => {
+              setUserSearch("");
+              setEventSearch("");
+              setEventPage(0);
+              onChange({
+                eventId: "",
+                authorId: "",
+                latest: "",
+                last24Hours: "",
+              });
+            }}
+          >
+            Сбросить фильтры
+          </button>
+          <button
+            type="button"
+            className="button primary"
+            disabled={refreshing || !valid}
+            onClick={onRefresh}
+          >
+            <RefreshCw size={17} aria-hidden="true" />
+            Обновить комментарии
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

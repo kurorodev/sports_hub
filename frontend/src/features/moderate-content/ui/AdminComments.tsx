@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -13,6 +13,10 @@ import { AdminCommentFilters } from "./AdminCommentFilters";
 export function AdminComments({ viewerId }: { viewerId: string }) {
   const repo = useModerationRepository();
   const [params, setParams] = useSearchParams();
+  const currentParams = useRef(params);
+  useEffect(() => {
+    currentParams.current = params;
+  }, [params]);
   const eventId = params.get("eventId") ?? "";
   const authorId = params.get("authorId") ?? "";
   const latest = params.get("latest") === "true";
@@ -34,7 +38,7 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
     enabled: valid,
   });
   function filter(changes: Record<string, string>, nextPage = 0) {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams(currentParams.current);
     next.set("section", "comments");
     next.delete("page");
     for (const [key, value] of Object.entries(changes)) {
@@ -42,8 +46,9 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
       else next.delete(key);
     }
     if (nextPage) next.set("page", String(nextPage));
+    currentParams.current = next;
     setNotice("");
-    setParams(next);
+    setParams(next, { preventScrollReset: true });
   }
   return (
     <section aria-labelledby="moderation-comments-heading">
@@ -53,23 +58,17 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
         времени применяются к выбранным условиям, без выбора — ко всем
         комментариям.
       </p>
-      <div className="organization-toolbar">
-        <AdminCommentFilters
-          viewerId={viewerId}
-          eventId={eventId}
-          authorId={authorId}
-          latest={latest}
-          last24Hours={last24Hours}
-          onChange={filter}
-        />
-        <button
-          className="button secondary"
-          disabled={query.isFetching || !valid}
-          onClick={() => void query.refetch()}
-        >
-          Обновить комментарии
-        </button>
-      </div>
+      <AdminCommentFilters
+        viewerId={viewerId}
+        eventId={eventId}
+        authorId={authorId}
+        latest={latest}
+        last24Hours={last24Hours}
+        onChange={filter}
+        onRefresh={() => void query.refetch()}
+        refreshing={query.isFetching}
+        valid={valid}
+      />
       {!valid ? (
         <p id="moderation-event-id-error" role="alert" className="field-error">
           Укажите корректный UUID мероприятия и пользователя в ссылке или
@@ -85,7 +84,7 @@ export function AdminComments({ viewerId }: { viewerId: string }) {
         />
       ) : (
         <>
-          <p className="join-note">
+          <p className="comment-results-count" aria-live="polite">
             Найдено комментариев: {query.data.totalCount}
           </p>
           {query.data.items.length === 0 ? (
