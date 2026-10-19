@@ -1,6 +1,13 @@
 import { http, HttpResponse } from "msw";
-import { accounts, events, makeSession } from "./database";
+import {
+  accounts,
+  getEvents,
+  getSports,
+  makeSession,
+  saveEvent,
+} from "./database";
 import { apiConfig } from "../shared/api/client";
+import { createEventSchema } from "../shared/api/provisional-event-schema";
 
 const api = apiConfig.baseUrl;
 const sessionKey = "dvizh.mock.account";
@@ -52,10 +59,53 @@ export const handlers = [
           { status: 401 },
         );
   }),
+  http.get(`${api}/sports`, () => HttpResponse.json(getSports())),
+  http.post(`${api}/events`, async ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return HttpResponse.json(
+        { code: "UNAUTHORIZED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (request.headers.get("X-CSRF-Token") !== session.csrfToken) {
+      return HttpResponse.json(
+        { code: "FORBIDDEN", message: "Сессия изменилась. Обновите страницу." },
+        { status: 403 },
+      );
+    }
+    const parsed = createEventSchema.safeParse(
+      await request.json().catch(() => null),
+    );
+    if (!parsed.success) {
+      const fieldErrors = Object.fromEntries(
+        parsed.error.issues.map((issue) => [
+          issue.path.join("."),
+          issue.message,
+        ]),
+      );
+      return HttpResponse.json(
+        { code: "VALIDATION_ERROR", message: "Проверьте поля", fieldErrors },
+        { status: 422 },
+      );
+    }
+    const event = saveEvent(parsed.data, session.user.id);
+    if (!event)
+      return HttpResponse.json(
+        {
+          code: "VALIDATION_ERROR",
+          message: "Спорт больше не доступен",
+          fieldErrors: {
+            sportId: "Выберите спорт из списка или добавьте свой",
+          },
+        },
+        { status: 422 },
+      );
+    return HttpResponse.json(event, { status: 201 });
+  }),
   http.get(`${api}/events`, ({ request }) => {
     const p = new URL(request.url).searchParams;
     const q = (p.get("q") ?? "").trim().toLocaleLowerCase("ru");
-    let items = events.filter(
+    let items = getEvents(savedAccount() ?? undefined).filter(
       (event) =>
         (!q ||
           `${event.title} ${event.description} ${event.sport.name}`
@@ -74,8 +124,8 @@ export const handlers = [
     );
     items = [...items].sort((a, b) =>
       p.get("sort") === "startsAt,desc"
-        ? b.startsAt.localeCompare(a.startsAt)
-        : a.startsAt.localeCompare(b.startsAt),
+        ? Date.parse(b.startsAt) - Date.parse(a.startsAt)
+        : Date.parse(a.startsAt) - Date.parse(b.startsAt),
     );
     const page = Math.max(0, Number(p.get("page")) || 0);
     const size = Math.min(24, Math.max(1, Number(p.get("size")) || 6));
@@ -87,7 +137,9 @@ export const handlers = [
     });
   }),
   http.get(`${api}/events/:eventId`, ({ params }) => {
-    const event = events.find((item) => item.id === params.eventId);
+    const event = getEvents(savedAccount() ?? undefined).find(
+      (item) => item.id === params.eventId,
+    );
     return event ? HttpResponse.json(event) : notFound();
   }),
 ];

@@ -1,10 +1,3 @@
-export const sportOptions = [
-  { id: "", name: "Все виды спорта" },
-  { id: "running", name: "Бег" },
-  { id: "basketball", name: "Баскетбол" },
-  { id: "tennis", name: "Теннис" },
-  { id: "chess", name: "Шахматы" },
-];
 // Presentation-only assets. Sport identifiers and labels await the shared contract.
 export const sportArt: Record<string, string> = {
   running: "/art/running.svg",

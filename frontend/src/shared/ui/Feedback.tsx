@@ -33,6 +33,9 @@ export function EmptyState({ reset }: { reset: () => void }) {
       <button className="button primary" onClick={reset}>
         Сбросить фильтры
       </button>
+      <Link className="button secondary" to="/events/new">
+        Создать свою встречу
+      </Link>
     </div>
   );
 }

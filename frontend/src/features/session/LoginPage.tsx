@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, Check, UserRound } from "lucide-react";
 import { apiConfig, errorMessage, setCsrfToken } from "../../shared/api/client";
 import { ErrorState } from "../../shared/ui/Feedback";
@@ -17,6 +17,7 @@ export function LoginPage() {
   const accounts = useQuery(demoAccountsQuery);
   const client = useQueryClient();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const form = useForm<LoginValues>({
     resolver: zodResolver(schema),
     defaultValues: { accountId: "" },
@@ -28,7 +29,9 @@ export function LoginPage() {
       client.clear();
       setCsrfToken(session.csrfToken);
       client.setQueryData(sessionQuery.queryKey, session);
-      navigate("/", { replace: true });
+      navigate(params.get("next") === "create-event" ? "/events/new" : "/", {
+        replace: true,
+      });
     },
   });
   const selected = useWatch({ control: form.control, name: "accountId" });

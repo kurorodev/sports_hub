@@ -27,6 +27,7 @@ export function Layout() {
             <NavLink to="/" end>
               Активности
             </NavLink>
+            <NavLink to="/events/new">Создать</NavLink>
             <a href="/#how-it-works">Как это работает</a>
             {session.data?.manageableOrganizationIds.length ? (
               <NavLink to="/organization">Организация</NavLink>

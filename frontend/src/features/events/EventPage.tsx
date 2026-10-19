@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CalendarDays,
@@ -15,6 +15,7 @@ import { eventDate, sportArt } from "./presentation";
 
 export function EventPage() {
   const { eventId = "" } = useParams();
+  const location = useLocation();
   const query = useQuery(eventQuery(eventId));
   if (query.isPending)
     return (
@@ -29,22 +30,40 @@ export function EventPage() {
       <ErrorState error={query.error} retry={() => void query.refetch()} />
     );
   const event = query.data;
+  const created =
+    location.state &&
+    typeof location.state === "object" &&
+    "created" in location.state &&
+    location.state.created === true &&
+    event.viewerIsOrganizer;
   return (
     <section className="detail-page">
       <Link to="/#activities" className="back-link">
         <ArrowLeft size={18} />
         Все активности
       </Link>
+      {created && (
+        <div className="creation-success" role="status">
+          <strong>Встреча опубликована</strong>
+          <p>Теперь её могут найти другие пользователи в каталоге.</p>
+          <Link to="/" className="button secondary">
+            Посмотреть в каталоге
+          </Link>
+        </div>
+      )}
       <div className="detail-grid">
         <div>
           <img
             className="detail-art"
-            src={sportArt[event.sport.id] ?? "/art/running.svg"}
+            src={sportArt[event.sport.id] ?? "/art/activity.svg"}
             alt={`Спортивная иллюстрация: ${event.sport.name}`}
             width="600"
             height="360"
           />
           <div className="detail-title">
+            {event.viewerIsOrganizer && (
+              <span className="owner-label">Вы организатор</span>
+            )}
             <span className="eyebrow muted">
               {event.sport.name} · Иллюстрация
             </span>

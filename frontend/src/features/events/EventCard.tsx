@@ -18,7 +18,7 @@ export function EventCard({ event }: { event: EventPreview }) {
     <article className="event-card">
       <div className="event-art">
         <img
-          src={sportArt[event.sport.id] ?? "/art/running.svg"}
+          src={sportArt[event.sport.id] ?? "/art/activity.svg"}
           alt=""
           loading="lazy"
           width="600"

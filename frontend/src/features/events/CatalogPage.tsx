@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -8,14 +8,19 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { eventsQuery } from "./api";
+import { eventsQuery, sportsQuery } from "./api";
 import { EventCard } from "./EventCard";
-import { sportOptions } from "./presentation";
+import { errorMessage } from "../../shared/api/client";
 import { EmptyState, ErrorState, Skeletons } from "../../shared/ui/Feedback";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
   const query = useQuery(eventsQuery(params));
+  const sports = useQuery(sportsQuery);
+  const sportOptions = [
+    { id: "", name: "Все виды спорта" },
+    ...(sports.data ?? []),
+  ];
   const setFilter = (key: string, value: string) => {
     setParams((current) => {
       const next = new URLSearchParams(current);
@@ -76,7 +81,10 @@ export function CatalogPage() {
               Найди свою компанию<span className="brand-dot">.</span>
             </h2>
           </div>
-          <span className="section-aside">Твой спорт начинается здесь</span>
+          <Link className="button secondary catalog-create" to="/events/new">
+            Создать встречу
+            <ArrowUpRight size={18} />
+          </Link>
         </div>
         <form
           className="search-bar"
@@ -125,6 +133,22 @@ export function CatalogPage() {
             </button>
           ))}
         </div>
+        {sports.isPending && (
+          <p className="sports-feedback" role="status">
+            Загружаем виды спорта…
+          </p>
+        )}
+        {sports.isError && (
+          <div className="sports-feedback" role="alert">
+            <p>{errorMessage(sports.error)}</p>
+            <button
+              className="reset-button"
+              onClick={() => void sports.refetch()}
+            >
+              Повторить загрузку видов спорта
+            </button>
+          </div>
+        )}
         <div className="catalog-layout">
           <aside className="filters-panel">
             <details open>

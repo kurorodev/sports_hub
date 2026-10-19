@@ -3,6 +3,12 @@ import type {
   EventPreview,
   Session,
 } from "../shared/api/provisional";
+import { z } from "zod";
+import {
+  eventDraftSchema,
+  eventFieldsSchema,
+  type CreateEventInput,
+} from "../shared/api/provisional-event-schema";
 
 export const accounts: DemoAccount[] = [
   { id: "user-alex", name: "Александр", description: "Участник · USER" },
@@ -28,7 +34,7 @@ export function makeSession(accountId: string): Session | undefined {
 }
 
 // Fixed future seed; it does not silently shift dates on each page load.
-export const events: EventPreview[] = [
+const seedEvents: EventPreview[] = [
   {
     id: "morning-run",
     title: "Утро. Парк. Лёгкий бег.",
@@ -147,3 +153,106 @@ export const events: EventPreview[] = [
     viewerRegistrationStatus: null,
   },
 ];
+
+const seedOwners: Record<string, string> = {
+  "morning-run": "org-run",
+  "basketball-yard": "user-alex",
+  "tennis-sunday": "user-maria",
+  "chess-evening": "user-maria",
+  "river-run": "user-alex",
+  "basketball-training": "org-run",
+};
+const createdEventSchema = z.object({
+  id: z.string(),
+  ownerId: z.string(),
+  sport: z.object({ id: z.string(), name: z.string() }),
+  input: eventDraftSchema,
+});
+const storeSchema = z.object({
+  version: z.literal(1),
+  events: z.array(createdEventSchema),
+});
+type MockStore = z.infer<typeof storeSchema>;
+const storeKey = "dvizh.mock.events.v1";
+let memoryStore: MockStore = { version: 1, events: [] };
+
+function readStore(): MockStore {
+  if (typeof localStorage === "undefined") return memoryStore;
+  const saved = localStorage.getItem(storeKey);
+  if (!saved) return { version: 1, events: [] };
+  // Fail the request visibly instead of silently discarding a corrupt persisted demo.
+  return storeSchema.parse(JSON.parse(saved));
+}
+
+function writeStore(store: MockStore) {
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem(storeKey, JSON.stringify(store));
+  memoryStore = store;
+}
+
+export function resetMockDatabase() {
+  memoryStore = { version: 1, events: [] };
+  if (typeof localStorage !== "undefined") localStorage.removeItem(storeKey);
+}
+
+export function getEvents(viewerId?: string): EventPreview[] {
+  const created = readStore().events.map((record): EventPreview => ({
+    ...eventFieldsSchema.parse(record.input),
+    startsAt: record.input.startsAt,
+    id: record.id,
+    sport: record.sport,
+    status: "PUBLISHED",
+    organizer: {
+      name:
+        accounts.find((account) => account.id === record.ownerId)?.name ??
+        "Участник",
+      type: "USER",
+    },
+    confirmedCount: 0,
+    viewerIsOrganizer: record.ownerId === viewerId,
+    viewerRegistrationStatus: null,
+  }));
+  return [
+    ...seedEvents.map((event) => ({
+      ...event,
+      viewerIsOrganizer: seedOwners[event.id] === viewerId,
+    })),
+    ...created,
+  ];
+}
+
+export function getSports() {
+  const sports = new Map(
+    getEvents().map((event) => [event.sport.id, event.sport]),
+  );
+  return [...sports.values()];
+}
+
+function normalizeSport(name: string) {
+  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru");
+}
+
+export function saveEvent(
+  input: CreateEventInput,
+  ownerId: string,
+): EventPreview | undefined {
+  const store = readStore();
+  const sports = getSports();
+  const sport = input.sportId
+    ? sports.find((item) => item.id === input.sportId)
+    : (sports.find(
+        (item) =>
+          normalizeSport(item.name) === normalizeSport(input.customSportName!),
+      ) ?? {
+        id: `custom-${crypto.randomUUID()}`,
+        name: input.customSportName!.trim().replace(/\s+/g, " "),
+      });
+  if (!sport) return undefined;
+  const id = crypto.randomUUID();
+  // Event and custom sport are persisted together; a failed write publishes neither.
+  writeStore({
+    version: 1,
+    events: [...store.events, { id, ownerId, sport, input }],
+  });
+  return getEvents(ownerId).find((event) => event.id === id);
+}

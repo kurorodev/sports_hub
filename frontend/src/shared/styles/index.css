@@ -138,6 +138,9 @@ button:disabled {
 .skip-link:focus {
   top: 16px;
 }
+.skip-link:not(:focus) {
+  clip-path: inset(50%);
+}
 .button {
   display: inline-flex;
   align-items: center;
@@ -1284,5 +1287,192 @@ input[type="radio"] {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* S1: event creation uses the same surfaces, controls and spacing tokens. */
+.create-page {
+  padding-block: var(--space-8) var(--space-16);
+}
+.create-heading {
+  margin-bottom: var(--space-8);
+}
+.create-heading h1 {
+  margin-block: var(--space-3);
+}
+.create-heading > p {
+  color: var(--color-ink-muted);
+}
+.create-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+.event-form {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-6);
+}
+.event-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-card);
+}
+.event-form legend {
+  font-size: 20px;
+  font-weight: 800;
+  padding-inline: var(--space-2);
+}
+.event-form legend > span {
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  margin-right: var(--space-3);
+}
+.form-field {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  min-width: 0;
+}
+.form-field:last-child {
+  margin-bottom: 0;
+}
+.form-field > label {
+  font-size: 14px;
+  font-weight: 750;
+}
+.form-field input,
+.form-field select,
+.form-field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid var(--color-ink-muted);
+  border-radius: var(--radius-control);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  font: inherit;
+}
+.form-field textarea {
+  resize: vertical;
+}
+.form-field [aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+.form-field .field-error {
+  margin: 0;
+}
+.form-two-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+.form-two-columns .form-field {
+  margin-bottom: 0;
+}
+.field-hint {
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.publish-panel {
+  padding: var(--space-6);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-card);
+}
+.publish-panel > p {
+  margin-bottom: var(--space-4);
+  font-size: 14px;
+}
+.publish-panel .field-hint {
+  font-size: 12px;
+}
+.create-aside .notice h2 {
+  margin-top: var(--space-4);
+  font-size: 21px;
+}
+.create-aside .notice svg {
+  color: var(--color-warning);
+}
+.create-aside-note {
+  padding: var(--space-8) var(--space-6);
+}
+.create-aside-note > p {
+  margin-top: var(--space-4);
+  font-size: 23px;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+.creation-success {
+  padding: var(--space-6);
+  border: 1px solid var(--color-success);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-6);
+}
+.creation-success > strong {
+  color: var(--color-success);
+  font-size: 18px;
+}
+.creation-success > p {
+  margin-block: var(--space-2) var(--space-4);
+}
+.owner-label {
+  display: block;
+  color: var(--color-success);
+  font-size: 13px;
+  font-weight: 750;
+  margin-bottom: var(--space-3);
+}
+.sports-feedback {
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  margin-bottom: var(--space-5);
+}
+@media (max-width: 1023px) {
+  .create-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .create-aside {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .create-page {
+    padding-block: var(--space-5) var(--space-8);
+  }
+  .create-heading {
+    margin-bottom: var(--space-6);
+  }
+  .event-form fieldset,
+  .publish-panel {
+    padding: var(--space-5);
+  }
+  .form-two-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .event-form legend {
+    font-size: 18px;
+  }
+  .publish-panel .button {
+    width: 100%;
+  }
+  .section-heading:has(.catalog-create) {
+    align-items: start;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .sport-tab {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
