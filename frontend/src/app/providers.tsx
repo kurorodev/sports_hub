@@ -1,3 +1,6 @@
+import { createHttpModerationRepository } from "../entities/moderation/api/http-moderation-repository";
+import { ModerationRepositoryProvider } from "../entities/moderation";
+import type { ModerationRepository } from "../entities/moderation/model";
 import { createHttpOrganizationRepository } from "../entities/organization/api/http-organization-repository";
 import { OrganizationRepositoryProvider } from "../entities/organization";
 import type { OrganizationRepository } from "../entities/organization/model";
@@ -10,6 +13,21 @@ import { createHttpRegistrationRepository } from "../entities/registration/api/h
 import { RegistrationRepositoryProvider } from "../entities/registration";
 import type { RegistrationRepository } from "../entities/registration/model";
 import { request } from "../shared/api/client";
+
+const moderationRepository = createHttpModerationRepository(request);
+export function ModerationServices({
+  children,
+  repository = moderationRepository,
+}: {
+  children: ReactNode;
+  repository?: ModerationRepository;
+}) {
+  return (
+    <ModerationRepositoryProvider repository={repository}>
+      {children}
+    </ModerationRepositoryProvider>
+  );
+}
 
 const organizationRepository = createHttpOrganizationRepository(request);
 export function OrganizationServices({
@@ -67,12 +85,16 @@ export function ApplicationProviders({ children }: { children: ReactNode }) {
       }),
   );
   return (
-    <OrganizationServices>
-      <DiscussionServices>
-        <RegistrationServices>
-          <QueryClientProvider client={client}>{children}</QueryClientProvider>
-        </RegistrationServices>
-      </DiscussionServices>
-    </OrganizationServices>
+    <ModerationServices>
+      <OrganizationServices>
+        <DiscussionServices>
+          <RegistrationServices>
+            <QueryClientProvider client={client}>
+              {children}
+            </QueryClientProvider>
+          </RegistrationServices>
+        </DiscussionServices>
+      </OrganizationServices>
+    </ModerationServices>
   );
 }

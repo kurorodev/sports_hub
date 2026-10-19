@@ -58,3 +58,17 @@ export function resetMockComments() {
   memory = [];
   if (typeof localStorage !== "undefined") localStorage.removeItem(key);
 }
+
+export function hideComment(comment: CommentDto): CommentDto {
+  const updated: CommentDto = {
+    ...comment,
+    status: "HIDDEN",
+    updatedAt: new Date().toISOString(),
+  };
+  memory = getComments().map((item) =>
+    item.id === comment.id ? updated : item,
+  );
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem(key, JSON.stringify(memory));
+  return updated;
+}

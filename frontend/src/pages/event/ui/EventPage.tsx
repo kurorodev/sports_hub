@@ -1,3 +1,4 @@
+import { sessionQuery } from "../../../entities/session";
 import { EventDiscussion } from "../../../features/event-discussion";
 import { RegistrationRequests } from "../../../features/review-registrations";
 import { isUuid } from "../../../shared/lib/identifiers";
@@ -28,15 +29,26 @@ import { Participants } from "../../../entities/registration";
 export function EventPage() {
   const { eventId = "" } = useParams();
   const location = useLocation();
-  const query = useQuery(eventQuery(eventId));
+  const session = useQuery(sessionQuery);
+  const query = useQuery({
+    ...eventQuery(eventId, session.data?.user.id),
+    enabled: isUuid(eventId) && !session.isPending && !session.isError,
+  });
   if (!isUuid(eventId)) return <NotFound />;
-  if (query.isPending)
+  if (session.isError)
+    return (
+      <ErrorState error={session.error} retry={() => void session.refetch()} />
+    );
+  if (session.isPending || query.isPending)
     return (
       <section className="page-state">
         <Skeletons />
       </section>
     );
-  if (query.isError)
+  const accessLost =
+    query.error instanceof ApiError &&
+    [401, 403, 404].includes(query.error.status);
+  if (!query.data || accessLost)
     return query.error instanceof ApiError && query.error.status === 404 ? (
       <NotFound />
     ) : (
@@ -48,9 +60,24 @@ export function EventPage() {
     typeof location.state === "object" &&
     "created" in location.state &&
     location.state.created === true &&
-    event.viewerIsOrganizer;
+    event.viewerIsOrganizer &&
+    event.status === "PUBLISHED";
   return (
     <section className="detail-page">
+      {query.isError && (
+        <div className="notice" role="alert">
+          <p>
+            Не удалось обновить состояние встречи. Показаны последние полученные
+            данные, введённый текст сохранён.
+          </p>
+          <button
+            className="button secondary"
+            onClick={() => void query.refetch()}
+          >
+            Обновить состояние встречи
+          </button>
+        </div>
+      )}
       <Link to="/#activities" className="back-link">
         <ArrowLeft size={18} />
         Все активности
@@ -71,6 +98,15 @@ export function EventPage() {
         <span className="eyebrow muted">{event.sport.name} · Иллюстрация</span>
         <h1>{event.title}</h1>
       </div>
+      {event.status !== "PUBLISHED" && (
+        <div className="notice" role="status">
+          <strong>
+            Запись закрыта ·{" "}
+            {event.status === "DRAFT" ? "Черновик" : "Снято с публикации"}
+          </strong>
+          {event.moderationReason && <p>{event.moderationReason}</p>}
+        </div>
+      )}
       <div className="detail-grid">
         <div>
           <img
@@ -81,15 +117,6 @@ export function EventPage() {
             height="360"
           />
           <p className="detail-description">{event.description}</p>
-          {event.status !== "PUBLISHED" && (
-            <div className="notice" role="status">
-              <strong>
-                Запись закрыта ·{" "}
-                {event.status === "DRAFT" ? "Черновик" : "Снято с публикации"}
-              </strong>
-              {event.moderationReason && <p>{event.moderationReason}</p>}
-            </div>
-          )}
           {event.viewerIsOrganizer && event.joinMode === "APPROVAL" && (
             <RegistrationRequests
               key={`${event.id}:${event.organizer.id}`}
@@ -109,7 +136,10 @@ export function EventPage() {
         </div>
         <aside className="detail-summary">
           <h2>Встречаемся здесь</h2>
-          <JoinAction event={toEventParticipation(event, event.team)} />
+          <JoinAction
+            event={toEventParticipation(event, event.team)}
+            publicationClosed={event.status !== "PUBLISHED"}
+          />
           <p>
             <CalendarDays size={20} />
             <time dateTime={event.startsAt}>

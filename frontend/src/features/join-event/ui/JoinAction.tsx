@@ -7,7 +7,13 @@ import {
 } from "../../../entities/registration";
 import { useJoinEvent } from "./use-join-event";
 
-export function JoinAction({ event }: { event: EventParticipation }) {
+export function JoinAction({
+  event,
+  publicationClosed = false,
+}: {
+  event: EventParticipation;
+  publicationClosed?: boolean;
+}) {
   const { session, viewerId, own, mutation, join } = useJoinEvent(
     event.eventId,
     event.joinMode,
@@ -35,13 +41,15 @@ export function JoinAction({ event }: { event: EventParticipation }) {
       <div className="join-feedback">
         <p className="join-note">
           Вы организатор.{" "}
-          {event.joinMode === "OPEN"
-            ? "Участники появятся в списке ниже."
-            : "Решения по заявкам принимаете вы."}
+          {publicationClosed
+            ? "Новая запись закрыта. Существующие регистрации доступны для просмотра."
+            : event.joinMode === "OPEN"
+              ? "Участники появятся в списке ниже."
+              : "Решения по заявкам принимаете вы."}
         </p>
         {event.joinMode === "APPROVAL" && (
           <a className="button secondary full-width" href="#event-requests">
-            Рассмотреть заявки
+            {publicationClosed ? "Посмотреть заявки" : "Рассмотреть заявки"}
           </a>
         )}
       </div>
@@ -89,14 +97,16 @@ export function JoinAction({ event }: { event: EventParticipation }) {
         <div>
           <strong>{label}</strong>
           <p>
-            {own.data.status === "CONFIRMED"
-              ? event.joinMode === "APPROVAL"
-                ? "Заявка одобрена. До встречи!"
-                : "Участие подтверждено. До встречи!"
-              : own.data.status === "PENDING"
-                ? "Организатор рассмотрит заявку. До одобрения место не занято."
-                : (own.data.decisionReason ??
-                  "Текущий статус получен от организатора.")}
+            {publicationClosed
+              ? "Существующая запись сохранена. Мероприятие больше не опубликовано, новая запись закрыта."
+              : own.data.status === "CONFIRMED"
+                ? event.joinMode === "APPROVAL"
+                  ? "Заявка одобрена. До встречи!"
+                  : "Участие подтверждено. До встречи!"
+                : own.data.status === "PENDING"
+                  ? "Организатор рассмотрит заявку. До одобрения место не занято."
+                  : (own.data.decisionReason ??
+                    "Текущий статус получен от организатора.")}
           </p>
         </div>
       </div>

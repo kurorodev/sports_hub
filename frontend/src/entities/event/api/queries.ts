@@ -40,9 +40,9 @@ export const eventsQuery = (params: URLSearchParams) =>
       return request<Page<EventCardDto>>(`/events?${apiParams}`, { signal });
     },
   });
-export const eventQuery = (id: string) =>
+export const eventQuery = (id: string, viewerId?: string) =>
   queryOptions({
-    queryKey: ["events", "detail", id],
+    queryKey: ["events", "detail", id, viewerId ?? "guest"],
     enabled: isUuid(id),
     queryFn: async ({ signal }) => {
       const path = `/events/${encodeURIComponent(id)}`;
@@ -54,6 +54,7 @@ export const eventQuery = (id: string) =>
       return { ...event, team };
     },
     retry: false,
+    refetchInterval: 10000,
   });
 
 export const organizationEventsQuery = (

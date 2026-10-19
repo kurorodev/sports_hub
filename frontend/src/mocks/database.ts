@@ -1,3 +1,4 @@
+import { getModerationRecords } from "./moderation";
 import { getOrganizations } from "./organizations";
 import type {
   DemoAccount,
@@ -402,12 +403,22 @@ export function getEvents(viewerId?: string): EventPreview[] {
     })),
     ...created,
   ].map((event) => {
+    const moderation = getModerationRecords().find(
+      (item) => item.kind === "EVENT" && item.targetId === event.id,
+    );
     const records = getRegistrations(event.id);
     const confirmedCount = records.filter(
       (item) => item.status === "CONFIRMED",
     ).length;
     return {
       ...event,
+      ...(moderation
+        ? {
+            status: "UNPUBLISHED" as const,
+            moderationReason: moderation.reason,
+            updatedAt: moderation.at,
+          }
+        : {}),
       confirmedCount,
       pendingCount: records.filter((item) => item.status === "PENDING").length,
       spotsLeft:

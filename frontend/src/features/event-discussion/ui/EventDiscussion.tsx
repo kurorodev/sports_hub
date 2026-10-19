@@ -39,7 +39,10 @@ export function EventDiscussion({
       panel.current?.scrollIntoView?.({ block: "start" });
   }, [location.hash]);
   const options = commentPageQuery(repository, eventId, viewerId, page);
-  const query = useQuery(options);
+  const query = useQuery({
+    ...options,
+    enabled: !session.isPending && !session.isError,
+  });
   const onPublished = (comment: DiscussionComment) => {
     setNotice("Сообщение опубликовано.");
     void client
@@ -97,7 +100,11 @@ export function EventDiscussion({
           {query.data.comments.length === 0 ? (
             <div className="discussion-empty">
               <MessageCircle size={28} />
-              <p>Пока нет сообщений. Задайте первый вопрос.</p>
+              <p>
+                {query.data.totalCount === 0
+                  ? "Пока нет сообщений. Задайте первый вопрос."
+                  : "На этой странице нет сообщений. Вернитесь к предыдущей странице."}
+              </p>
             </div>
           ) : (
             <ol className="comment-list" aria-labelledby="discussion-heading">

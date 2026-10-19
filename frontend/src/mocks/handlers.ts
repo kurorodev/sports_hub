@@ -1,3 +1,5 @@
+import type { EventPreview, Session } from "../shared/api/types";
+import { saveModeration } from "./moderation";
 import {
   getOrganizations,
   saveOrganization,
@@ -17,7 +19,7 @@ import {
 } from "./database";
 import { apiConfig } from "../shared/api/client";
 import { createEventSchema } from "../shared/api/event-schema";
-import { getComments, saveComment } from "./comments";
+import { getComments, saveComment, hideComment } from "./comments";
 
 function json(body: unknown, init?: ResponseInit) {
   if (body && typeof body === "object" && "code" in body)
@@ -46,7 +48,203 @@ export function resetMockSession() {
 const notFound = () =>
   json({ code: "NOT_FOUND", message: "Не найдено" }, { status: 404 });
 
+function eventVisible(event: EventPreview, session?: Session) {
+  return (
+    event.status === "PUBLISHED" ||
+    event.viewerIsOrganizer ||
+    Boolean(session?.systemRoles.includes("ADMIN")) ||
+    (event.status !== "DRAFT" && Boolean(event.viewerRegistrationStatus))
+  );
+}
+const moderationSchema = z
+  .object({
+    reason: z
+      .string()
+      .min(3)
+      .max(1000)
+      .refine((value) => value.trim().length > 0),
+  })
+  .strict();
+
 export const handlers = [
+  http.get(`${api}/admin/events`, ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (!session.systemRoles.includes("ADMIN"))
+      return json(
+        { code: "FORBIDDEN", message: "Нет доступа" },
+        { status: 403 },
+      );
+    const p = new URL(request.url).searchParams;
+    const q = (p.get("q") ?? "").toLocaleLowerCase("ru");
+    const status = p.get("status");
+    if (
+      status &&
+      !["DRAFT", "PUBLISHED", "UNPUBLISHED", "DELETED"].includes(status)
+    )
+      return json(
+        { code: "VALIDATION_ERROR", message: "Неизвестный статус" },
+        { status: 400 },
+      );
+    const page = Math.max(0, Math.floor(Number(p.get("page")) || 0)),
+      size = Math.min(
+        100,
+        Math.max(1, Math.floor(Number(p.get("size")) || 20)),
+      );
+    const items = getEvents(session.user.id)
+      .filter(
+        (item) =>
+          (!status || item.status === status) &&
+          `${item.title} ${item.description}`
+            .toLocaleLowerCase("ru")
+            .includes(q),
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+          a.id.localeCompare(b.id),
+      );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.get(`${api}/admin/comments`, ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (!session.systemRoles.includes("ADMIN"))
+      return json(
+        { code: "FORBIDDEN", message: "Нет доступа" },
+        { status: 403 },
+      );
+    const p = new URL(request.url).searchParams;
+    const eventId = p.get("eventId");
+    if (eventId && !getEvents().some((item) => item.id === eventId))
+      return notFound();
+    const page = Math.max(0, Math.floor(Number(p.get("page")) || 0)),
+      size = Math.min(
+        100,
+        Math.max(1, Math.floor(Number(p.get("size")) || 20)),
+      );
+    const items = getComments()
+      .filter((item) => !eventId || item.eventId === eventId)
+      .sort(
+        (a, b) =>
+          Date.parse(a.createdAt) - Date.parse(b.createdAt) ||
+          a.id.localeCompare(b.id),
+      );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.post(
+    `${api}/admin/events/:eventId/unpublish`,
+    async ({ params, request }) => {
+      const session = makeSession(savedAccount() ?? "");
+      if (!session)
+        return json(
+          { code: "UNAUTHENTICATED", message: "Войдите" },
+          { status: 401 },
+        );
+      if (
+        !session.systemRoles.includes("ADMIN") ||
+        request.headers.get("X-CSRF-Token") !== session.csrfToken
+      )
+        return json(
+          { code: "FORBIDDEN", message: "Нет доступа" },
+          { status: 403 },
+        );
+      const parsed = moderationSchema.safeParse(
+        await request.json().catch(() => null),
+      );
+      if (!parsed.success)
+        return json(
+          {
+            code: "VALIDATION_ERROR",
+            message: "Проверьте причину",
+            details: [{ field: "reason", message: "От 3 до 1000 символов" }],
+          },
+          { status: 400 },
+        );
+      const event = getEvents(session.user.id).find(
+        (item) => item.id === params.eventId,
+      );
+      if (!event) return notFound();
+      if (event.status !== "PUBLISHED")
+        return json(
+          {
+            code: "INVALID_STATUS_TRANSITION",
+            message: "Статус уже изменился",
+          },
+          { status: 409 },
+        );
+      saveModeration("EVENT", event.id, parsed.data.reason, session.user.id);
+      return json(
+        getEvents(session.user.id).find((item) => item.id === event.id),
+      );
+    },
+  ),
+  http.post(
+    `${api}/admin/comments/:commentId/hide`,
+    async ({ params, request }) => {
+      const session = makeSession(savedAccount() ?? "");
+      if (!session)
+        return json(
+          { code: "UNAUTHENTICATED", message: "Войдите" },
+          { status: 401 },
+        );
+      if (
+        !session.systemRoles.includes("ADMIN") ||
+        request.headers.get("X-CSRF-Token") !== session.csrfToken
+      )
+        return json(
+          { code: "FORBIDDEN", message: "Нет доступа" },
+          { status: 403 },
+        );
+      const parsed = moderationSchema.safeParse(
+        await request.json().catch(() => null),
+      );
+      if (!parsed.success)
+        return json(
+          { code: "VALIDATION_ERROR", message: "Проверьте причину" },
+          { status: 400 },
+        );
+      const comment = getComments().find(
+        (item) => item.id === params.commentId,
+      );
+      if (!comment) return notFound();
+      if (comment.status !== "VISIBLE")
+        return json(
+          {
+            code: "INVALID_STATUS_TRANSITION",
+            message: "Комментарий уже скрыт",
+          },
+          { status: 409 },
+        );
+      saveModeration(
+        "COMMENT",
+        comment.id,
+        parsed.data.reason,
+        session.user.id,
+      );
+      return json(hideComment(comment));
+    },
+  ),
   http.get(`${api}/me/organizations`, () => {
     const session = makeSession(savedAccount() ?? "");
     if (!session)
@@ -503,17 +701,18 @@ export const handlers = [
     });
   }),
   http.get(`${api}/events/:eventId`, ({ params }) => {
-    const event = getEvents(makeSession(savedAccount() ?? "")?.user.id).find(
+    const session = makeSession(savedAccount() ?? "");
+    const event = getEvents(session?.user.id).find(
       (item) => item.id === params.eventId,
     );
-    return event ? json(event) : notFound();
+    return event && eventVisible(event, session) ? json(event) : notFound();
   }),
   http.get(`${api}/events/:eventId/team`, ({ params }) => {
     const session = makeSession(savedAccount() ?? "");
     const event = getEvents(session?.user.id).find(
       (item) => item.id === params.eventId,
     );
-    if (!event) return notFound();
+    if (!event || !eventVisible(event, session)) return notFound();
     const available =
       event.status === "PUBLISHED" && Date.parse(event.startsAt) > Date.now();
     const canJoin =
@@ -551,8 +750,11 @@ export const handlers = [
     return registration ? json(registration) : notFound();
   }),
   http.get(`${api}/events/:eventId/participants`, ({ params, request }) => {
-    if (!getEvents().some((event) => event.id === params.eventId))
-      return notFound();
+    const session = makeSession(savedAccount() ?? "");
+    const event = getEvents(session?.user.id).find(
+      (item) => item.id === params.eventId,
+    );
+    if (!event || !eventVisible(event, session)) return notFound();
     const p = new URL(request.url).searchParams;
     const page = Math.max(0, Math.floor(Number(p.get("page")) || 0));
     const size = Math.min(
@@ -602,15 +804,6 @@ export const handlers = [
       );
       if (!event) return notFound();
       if (
-        getRegistrations(event.id).some(
-          (item) => item.user.id === session.user.id,
-        )
-      )
-        return json(
-          { code: "ALREADY_REGISTERED", message: "Вы уже участвуете" },
-          { status: 409 },
-        );
-      if (
         event.status !== "PUBLISHED" ||
         Date.parse(event.startsAt) <= Date.now()
       )
@@ -619,6 +812,15 @@ export const handlers = [
             code: "EVENT_NOT_AVAILABLE",
             message: "Запись на эту встречу закрыта",
           },
+          { status: 409 },
+        );
+      if (
+        getRegistrations(event.id).some(
+          (item) => item.user.id === session.user.id,
+        )
+      )
+        return json(
+          { code: "ALREADY_REGISTERED", message: "Вы уже участвуете" },
           { status: 409 },
         );
       if (

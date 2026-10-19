@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import { handlers, resetMockSession } from "../mocks/handlers";
 import { setCsrfToken } from "../shared/api/client";
 import { resetMockOrganizations } from "../mocks/organizations";
+import { resetMockModeration } from "../mocks/moderation";
 import { resetMockDatabase } from "../mocks/database";
 import { resetMockComments } from "../mocks/comments";
 
@@ -17,6 +18,7 @@ afterEach(() => {
   resetMockDatabase();
   resetMockOrganizations();
   resetMockComments();
+  resetMockModeration();
   setCsrfToken();
 });
 afterAll(() => server.close());
