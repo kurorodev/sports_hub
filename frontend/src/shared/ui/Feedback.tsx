@@ -5,15 +5,17 @@ import { errorMessage } from "../api/client";
 export function ErrorState({
   error,
   retry,
+  message,
 }: {
   error: unknown;
   retry?: () => void;
+  message?: string;
 }) {
   return (
     <div className="feedback" role="alert">
       <AlertCircle size={30} />
       <h2>Не удалось загрузить данные</h2>
-      <p>{errorMessage(error)}</p>
+      <p>{message ?? errorMessage(error)}</p>
       {retry && (
         <button className="button secondary" onClick={retry}>
           Повторить

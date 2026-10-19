@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { CheckCircle2, LockKeyhole } from "lucide-react";
-import { sessionQuery } from "./api";
-import { ErrorState } from "../../shared/ui/Feedback";
+import { sessionQuery } from "../../../entities/session";
+import { ErrorState } from "../../../shared/ui/Feedback";
 
 export function WorkspacePage({ kind }: { kind: "admin" | "organization" }) {
   const query = useQuery(sessionQuery);

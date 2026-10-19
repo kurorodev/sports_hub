@@ -1,3 +1,4 @@
+import { RegistrationServices } from "../app/providers";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -5,10 +6,10 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { delay, http, HttpResponse } from "msw";
 import { server } from "./setup";
-import { createEvent } from "../features/events/api";
-import { CreateEventPage } from "../features/events/CreateEventPage";
-import { EventPage } from "../features/events/EventPage";
-import { switchAccount } from "../features/session/api";
+import { createEvent } from "../entities/event";
+import { CreateEventPage } from "../pages/create-event";
+import { EventPage } from "../pages/event";
+import { switchAccount } from "../entities/session";
 import { request, setCsrfToken } from "../shared/api/client";
 import type { EventPreview, Page, Sport } from "../shared/api/provisional";
 import type { CreateEventInput } from "../shared/api/provisional-event-schema";
@@ -34,14 +35,16 @@ function mount() {
     defaultOptions: { queries: { retry: false } },
   });
   render(
-    <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={["/events/new"]}>
-        <Routes>
-          <Route path="/events/new" element={<CreateEventPage />} />
-          <Route path="/events/:eventId" element={<EventPage />} />
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <RegistrationServices>
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={["/events/new"]}>
+          <Routes>
+            <Route path="/events/new" element={<CreateEventPage />} />
+            <Route path="/events/:eventId" element={<EventPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    </RegistrationServices>,
   );
 }
 async function fillForm() {

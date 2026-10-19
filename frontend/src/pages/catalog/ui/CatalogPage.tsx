@@ -1,3 +1,4 @@
+import { registrationPresentation } from "../../../entities/registration";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -8,10 +9,10 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { eventsQuery, sportsQuery } from "./api";
-import { EventCard } from "./EventCard";
-import { errorMessage } from "../../shared/api/client";
-import { EmptyState, ErrorState, Skeletons } from "../../shared/ui/Feedback";
+import { eventsQuery, sportsQuery } from "../../../entities/event";
+import { EventCard } from "../../../entities/event";
+import { errorMessage } from "../../../shared/api/client";
+import { EmptyState, ErrorState, Skeletons } from "../../../shared/ui/Feedback";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -279,7 +280,17 @@ export function CatalogPage() {
               <>
                 <div className="event-grid">
                   {query.data.items.map((event) => (
-                    <EventCard event={event} key={event.id} />
+                    <EventCard
+                      event={event}
+                      key={event.id}
+                      participation={
+                        event.viewerRegistrationStatus
+                          ? registrationPresentation[
+                              event.viewerRegistrationStatus
+                            ]
+                          : undefined
+                      }
+                    />
                   ))}
                 </div>
                 <nav className="pagination" aria-label="Страницы каталога">

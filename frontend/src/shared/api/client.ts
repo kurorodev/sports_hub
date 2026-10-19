@@ -44,7 +44,13 @@ export async function request<T>(
       credentials: "include",
     });
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError")
+    if (
+      init.signal?.aborted ||
+      (error &&
+        typeof error === "object" &&
+        "name" in error &&
+        error.name === "AbortError")
+    )
       throw error;
     throw new ApiError(0);
   }
@@ -56,6 +62,8 @@ export async function request<T>(
   }
   return response.json() as Promise<T>;
 }
+
+export type HttpClient = typeof request;
 
 export function errorMessage(error: unknown): string {
   if (!(error instanceof ApiError))

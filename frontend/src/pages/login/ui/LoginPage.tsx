@@ -4,9 +4,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, Check, UserRound } from "lucide-react";
-import { apiConfig, errorMessage, setCsrfToken } from "../../shared/api/client";
-import { ErrorState } from "../../shared/ui/Feedback";
-import { demoAccountsQuery, sessionQuery, switchAccount } from "./api";
+import {
+  apiConfig,
+  errorMessage,
+  setCsrfToken,
+} from "../../../shared/api/client";
+import { ErrorState } from "../../../shared/ui/Feedback";
+import {
+  demoAccountsQuery,
+  sessionQuery,
+  switchAccount,
+} from "../../../entities/session";
 
 const schema = z.object({
   accountId: z.string().min(1, "Выберите демо-аккаунт"),
@@ -29,7 +37,15 @@ export function LoginPage() {
       client.clear();
       setCsrfToken(session.csrfToken);
       client.setQueryData(sessionQuery.queryKey, session);
-      navigate(params.get("next") === "create-event" ? "/events/new" : "/", {
+      const eventId = params.get("eventId") ?? "";
+      const destination =
+        params.get("next") === "create-event"
+          ? "/events/new"
+          : params.get("next") === "join-event" &&
+              /^[\w-]{1,100}$/.test(eventId)
+            ? `/events/${encodeURIComponent(eventId)}`
+            : "/";
+      navigate(destination, {
         replace: true,
       });
     },

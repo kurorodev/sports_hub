@@ -33,7 +33,21 @@ export interface EventPreview {
   confirmedCount: number;
   capacity: number;
   viewerIsOrganizer: boolean;
-  viewerRegistrationStatus: null;
+  viewerRegistrationStatus: Registration["status"] | null;
+  /** Temporary server-provided availability (publication/time), pending OpenAPI review. */
+  registrationOpen: boolean;
+}
+/** S3 mock DTOs; response shapes and participant visibility await OpenAPI review. */
+export interface Registration {
+  id: string;
+  eventId: string;
+  user: { id: string; name: string };
+  status: "CONFIRMED";
+  createdAt: string;
+}
+export interface EventParticipant {
+  user: Registration["user"];
+  joinedAt: string;
 }
 export interface Page<T> {
   items: T[];

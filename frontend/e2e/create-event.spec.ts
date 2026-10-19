@@ -54,7 +54,9 @@ for (const width of [375, 768, 1440]) {
     expect((await posted).status()).toBe(201);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     await expect(page.getByText("Встреча опубликована")).toBeVisible();
-    await expect(page.getByText("Вы организатор")).toBeVisible();
+    await expect(
+      page.getByText("Вы организатор", { exact: true }),
+    ).toBeVisible();
     await expect(page.locator("time")).toContainText("18:30");
     const detailUrl = page.url();
     await page.reload();
@@ -70,7 +72,9 @@ for (const width of [375, 768, 1440]) {
     ).toBeVisible();
     await page.getByRole("heading", { name: title }).getByRole("link").click();
     await expect(page).toHaveURL(detailUrl);
-    await expect(page.getByText("Вы организатор")).toHaveCount(0);
+    await expect(page.getByText("Вы организатор", { exact: true })).toHaveCount(
+      0,
+    );
     await expect(page.getByText("Встреча опубликована")).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     expect(

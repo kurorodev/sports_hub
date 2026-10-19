@@ -2,6 +2,7 @@ import type {
   DemoAccount,
   EventPreview,
   Session,
+  Registration,
 } from "../shared/api/provisional";
 import { z } from "zod";
 import {
@@ -34,7 +35,7 @@ export function makeSession(accountId: string): Session | undefined {
 }
 
 // Fixed future seed; it does not silently shift dates on each page load.
-const seedEvents: EventPreview[] = [
+const seedEvents: Omit<EventPreview, "registrationOpen">[] = [
   {
     id: "morning-run",
     title: "Утро. Парк. Лёгкий бег.",
@@ -176,6 +177,85 @@ type MockStore = z.infer<typeof storeSchema>;
 const storeKey = "dvizh.mock.events.v1";
 let memoryStore: MockStore = { version: 1, events: [] };
 
+const registrationSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  user: z.object({ id: z.string(), name: z.string() }),
+  status: z.literal("CONFIRMED"),
+  createdAt: z.iso.datetime({ offset: true }),
+});
+const registrationStoreSchema = z.object({
+  version: z.literal(1),
+  items: z.array(registrationSchema),
+});
+const registrationKey = "dvizh.mock.registrations.v1";
+let memoryRegistrations: Registration[] = [];
+// Each seeded count corresponds to actual synthetic demo participants, never a separate counter.
+const participantNames = [
+  "Анастасия",
+  "Илья",
+  "Виктория",
+  "Дмитрий",
+  "Анна",
+  "Михаил",
+  "Елена",
+  "Артём",
+  "София",
+  "Никита",
+];
+const seedRegistrations: Registration[] = seedEvents.flatMap((event) =>
+  Array.from({ length: event.confirmedCount }, (_, index) => ({
+    id: `seed-${event.id}-${index}`,
+    eventId: event.id,
+    user: {
+      id: `demo-${event.id}-${index}`,
+      name: participantNames[index % participantNames.length],
+    },
+    status: "CONFIRMED",
+    createdAt: "2026-10-01T12:00:00+03:00",
+  })),
+);
+
+export function getRegistrations(eventId?: string): Registration[] {
+  const saved =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem(registrationKey)
+      : null;
+  const items =
+    typeof localStorage === "undefined"
+      ? memoryRegistrations
+      : saved
+        ? registrationStoreSchema.parse(JSON.parse(saved)).items
+        : [];
+  return [...seedRegistrations, ...items].filter(
+    (registration) => !eventId || registration.eventId === eventId,
+  );
+}
+
+export function saveRegistration(
+  eventId: string,
+  user: Session["user"],
+): Registration {
+  const registration: Registration = {
+    id: crypto.randomUUID(),
+    eventId,
+    user,
+    status: "CONFIRMED",
+    createdAt: new Date().toISOString(),
+  };
+  const items = [
+    ...getRegistrations().filter((item) => !item.id.startsWith("seed-")),
+    registration,
+  ];
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem(
+      registrationKey,
+      JSON.stringify({ version: 1, items }),
+    );
+  memoryRegistrations = items;
+  return registration;
+}
+
 function readStore(): MockStore {
   if (typeof localStorage === "undefined") return memoryStore;
   const saved = localStorage.getItem(storeKey);
@@ -193,32 +273,50 @@ function writeStore(store: MockStore) {
 export function resetMockDatabase() {
   memoryStore = { version: 1, events: [] };
   if (typeof localStorage !== "undefined") localStorage.removeItem(storeKey);
+  memoryRegistrations = [];
+  if (typeof localStorage !== "undefined")
+    localStorage.removeItem(registrationKey);
 }
 
 export function getEvents(viewerId?: string): EventPreview[] {
-  const created = readStore().events.map((record): EventPreview => ({
-    ...eventFieldsSchema.parse(record.input),
-    startsAt: record.input.startsAt,
-    id: record.id,
-    sport: record.sport,
-    status: "PUBLISHED",
-    organizer: {
-      name:
-        accounts.find((account) => account.id === record.ownerId)?.name ??
-        "Участник",
-      type: "USER",
-    },
-    confirmedCount: 0,
-    viewerIsOrganizer: record.ownerId === viewerId,
-    viewerRegistrationStatus: null,
-  }));
+  const created = readStore().events.map(
+    (record): Omit<EventPreview, "registrationOpen"> => ({
+      ...eventFieldsSchema.parse(record.input),
+      startsAt: record.input.startsAt,
+      id: record.id,
+      sport: record.sport,
+      status: "PUBLISHED",
+      organizer: {
+        name:
+          accounts.find((account) => account.id === record.ownerId)?.name ??
+          "Участник",
+        type: "USER",
+      },
+      confirmedCount: 0,
+      viewerIsOrganizer: record.ownerId === viewerId,
+      viewerRegistrationStatus: null,
+    }),
+  );
+  const registrations = getRegistrations();
   return [
     ...seedEvents.map((event) => ({
       ...event,
       viewerIsOrganizer: seedOwners[event.id] === viewerId,
     })),
     ...created,
-  ];
+  ].map((event) => {
+    const confirmed = registrations.filter(
+      (item) => item.eventId === event.id && item.status === "CONFIRMED",
+    );
+    return {
+      ...event,
+      confirmedCount: confirmed.length,
+      registrationOpen:
+        event.status === "PUBLISHED" && Date.parse(event.startsAt) > Date.now(),
+      viewerRegistrationStatus:
+        confirmed.find((item) => item.user.id === viewerId)?.status ?? null,
+    };
+  });
 }
 
 export function getSports() {

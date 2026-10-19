@@ -1,10 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Layout } from "./Layout";
-import { CatalogPage } from "../features/events/CatalogPage";
-import { EventPage } from "../features/events/EventPage";
-import { CreateEventPage } from "../features/events/CreateEventPage";
-import { LoginPage } from "../features/session/LoginPage";
-import { WorkspacePage } from "../features/session/WorkspacePage";
+import { CatalogPage } from "../pages/catalog";
+import { EventPage } from "../pages/event";
+import { CreateEventPage } from "../pages/create-event";
+import { LoginPage } from "../pages/login";
+import { WorkspacePage } from "../pages/workspace";
 import { NotFound } from "../shared/ui/Feedback";
 import { RouteError } from "./RouteError";
 export const router = createBrowserRouter([

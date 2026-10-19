@@ -7,10 +7,16 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { EventPreview } from "../../shared/api/provisional";
-import { eventDate, sportArt } from "./presentation";
+import type { EventPreview } from "../../../shared/api/provisional";
+import { eventDate, sportArt } from "../lib/presentation";
 
-export function EventCard({ event }: { event: EventPreview }) {
+export function EventCard({
+  event,
+  participation,
+}: {
+  event: EventPreview;
+  participation?: { label: string; tone: string };
+}) {
   const places = event.capacity - event.confirmedCount;
   const OrganizerIcon =
     event.organizer.type === "ORGANIZATION" ? Building2 : UserRound;
@@ -35,6 +41,11 @@ export function EventCard({ event }: { event: EventPreview }) {
             {event.joinMode === "OPEN" ? "Свободная запись" : "По заявке"}
           </span>
         </div>
+        {participation && (
+          <span className={`card-registration ${participation.tone}`}>
+            {participation.label}
+          </span>
+        )}
         <h3>
           <Link to={`/events/${event.id}`}>
             {event.title}

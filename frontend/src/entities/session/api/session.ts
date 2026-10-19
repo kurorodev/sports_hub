@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import { ApiError, request, setCsrfToken } from "../../shared/api/client";
-import type { DemoAccount, Session } from "../../shared/api/provisional";
+import { ApiError, request, setCsrfToken } from "../../../shared/api/client";
+import type { DemoAccount, Session } from "../../../shared/api/provisional";
 
 export const sessionQuery = queryOptions({
   queryKey: ["session"],

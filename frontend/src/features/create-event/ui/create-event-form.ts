@@ -3,7 +3,7 @@ import {
   eventFieldsSchema,
   createEventSchema,
   type CreateEventInput,
-} from "../../shared/api/provisional-event-schema";
+} from "../../../shared/api/provisional-event-schema";
 
 export const customSportValue = "__custom__";
 export const timezoneOffsets = Array.from(

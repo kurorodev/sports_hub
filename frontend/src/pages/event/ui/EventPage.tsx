@@ -1,3 +1,4 @@
+import { toEventParticipation } from "../../../entities/event";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
@@ -8,10 +9,12 @@ import {
   Gauge,
   Building2,
 } from "lucide-react";
-import { ApiError } from "../../shared/api/client";
-import { ErrorState, NotFound, Skeletons } from "../../shared/ui/Feedback";
-import { eventQuery } from "./api";
-import { eventDate, sportArt } from "./presentation";
+import { ApiError } from "../../../shared/api/client";
+import { ErrorState, NotFound, Skeletons } from "../../../shared/ui/Feedback";
+import { eventQuery } from "../../../entities/event";
+import { eventDate, sportArt } from "../../../entities/event";
+import { JoinAction } from "../../../features/join-event";
+import { Participants } from "../../../entities/registration";
 
 export function EventPage() {
   const { eventId = "" } = useParams();
@@ -51,6 +54,13 @@ export function EventPage() {
           </Link>
         </div>
       )}
+      <div className="detail-title">
+        {event.viewerIsOrganizer && (
+          <span className="owner-label">Вы организатор</span>
+        )}
+        <span className="eyebrow muted">{event.sport.name} · Иллюстрация</span>
+        <h1>{event.title}</h1>
+      </div>
       <div className="detail-grid">
         <div>
           <img
@@ -60,26 +70,12 @@ export function EventPage() {
             width="600"
             height="360"
           />
-          <div className="detail-title">
-            {event.viewerIsOrganizer && (
-              <span className="owner-label">Вы организатор</span>
-            )}
-            <span className="eyebrow muted">
-              {event.sport.name} · Иллюстрация
-            </span>
-            <h1>{event.title}</h1>
-            <p>{event.description}</p>
-          </div>
-          <div className="notice">
-            <strong>Запись пока недоступна</strong>
-            <p>
-              Сейчас можно посмотреть информацию о встрече. Возможность
-              присоединиться и задать вопрос появится позже.
-            </p>
-          </div>
+          <p className="detail-description">{event.description}</p>
+          <Participants eventId={event.id} />
         </div>
         <aside className="detail-summary">
           <h2>Встречаемся здесь</h2>
+          <JoinAction event={toEventParticipation(event)} />
           <p>
             <CalendarDays size={20} />
             <time dateTime={event.startsAt}>

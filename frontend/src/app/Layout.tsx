@@ -3,7 +3,7 @@ import { ArrowUpRight, UserRound } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "../shared/ui/Brand";
 import { apiConfig } from "../shared/api/client";
-import { sessionQuery } from "../features/session/api";
+import { sessionQuery } from "../entities/session";
 
 export function Layout() {
   const session = useQuery(sessionQuery);

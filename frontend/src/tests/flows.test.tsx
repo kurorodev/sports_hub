@@ -5,11 +5,11 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "./setup";
-import { CatalogPage } from "../features/events/CatalogPage";
-import { WorkspacePage } from "../features/session/WorkspacePage";
-import { sessionQuery, switchAccount } from "../features/session/api";
+import { CatalogPage } from "../pages/catalog";
+import { WorkspacePage } from "../pages/workspace";
+import { sessionQuery, switchAccount } from "../entities/session";
 import { ApiError, request, setCsrfToken } from "../shared/api/client";
-import { eventDate } from "../features/events/presentation";
+import { eventDate } from "../entities/event";
 import type { Page, EventPreview } from "../shared/api/provisional";
 
 function mount(ui: React.ReactNode, path = "/") {

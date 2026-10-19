@@ -1,7 +1,11 @@
 import { queryOptions } from "@tanstack/react-query";
-import { request } from "../../shared/api/client";
-import type { EventPreview, Page, Sport } from "../../shared/api/provisional";
-import type { CreateEventInput } from "../../shared/api/provisional-event-schema";
+import { request } from "../../../shared/api/client";
+import type {
+  EventPreview,
+  Page,
+  Sport,
+} from "../../../shared/api/provisional";
+import type { CreateEventInput } from "../../../shared/api/provisional-event-schema";
 
 export const sportsQuery = queryOptions({
   queryKey: ["sports"],

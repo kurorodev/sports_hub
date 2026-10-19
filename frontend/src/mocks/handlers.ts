@@ -5,6 +5,8 @@ import {
   getSports,
   makeSession,
   saveEvent,
+  getRegistrations,
+  saveRegistration,
 } from "./database";
 import { apiConfig } from "../shared/api/client";
 import { createEventSchema } from "../shared/api/provisional-event-schema";
@@ -141,5 +143,101 @@ export const handlers = [
       (item) => item.id === params.eventId,
     );
     return event ? HttpResponse.json(event) : notFound();
+  }),
+  http.get(`${api}/events/:eventId/my-registration`, ({ params }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return HttpResponse.json(
+        { code: "UNAUTHORIZED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (!getEvents().some((event) => event.id === params.eventId))
+      return notFound();
+    const registration = getRegistrations(String(params.eventId)).find(
+      (item) => item.user.id === session.user.id,
+    );
+    return registration ? HttpResponse.json(registration) : notFound();
+  }),
+  http.get(`${api}/events/:eventId/participants`, ({ params, request }) => {
+    if (!getEvents().some((event) => event.id === params.eventId))
+      return notFound();
+    const p = new URL(request.url).searchParams;
+    const page = Math.max(0, Math.floor(Number(p.get("page")) || 0));
+    const size = Math.min(
+      50,
+      Math.max(1, Math.floor(Number(p.get("size")) || 12)),
+    );
+    const items = getRegistrations(String(params.eventId))
+      .filter((item) => item.status === "CONFIRMED")
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+      .map((item) => ({ user: item.user, joinedAt: item.createdAt }));
+    return HttpResponse.json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+    });
+  }),
+  http.post(`${api}/events/:eventId/registrations`, ({ params, request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return HttpResponse.json(
+        { code: "UNAUTHORIZED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+      return HttpResponse.json(
+        { code: "FORBIDDEN", message: "Обновите сессию" },
+        { status: 403 },
+      );
+    const event = getEvents(session.user.id).find(
+      (item) => item.id === params.eventId,
+    );
+    if (!event) return notFound();
+    if (
+      getRegistrations(event.id).some(
+        (item) => item.user.id === session.user.id,
+      )
+    )
+      return HttpResponse.json(
+        { code: "ALREADY_REGISTERED", message: "Вы уже участвуете" },
+        { status: 409 },
+      );
+    if (event.viewerIsOrganizer)
+      return HttpResponse.json(
+        {
+          code: "ORGANIZER_CANNOT_JOIN",
+          message: "Вы организатор этой встречи",
+        },
+        { status: 403 },
+      );
+    if (
+      event.status !== "PUBLISHED" ||
+      Date.parse(event.startsAt) <= Date.now()
+    )
+      return HttpResponse.json(
+        {
+          code: "EVENT_NOT_AVAILABLE",
+          message: "Запись на эту встречу закрыта",
+        },
+        { status: 409 },
+      );
+    if (event.joinMode !== "OPEN")
+      return HttpResponse.json(
+        {
+          code: "REGISTRATION_MODE_UNAVAILABLE",
+          message: "Запись по заявке пока недоступна",
+        },
+        { status: 501 },
+      );
+    if (event.confirmedCount >= event.capacity)
+      return HttpResponse.json(
+        { code: "EVENT_FULL", message: "Все места уже заняты" },
+        { status: 409 },
+      );
+    // Validation + append run synchronously in this mock context, including duplicate/capacity checks.
+    return HttpResponse.json(saveRegistration(event.id, session.user), {
+      status: 201,
+    });
   }),
 ];
