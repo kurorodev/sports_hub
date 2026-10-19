@@ -31,6 +31,27 @@ class GeoapifyProviderTest {
         var location=provider.reverse(53.196,50.102);assertThat(location.latitude()).isEqualTo(53.196);assertThat(location.longitude()).isEqualTo(50.102);
         reply(200,"{\"results\":[]}");assertThat(provider.reverse(53.196,50.102)).isNull();
     }
+    @Test void trimsConfiguredKeyAndDoesNotCallProviderWithoutKey() throws Exception {
+        reply(200,"{\"results\":[]}");
+        new GeoapifyProvider("  test-secret  ",new ObjectMapper(),http).suggest("Самара",null,5);
+        var request=ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http,times(2)).send(request.capture(),org.mockito.ArgumentMatchers.<HttpResponse.BodyHandler<String>>any());
+        assertThat(request.getValue().uri().getRawQuery()).contains("apiKey=test-secret").doesNotContain("apiKey=+");
+        clearInvocations(http);
+        assertThatThrownBy(()->new GeoapifyProvider("  ",new ObjectMapper(),http).reverse(53,50))
+            .isInstanceOfSatisfying(Problem.class,e->assertThat(e.status).isEqualTo(503));
+        verifyNoInteractions(http);
+    }
+    @Test @SuppressWarnings("unchecked") void emptyAutocompleteFallsBackToFullAddressSearch() throws Exception {
+        reply(200,"{\"results\":[{\"city\":\"Самара\",\"address_line1\":\"Чапаевская улица\",\"lat\":53.19,\"lon\":50.1}]}");
+        HttpResponse<String> empty=mock(HttpResponse.class);
+        when(empty.statusCode()).thenReturn(200);when(empty.body()).thenReturn("{\"results\":[]}");
+        when(http.send(any(HttpRequest.class),org.mockito.ArgumentMatchers.<HttpResponse.BodyHandler<String>>any())).thenReturn(empty,response);
+        assertThat(provider.suggest("Чапаевская","Самара",5)).singleElement().satisfies(item->assertThat(item.address()).isEqualTo("Чапаевская улица"));
+        var requests=ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http,times(2)).send(requests.capture(),org.mockito.ArgumentMatchers.<HttpResponse.BodyHandler<String>>any());
+        assertThat(requests.getAllValues()).extracting(r->r.uri().getPath()).containsExactly("/v1/geocode/autocomplete","/v1/geocode/search");
+    }
     @Test void providerFailuresAre503WithoutSecrets() throws Exception {
         for(int status:new int[]{429,502,503}) {
             reply(status,"{\"message\":\"test-secret\"}");

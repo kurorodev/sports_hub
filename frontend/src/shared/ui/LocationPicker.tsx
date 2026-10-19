@@ -15,7 +15,7 @@ export function LocationPicker({
   idPrefix = "event",
   addressLabel = "Место встречи",
   cityLabel = "Город",
-  preserveAddressOnPoint = false,
+  preserveAddressOnPoint = true,
   unmappedHint = "Без точки событие пока не появится на карте.",
 }: {
   value: Location;
@@ -244,7 +244,11 @@ export function LocationPicker({
         <button
           type="button"
           className="button secondary"
-          onClick={() => setMapOpen((v) => !v)}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            setOpen(false);
+            setMapOpen((v) => !v);
+          }}
         >
           {mapOpen ? "Скрыть карту" : "Указать на карте"}
         </button>

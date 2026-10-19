@@ -10,16 +10,19 @@ async function login(page: Page) {
   await expect(page).toHaveURL("/");
 }
 async function manualPoint(page: Page) {
+  await page.getByLabel("Город", { exact: true }).fill("Самара");
+  const address = page.getByRole("combobox", {
+    name: /Место встречи|Адрес площадки/,
+  });
+  await address.fill("площадь Куйбышева · точка для проверки");
   await page.getByRole("button", { name: "Указать на карте" }).click();
   await page.locator(".location-picker .map-canvas").click();
   // This suite runs with the provider disabled; only geocoding degrades, Java stays real.
   await expect(
     page.getByText(/Поиск адресов недоступен. Заполните город/),
   ).toBeVisible();
-  await page.getByLabel("Город", { exact: true }).fill("Самара");
-  await page
-    .getByRole("combobox", { name: /Место встречи|Адрес площадки/ })
-    .fill("площадь Куйбышева · точка для проверки");
+  await expect(page.getByLabel("Город", { exact: true })).toHaveValue("Самара");
+  await expect(address).toHaveValue("площадь Куйбышева · точка для проверки");
   await page.getByRole("button", { name: "Подтвердить адрес точки" }).click();
 }
 test.beforeEach(async ({ page }) => {

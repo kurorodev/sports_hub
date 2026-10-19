@@ -51,6 +51,64 @@ function setup(initial?: Location) {
   );
 }
 describe("location picker", () => {
+  it("keeps the entered address and selected point when reverse geocoding is unavailable", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("/api/v1/geo/reverse", () =>
+        HttpResponse.json({ code: "SERVICE_UNAVAILABLE" }, { status: 503 }),
+      ),
+    );
+    setup({ city: "Самара", address: "Парк, спортивная площадка" });
+    await user.click(screen.getByRole("button", { name: "Указать на карте" }));
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Выбрать точку тестовой карты",
+      }),
+    );
+    await screen.findByText(/Поиск адресов недоступен/);
+    expect(screen.getByLabelText("Город")).toHaveValue("Самара");
+    expect(screen.getByRole("combobox")).toHaveValue(
+      "Парк, спортивная площадка",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Подтвердить адрес точки" }),
+    );
+    expect(JSON.parse(screen.getByTestId("location").textContent!)).toEqual({
+      city: "Самара",
+      address: "Парк, спортивная площадка",
+      latitude: 53.195561,
+      longitude: 50.101022,
+    });
+  });
+  it("fills the address from reverse geocoding while keeping the exact selected coordinates", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("/api/v1/geo/reverse", () =>
+        HttpResponse.json({
+          location: {
+            city: "Самара",
+            address: "площадь Куйбышева",
+            latitude: 53.19,
+            longitude: 50.1,
+          },
+        }),
+      ),
+    );
+    setup({ city: "Старый город", address: "Старый адрес" });
+    await user.click(screen.getByRole("button", { name: "Указать на карте" }));
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Выбрать точку тестовой карты",
+      }),
+    );
+    await screen.findByText("Адрес точки найден");
+    expect(JSON.parse(screen.getByTestId("location").textContent!)).toEqual({
+      city: "Самара",
+      address: "площадь Куйбышева",
+      latitude: 53.195561,
+      longitude: 50.101022,
+    });
+  });
   it("debounces suggestions, selects with keyboard, preserves coordinates, clears them after text edits", async () => {
     const user = userEvent.setup();
     let calls = 0;
@@ -112,7 +170,9 @@ describe("location picker", () => {
     setup();
     await user.click(screen.getByRole("button", { name: "Указать на карте" }));
     await user.click(
-      screen.getByRole("button", { name: "Выбрать точку тестовой карты" }),
+      await screen.findByRole("button", {
+        name: "Выбрать точку тестовой карты",
+      }),
     );
     fireEvent.change(screen.getByLabelText("Город"), {
       target: { value: "Новый город" },
@@ -131,7 +191,9 @@ describe("location picker", () => {
       ),
     );
     await user.click(
-      screen.getByRole("button", { name: "Выбрать точку тестовой карты" }),
+      await screen.findByRole("button", {
+        name: "Выбрать точку тестовой карты",
+      }),
     );
     await screen.findByText(/Адрес не найден/);
     expect(screen.getByTestId("location")).toHaveTextContent(
