@@ -2,7 +2,20 @@
 
 Дата: 19 октября 2026.
 
-## Подтверждённый результат
+## Актуальная проверка регистрации · feature/demo-registration-20261019
+
+- H2/MockMvc: **43/43**; полный профиль PostgreSQL/Testcontainers: **76/76**, без ошибок и пропусков. Проверены конкурентная регистрация, сессии/CSRF, повторный вход и более 100 аккаунтов.
+- OpenAPI и ресурсы синхронны: **58 операций**. Generated-типы frontend обновлены, `api:check` и TypeScript проходят.
+- Обновлённый backend запущен локально с существующей PostgreSQL. Расширенный HTTP smoke регистрации, S1–S6, очереди и чатов успешен.
+- Новый POST `/api/v1/demo/accounts` готов; UI регистрации, публичного профиля и вывода условий остаётся frontend-задачей.
+- Chromium по сетевому IP подтвердил HttpOnly-cookie, восстановление после reload, CSRF и отсутствие смены сессии при 409. После перезапуска backend профиль нового пользователя сохранён в PostgreSQL, повторный вход успешен. Браузерная регрессия S1/S3 на 375/768/1440 px: **3/3**.
+- Логи: `/tmp/sports-hub-signup-build.log`, `/tmp/sports-hub-signup-postgres.log`, `/tmp/sports-hub-signup-smoke.log`.
+
+## Исторические результаты исходной поставки
+
+Следующие разделы сохранены как история; текущие числа и состояние приведены выше.
+
+### Подтверждённый результат
 
 - **Полная сборка успешна:** `mvn -o -B -ntp verify`, итог **BUILD SUCCESS**, **23 теста, 0 ошибок, 0 падений, 0 пропусков**. Лог: `verify-latest.log` в рабочей копии. Создан исполняемый `backend/target/sport-hub-backend-1.0.0.jar`, структура BOOT-INF и Spring Boot JarLauncher проверены.
 - **PostgreSQL и backend запущены пользователем через Docker Compose.** `startup.log` подтверждает сборку runtime-образа, PostgreSQL `Healthy` и backend `Started`.
