@@ -48,11 +48,23 @@ export function JoinAction({
               ? "Участники появятся в списке ниже."
               : "Решения по заявкам принимаете вы."}
         </p>
-        {event.joinMode === "APPROVAL" && (
-          <a className="button secondary full-width" href="#event-requests">
-            {publicationClosed ? "Посмотреть заявки" : "Рассмотреть заявки"}
-          </a>
-        )}
+        {event.joinMode === "APPROVAL" &&
+          (event.pendingParticipants > 0 ? (
+            <a
+              className={`button ${publicationClosed ? "secondary" : "primary"} full-width`}
+              href="#event-requests"
+            >
+              {publicationClosed ? "Посмотреть заявки" : "Рассмотреть заявки"}
+            </a>
+          ) : (
+            <button
+              type="button"
+              className="button requests-empty-action full-width"
+              disabled
+            >
+              Новых заявок нет
+            </button>
+          ))}
       </div>
     );
   if (!viewerId && !event.openForRegistration)

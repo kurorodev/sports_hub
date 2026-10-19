@@ -197,6 +197,50 @@ describe("S4 API", () => {
 });
 
 describe("S4 UI", () => {
+  it("disables the summary action with no pending requests, including after both decisions", async () => {
+    const e = await event();
+    await login("user-maria");
+    const approved = await apply(e.id);
+    await login("admin");
+    const rejected = await apply(e.id);
+    await login();
+    await decide(e.id, approved.id);
+    await decide(e.id, rejected.id, "REJECT");
+    mount(e.id);
+    expect(
+      await screen.findByRole("button", { name: "Новых заявок нет" }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("link", { name: "Рассмотреть заявки" }),
+    ).not.toBeInTheDocument();
+    await userEvent.selectOptions(
+      screen.getByLabelText("Статус заявок"),
+      "CONFIRMED",
+    );
+    expect(
+      await screen.findByRole("listitem", { name: "Заявка: Мария" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Новых заявок нет" }),
+    ).toBeDisabled();
+  });
+  it("enables the summary action when a new application arrives on refresh", async () => {
+    const e = await event();
+    const client = mount(e.id);
+    expect(
+      await screen.findByRole("button", { name: "Новых заявок нет" }),
+    ).toBeDisabled();
+    await login("user-maria");
+    await apply(e.id);
+    await login();
+    await client.invalidateQueries({ queryKey: ["events"] });
+    expect(
+      await screen.findByRole("link", { name: "Рассмотреть заявки" }),
+    ).toHaveAttribute("href", "#event-requests");
+    expect(
+      screen.queryByRole("button", { name: "Новых заявок нет" }),
+    ).not.toBeInTheDocument();
+  });
   it("submits an application, waits for the API, and shows no confirmed participant", async () => {
     const e = await event();
     await login("user-maria");
@@ -222,6 +266,9 @@ describe("S4 UI", () => {
     await login();
     mount(e.id);
     const row = await screen.findByRole("listitem", { name: "Заявка: Мария" });
+    expect(
+      screen.getByRole("link", { name: "Рассмотреть заявки" }),
+    ).toHaveAttribute("href", "#event-requests");
     const reject = within(row).getByRole("button", { name: "Отклонить" });
     await userEvent.click(reject);
     const reason = screen.getByLabelText("Причина отказа (необязательно)");
@@ -243,6 +290,9 @@ describe("S4 UI", () => {
     expect(
       await screen.findByText(/Мария: отклонено. Решение сохранено/),
     ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Новых заявок нет" }),
+    ).toBeDisabled();
     await userEvent.selectOptions(
       screen.getByLabelText("Статус заявок"),
       "REJECTED",

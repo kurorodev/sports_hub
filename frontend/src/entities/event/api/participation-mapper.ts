@@ -11,6 +11,7 @@ export function toEventParticipation(
     openForRegistration: team.joinAvailable || team.waitlistAvailable,
     participantLimit: dto.maxParticipants ?? null,
     confirmedParticipants: dto.confirmedCount,
+    pendingParticipants: team.pendingCount,
     joinMode: dto.joinMode,
   };
 }

@@ -5,5 +5,6 @@ export interface EventParticipation {
   openForRegistration: boolean;
   participantLimit: number | null;
   confirmedParticipants: number;
+  pendingParticipants: number;
   joinMode: "OPEN" | "APPROVAL";
 }
