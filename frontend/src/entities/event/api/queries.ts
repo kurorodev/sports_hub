@@ -55,3 +55,19 @@ export const eventQuery = (id: string) =>
     },
     retry: false,
   });
+
+export const organizationEventsQuery = (
+  id: string,
+  page: number,
+  viewerId?: string,
+) =>
+  queryOptions({
+    queryKey: ["events", "organization", id, viewerId ?? "guest", page],
+    enabled: isUuid(id),
+    queryFn: ({ signal }) =>
+      request<Page<EventCardDto>>(
+        `/organizations/${encodeURIComponent(id)}/events?page=${page}&size=6`,
+        { signal },
+      ),
+    retry: false,
+  });

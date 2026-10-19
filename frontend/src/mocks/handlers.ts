@@ -1,3 +1,8 @@
+import {
+  getOrganizations,
+  saveOrganization,
+  decideOrganization,
+} from "./organizations";
 import { z } from "zod";
 import { http, HttpResponse } from "msw";
 import {
@@ -42,6 +47,235 @@ const notFound = () =>
   json({ code: "NOT_FOUND", message: "Не найдено" }, { status: 404 });
 
 export const handlers = [
+  http.get(`${api}/me/organizations`, () => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    return json(
+      getOrganizations().filter(
+        (item) => item.createdBy.id === session.user.id,
+      ),
+    );
+  }),
+  http.get(`${api}/organizations`, ({ request }) => {
+    const p = new URL(request.url).searchParams;
+    const q = (p.get("q") ?? "").toLocaleLowerCase("ru");
+    const page = Math.max(0, Math.floor(Number(p.get("page")) || 0));
+    const size = Math.min(
+      100,
+      Math.max(1, Math.floor(Number(p.get("size")) || 20)),
+    );
+    const items = getOrganizations()
+      .filter(
+        (item) =>
+          item.status === "APPROVED" &&
+          `${item.name} ${item.description}`
+            .toLocaleLowerCase("ru")
+            .includes(q),
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+          a.id.localeCompare(b.id),
+      );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.get(`${api}/admin/organizations`, ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (!session.systemRoles.includes("ADMIN"))
+      return json(
+        { code: "FORBIDDEN", message: "Нет доступа" },
+        { status: 403 },
+      );
+    const p = new URL(request.url).searchParams;
+    const q = (p.get("q") ?? "").toLocaleLowerCase("ru");
+    const status = p.get("status");
+    const page = Math.max(0, Math.floor(Number(p.get("page")) || 0));
+    const size = Math.min(
+      100,
+      Math.max(1, Math.floor(Number(p.get("size")) || 20)),
+    );
+    if (status && !["PENDING", "APPROVED", "REJECTED"].includes(status))
+      return json(
+        { code: "VALIDATION_ERROR", message: "Неизвестный статус" },
+        { status: 400 },
+      );
+    const items = getOrganizations()
+      .filter(
+        (item) =>
+          (!status || item.status === status) &&
+          `${item.name} ${item.description}`
+            .toLocaleLowerCase("ru")
+            .includes(q),
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+          a.id.localeCompare(b.id),
+      );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.get(`${api}/organizations/:organizationId`, ({ params }) => {
+    const session = makeSession(savedAccount() ?? "");
+    const org = getOrganizations().find(
+      (item) => item.id === params.organizationId,
+    );
+    return org &&
+      (org.status === "APPROVED" ||
+        org.createdBy.id === session?.user.id ||
+        session?.systemRoles.includes("ADMIN"))
+      ? json(org)
+      : notFound();
+  }),
+  http.get(
+    `${api}/organizations/:organizationId/events`,
+    ({ params, request }) => {
+      const session = makeSession(savedAccount() ?? "");
+      const org = getOrganizations().find(
+        (item) => item.id === params.organizationId,
+      );
+      if (
+        !org ||
+        (org.status !== "APPROVED" &&
+          org.createdBy.id !== session?.user.id &&
+          !session?.systemRoles.includes("ADMIN"))
+      )
+        return notFound();
+      const p = new URL(request.url).searchParams;
+      const page = Math.max(0, Math.floor(Number(p.get("page")) || 0));
+      const size = Math.min(
+        100,
+        Math.max(1, Math.floor(Number(p.get("size")) || 20)),
+      );
+      const privileged =
+        org.createdBy.id === session?.user.id ||
+        session?.systemRoles.includes("ADMIN");
+      const items = getEvents(session?.user.id)
+        .filter(
+          (item) =>
+            item.organizer.type === "ORGANIZATION" &&
+            item.organizer.id === org.id &&
+            (privileged || item.status === "PUBLISHED"),
+        )
+        .sort(
+          (a, b) =>
+            Date.parse(a.startsAt) - Date.parse(b.startsAt) ||
+            a.id.localeCompare(b.id),
+        );
+      return json({
+        items: items.slice(page * size, (page + 1) * size),
+        page,
+        size,
+        total: items.length,
+        totalPages: Math.ceil(items.length / size),
+      });
+    },
+  ),
+  http.post(`${api}/organizations`, async ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+      return json(
+        { code: "FORBIDDEN", message: "Сессия изменилась" },
+        { status: 403 },
+      );
+    const parsed = z
+      .object({
+        name: z.string().trim().min(2).max(160),
+        description: z.string().trim().min(10).max(2000),
+        sports: z.array(z.string().uuid()).optional(),
+        avatarUrl: z.url().nullable().optional(),
+      })
+      .strict()
+      .safeParse(await request.json().catch(() => null));
+    if (!parsed.success)
+      return json(
+        { code: "VALIDATION_ERROR", message: "Проверьте заявку" },
+        { status: 400 },
+      );
+    if (
+      parsed.data.sports?.some(
+        (id) => !getSports().some((sport) => sport.id === id),
+      )
+    )
+      return notFound();
+    return json(saveOrganization(parsed.data, session.user), { status: 201 });
+  }),
+  http.post(
+    `${api}/admin/organizations/:organizationId/decision`,
+    async ({ params, request }) => {
+      const session = makeSession(savedAccount() ?? "");
+      if (!session)
+        return json(
+          { code: "UNAUTHENTICATED", message: "Войдите" },
+          { status: 401 },
+        );
+      if (
+        !session.systemRoles.includes("ADMIN") ||
+        request.headers.get("X-CSRF-Token") !== session.csrfToken
+      )
+        return json(
+          { code: "FORBIDDEN", message: "Нет доступа" },
+          { status: 403 },
+        );
+      const parsed = z
+        .object({
+          decision: z.enum(["APPROVE", "REJECT"]),
+          reason: z.string().min(3).max(1000).nullable().optional(),
+        })
+        .strict()
+        .safeParse(await request.json().catch(() => null));
+      if (
+        !parsed.success ||
+        (parsed.data.decision === "REJECT" &&
+          (!parsed.data.reason || parsed.data.reason.trim().length < 3))
+      )
+        return json(
+          { code: "VALIDATION_ERROR", message: "Укажите причину отказа" },
+          { status: 400 },
+        );
+      const org = getOrganizations().find(
+        (item) => item.id === params.organizationId,
+      );
+      if (!org) return notFound();
+      if (org.status !== "PENDING")
+        return json(
+          {
+            code: "INVALID_STATUS_TRANSITION",
+            message: "Заявка уже рассмотрена",
+          },
+          { status: 409 },
+        );
+      return json(
+        decideOrganization(org, parsed.data.decision, parsed.data.reason),
+      );
+    },
+  ),
+
   http.get(`${api}/events/:eventId/comments`, ({ params, request }) => {
     const session = makeSession(savedAccount() ?? "");
     const event = getEvents(session?.user.id).find(
@@ -186,16 +420,32 @@ export const handlers = [
       );
     }
     if (
-      parsed.data.organizer.type !== "USER" ||
+      parsed.data.organizer.type === "USER" &&
       parsed.data.organizer.id !== session.user.id
     )
       return json(
-        {
-          code: "FORBIDDEN",
-          message: "Недостаточно прав для публикации от этого организатора",
-        },
+        { code: "FORBIDDEN", message: "Нет доступа к организатору" },
         { status: 403 },
       );
+    if (parsed.data.organizer.type === "ORGANIZATION") {
+      const org = getOrganizations().find(
+        (item) => item.id === parsed.data.organizer.id,
+      );
+      if (!org) return notFound();
+      if (org.createdBy.id !== session.user.id)
+        return json(
+          { code: "FORBIDDEN", message: "Вы не представитель организации" },
+          { status: 403 },
+        );
+      if (org.status !== "APPROVED")
+        return json(
+          {
+            code: "ORGANIZATION_NOT_APPROVED",
+            message: "Организация ещё не допущена",
+          },
+          { status: 403 },
+        );
+    }
     const event = saveEvent(parsed.data, session.user.id);
     if (!event)
       return json(

@@ -69,7 +69,13 @@ export function EventCard({
         </p>
         <div className="event-organizer">
           <OrganizerIcon size={16} />
-          <span>{event.organizer.name}</span>
+          {event.organizer.type === "ORGANIZATION" ? (
+            <Link to={`/organizations/${event.organizer.id}`}>
+              {event.organizer.name}
+            </Link>
+          ) : (
+            <span>{event.organizer.name}</span>
+          )}
         </div>
         <div className="card-bottom">
           <span className={places > 0 ? "places" : "places full"}>

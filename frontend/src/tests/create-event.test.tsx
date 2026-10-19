@@ -1,4 +1,8 @@
-import { RegistrationServices, DiscussionServices } from "../app/providers";
+import {
+  RegistrationServices,
+  DiscussionServices,
+  OrganizationServices,
+} from "../app/providers";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -38,16 +42,18 @@ function mount() {
   });
   render(
     <RegistrationServices>
-      <DiscussionServices>
-        <QueryClientProvider client={client}>
-          <MemoryRouter initialEntries={["/events/new"]}>
-            <Routes>
-              <Route path="/events/new" element={<CreateEventPage />} />
-              <Route path="/events/:eventId" element={<EventPage />} />
-            </Routes>
-          </MemoryRouter>
-        </QueryClientProvider>
-      </DiscussionServices>
+      <OrganizationServices>
+        <DiscussionServices>
+          <QueryClientProvider client={client}>
+            <MemoryRouter initialEntries={["/events/new"]}>
+              <Routes>
+                <Route path="/events/new" element={<CreateEventPage />} />
+                <Route path="/events/:eventId" element={<EventPage />} />
+              </Routes>
+            </MemoryRouter>
+          </QueryClientProvider>
+        </DiscussionServices>
+      </OrganizationServices>
     </RegistrationServices>,
   );
 }

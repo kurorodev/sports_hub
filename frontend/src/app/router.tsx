@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+import { OrganizationsPage, OrganizationPage } from "../pages/organizations";
 import { Layout } from "./Layout";
 import { CatalogPage } from "../pages/catalog";
 import { EventPage } from "../pages/event";
@@ -16,6 +17,8 @@ export const router = createBrowserRouter([
       { path: "/events/new", element: <CreateEventPage /> },
       { path: "/events/:eventId", element: <EventPage /> },
       { path: "/login", element: <LoginPage /> },
+      { path: "/organizations", element: <OrganizationsPage /> },
+      { path: "/organizations/:organizationId", element: <OrganizationPage /> },
       { path: "/organization", element: <WorkspacePage kind="organization" /> },
       { path: "/admin", element: <WorkspacePage kind="admin" /> },
       { path: "*", element: <NotFound /> },

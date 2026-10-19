@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll } from "vitest";
 import { setupServer } from "msw/node";
 import { handlers, resetMockSession } from "../mocks/handlers";
 import { setCsrfToken } from "../shared/api/client";
+import { resetMockOrganizations } from "../mocks/organizations";
 import { resetMockDatabase } from "../mocks/database";
 import { resetMockComments } from "../mocks/comments";
 
@@ -14,6 +15,7 @@ afterEach(() => {
   server.resetHandlers();
   resetMockSession();
   resetMockDatabase();
+  resetMockOrganizations();
   resetMockComments();
   setCsrfToken();
 });

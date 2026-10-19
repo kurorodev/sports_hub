@@ -134,7 +134,13 @@ export function EventPage() {
           </p>
           <p>
             <Building2 size={20} />
-            {event.organizer.name}
+            {event.organizer.type === "ORGANIZATION" ? (
+              <Link to={`/organizations/${event.organizer.id}`}>
+                {event.organizer.name}
+              </Link>
+            ) : (
+              event.organizer.name
+            )}
           </p>
           <div className="detail-condition">
             {event.joinMode === "OPEN"

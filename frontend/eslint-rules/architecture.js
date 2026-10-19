@@ -79,7 +79,7 @@ export const boundaries = {
         });
       }
       if (
-        /^entities\/(registration|comment)\/api\/http-[^/]+-repository/.test(
+        /^entities\/(registration|comment|organization)\/api\/http-[^/]+-repository/.test(
           to.relative,
         ) &&
         from.layer !== "app" &&

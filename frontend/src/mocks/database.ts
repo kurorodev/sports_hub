@@ -1,3 +1,4 @@
+import { getOrganizations } from "./organizations";
 import type {
   DemoAccount,
   EventPreview,
@@ -59,6 +60,12 @@ export const accounts: DemoAccount[] = [
 export function makeSession(accountId: string): Session | undefined {
   const account = accounts.find((item) => item.id === accountId);
   if (!account) return undefined;
+  const manageable = getOrganizations()
+    .filter(
+      (item) =>
+        item.createdBy.id === mockId(accountId) && item.status === "APPROVED",
+    )
+    .map((item) => item.id);
   return {
     user: {
       ...mockUser(account.id, account.label),
@@ -66,9 +73,11 @@ export function makeSession(accountId: string): Session | undefined {
       sportsPreferences: [],
       createdAt: "2026-10-01T12:00:00Z",
     },
-    systemRoles: account.systemRoles,
-    manageableOrganizationIds:
-      accountId === "org-run" ? [mockId("org-temp")] : [],
+    systemRoles: [
+      ...account.systemRoles.filter((role) => role !== "ORGANIZATION"),
+      ...(manageable.length ? ["ORGANIZATION" as const] : []),
+    ],
+    manageableOrganizationIds: manageable,
     csrfToken: `mock-csrf-${accountId}`,
     demo: true,
   };
@@ -216,7 +225,13 @@ const seedEvents: EventPreview[] = seedData.map((event) => ({
   ...event,
   id: mockId(event.id),
   sport: { ...event.sport, id: mockId(event.sport.id), isCustom: false },
-  organizer: { ...event.organizer, id: mockId(seedOwners[event.id]) },
+  organizer: {
+    ...event.organizer,
+    id:
+      event.organizer.type === "ORGANIZATION"
+        ? mockId("org-temp")
+        : mockId(seedOwners[event.id]),
+  },
   pendingCount: 0,
   spotsLeft: event.maxParticipants - event.confirmedCount,
   createdAt: "2026-10-01T12:00:00Z",
@@ -355,11 +370,15 @@ export function getEvents(viewerId?: string): EventPreview[] {
     eventKind: record.input.eventKind ?? "ACTIVITY",
     status: record.input.publishNow === false ? "DRAFT" : "PUBLISHED",
     organizer: {
-      id: record.ownerId,
-      type: "USER",
+      id: record.input.organizer.id,
+      type: record.input.organizer.type,
       name:
-        accounts.find((account) => mockId(account.id) === record.ownerId)
-          ?.label ?? "Участник",
+        record.input.organizer.type === "ORGANIZATION"
+          ? (getOrganizations().find(
+              (item) => item.id === record.input.organizer.id,
+            )?.name ?? "Организация")
+          : (accounts.find((account) => mockId(account.id) === record.ownerId)
+              ?.label ?? "Участник"),
     },
     confirmedCount: 0,
     pendingCount: 0,
@@ -371,7 +390,15 @@ export function getEvents(viewerId?: string): EventPreview[] {
   return [
     ...seedEvents.map((event) => ({
       ...event,
-      viewerIsOrganizer: event.organizer.id === viewerId,
+      viewerIsOrganizer:
+        event.organizer.type === "ORGANIZATION"
+          ? getOrganizations().some(
+              (item) =>
+                item.id === event.organizer.id &&
+                item.createdBy.id === viewerId &&
+                item.status === "APPROVED",
+            )
+          : event.organizer.id === viewerId,
     })),
     ...created,
   ].map((event) => {

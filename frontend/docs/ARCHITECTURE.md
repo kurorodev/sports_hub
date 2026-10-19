@@ -1,6 +1,6 @@
 # Архитектура frontend
 
-Статус: постепенный переход к Clean Architecture с принципами Feature-Sliced Design. Сценарии S3 OPEN, S4 APPROVAL и публикация комментария S5 уже разделены на чистое ядро, адаптеры и React. Остальные экраны приведены к слоям FSD, но создание события и сессия пока используют прежний query/service-подход. Весь проект ещё не считается полностью переведённым на Clean Architecture.
+Статус: постепенный переход к Clean Architecture с принципами Feature-Sliced Design. Сценарии S3 OPEN, S4 APPROVAL, публикация комментария S5 и создание/решение заявки S2 уже разделены на чистое ядро, адаптеры и React. Остальные экраны приведены к слоям FSD, но создание события и сессия пока используют прежний query/service-подход. Весь проект ещё не считается полностью переведённым на Clean Architecture.
 
 ## Структура и направление зависимостей
 
@@ -115,3 +115,13 @@ URL, сетевые пути, CSRF/cookie transport, mock persistence и виз�
 `CommentRepository` имеет list/publish. HTTP-реализация выбирается в `app/providers.tsx` и внедряется через DiscussionServices; без provider нет скрытого fallback. Runtime Zod guards сверены с generated Comment/PagedComments. Ошибки HTTP преобразуются в CommentFailure, Abort сохраняется отменой. Чистый publishComment проверяет длину текста и соответствие ответа событию/автору/тексту/видимости; сервер остаётся источником прав и статуса.
 
 EventDiscussion управляет серверной пагинацией, polling и invalidation; PublishCommentForm связывает RHF/Zod с use case и блокировкой повторной отправки. ViewerId включён в query key, поскольку администратор может получать скрытые сообщения. Поздний ответ предыдущего аккаунта не очищает ввод и не объявляет успех в новой сессии. MSW перехватывает тот же транспорт и хранит данные в `dvizh.mock.comments.v1`; отдельный production mock repository не добавлен. ESLint запрещает импорт конкретного адаптера из feature; негативный тест проверяет эту границу.
+
+## S2: организация и право публикации
+
+`entities/organization/model` содержит независимые Organization / OrganizationApplication / OrganizationDecision и OrganizationRepository. В модели используется representative/submittedAt, DTO — createdBy/createdAt; адаптер проверяет generated типы через runtime Zod guards и преобразует поля/ошибки. Конкретный HTTP-адаптер внедряется OrganizationServices в app; он не экспортируется через публичный UI barrel, архитектурный lint запрещает его импорт из feature.
+
+`features/organization-application` объединяет чистый applyOrganization, RHF/Zod-форму и собственные заявки. `features/review-organizations` — чистый reviewOrganization, фильтры/пагинацию административного списка и форму обязательного отказа. Use cases проверяют поля и соответствие серверного результата запросу; решения, права и статусы устанавливает Java. Guard viewerId не даёт поздней мутации объявить успех в другом аккаунте. MyOrganizations сверяет полученный допуск с Session и при расхождении перечитывает сессию, а не создаёт роль на клиенте.
+
+`pages/workspace` проверяет вход/ADMIN и собирает соответствующие features. `pages/organizations` собирает публичные данные организации и EventCard; сущности organization/event не импортируют друг друга. Запрос мероприятий организации находится в API event, DTO остаётся PagedEvents. `pages/create-event` загружает доступные организации и передаёт форму; feature создания преобразует явный выбор в контрактный OrganizerRef. Подмена organizationId не даёт обхода Java-проверки.
+
+MSW использует те же endpoints и отдельное хранилище `dvizh.mock.organizations.v1`. В mock Session допуск также вычисляется по сохранённым APPROVED-заявкам, а события хранят настоящий organizationId отдельно от id представителя. Публичные/личные/admin query keys включают viewerId для изоляции данных. Страница организации ждёт восстановления Session перед чтением: ответы для автора/ADMIN не сохраняются под гостевым ключом при старте приложения. Старые личные события v2 остаются совместимы.

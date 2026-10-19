@@ -20,15 +20,20 @@ import {
 export function CreateEventForm({
   sports,
   session,
+  organizations = [],
+  initialOrganizationId,
 }: {
   sports: Sport[];
   session: Session;
+  organizations?: { id: string; name: string }[];
+  initialOrganizationId?: string;
 }) {
   const navigate = useNavigate();
   const client = useQueryClient();
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
+      organizerChoice: initialOrganizationId ?? "__personal__",
       title: "",
       description: "",
       sportChoice: "",
@@ -46,8 +51,15 @@ export function CreateEventForm({
   const sportChoice = useWatch({ control: form.control, name: "sportChoice" });
   const joinMode = useWatch({ control: form.control, name: "joinMode" });
   const mutation = useMutation({
-    mutationFn: (values: EventFormValues) =>
-      createEvent(toEventInput(values, session.user.id)),
+    mutationFn: (values: EventFormValues) => {
+      if (
+        values.organizerChoice !== "__personal__" &&
+        (!session.manageableOrganizationIds.includes(values.organizerChoice) ||
+          !organizations.some((item) => item.id === values.organizerChoice))
+      )
+        throw new ApiError(403);
+      return createEvent(toEventInput(values, session.user.id));
+    },
     onSuccess: async (event) => {
       // A late response must not open a previous account's result after switching sessions.
       if (
@@ -63,7 +75,7 @@ export function CreateEventForm({
     onError: (error) => {
       if (
         error instanceof ApiError &&
-        error.status === 422 &&
+        [400, 422].includes(error.status) &&
         error.body?.details
       ) {
         const entries = error.body.details.map(
@@ -352,16 +364,31 @@ export function CreateEventForm({
             </FormField>
           </fieldset>
           <div className="publish-panel">
+            <FormField
+              id="event-organizer"
+              label="Организатор встречи"
+              error={errors.organizerChoice?.message}
+            >
+              <select
+                id="event-organizer"
+                {...form.register("organizerChoice")}
+                disabled={mutation.isPending}
+                aria-invalid={Boolean(errors.organizerChoice)}
+              >
+                <option value="__personal__">
+                  Лично: {session.user.displayName}
+                </option>
+                {organizations.map((organization) => (
+                  <option key={organization.id} value={organization.id}>
+                    Организация: {organization.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
             <p>
-              Личная встреча от имени{" "}
-              <strong>{session.user.displayName}</strong>. После публикации её
-              увидят другие пользователи.
+              После публикации встречу увидят другие пользователи. Организации
+              публикуют встречи после допуска, без повторного согласования.
             </p>
-            {session.manageableOrganizationIds.length > 0 && (
-              <p className="field-hint">
-                Публикация от имени организации пока недоступна.
-              </p>
-            )}
             {mutation.isError && (
               <p className="field-error" role="alert">
                 {errorMessage(mutation.error)} Данные формы сохранены, можно

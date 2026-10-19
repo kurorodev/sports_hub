@@ -39,13 +39,15 @@ export function LoginPage() {
       client.setQueryData(sessionQuery.queryKey, session);
       const eventId = params.get("eventId") ?? "";
       const destination =
-        params.get("next") === "create-event"
-          ? "/events/new"
-          : ["join-event", "event-discussion"].includes(
-                params.get("next") ?? "",
-              ) && /^[\w-]{1,100}$/.test(eventId)
-            ? `/events/${encodeURIComponent(eventId)}${params.get("next") === "event-discussion" ? "#event-discussion" : ""}`
-            : "/";
+        params.get("next") === "organization"
+          ? "/organization"
+          : params.get("next") === "create-event"
+            ? "/events/new"
+            : ["join-event", "event-discussion"].includes(
+                  params.get("next") ?? "",
+                ) && /^[\w-]{1,100}$/.test(eventId)
+              ? `/events/${encodeURIComponent(eventId)}${params.get("next") === "event-discussion" ? "#event-discussion" : ""}`
+              : "/";
       navigate(destination, {
         replace: true,
       });

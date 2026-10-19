@@ -14,3 +14,5 @@ export {
   eventTimezone,
 } from "./lib/presentation";
 export { EventCard } from "./ui/EventCard";
+
+export { organizationEventsQuery } from "./api/queries";

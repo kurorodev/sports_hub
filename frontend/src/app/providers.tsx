@@ -1,3 +1,6 @@
+import { createHttpOrganizationRepository } from "../entities/organization/api/http-organization-repository";
+import { OrganizationRepositoryProvider } from "../entities/organization";
+import type { OrganizationRepository } from "../entities/organization/model";
 import { createHttpCommentRepository } from "../entities/comment/api/http-comment-repository";
 import { CommentRepositoryProvider } from "../entities/comment";
 import type { CommentRepository } from "../entities/comment/model";
@@ -7,6 +10,21 @@ import { createHttpRegistrationRepository } from "../entities/registration/api/h
 import { RegistrationRepositoryProvider } from "../entities/registration";
 import type { RegistrationRepository } from "../entities/registration/model";
 import { request } from "../shared/api/client";
+
+const organizationRepository = createHttpOrganizationRepository(request);
+export function OrganizationServices({
+  children,
+  repository = organizationRepository,
+}: {
+  children: ReactNode;
+  repository?: OrganizationRepository;
+}) {
+  return (
+    <OrganizationRepositoryProvider repository={repository}>
+      {children}
+    </OrganizationRepositoryProvider>
+  );
+}
 
 const commentRepository = createHttpCommentRepository(request);
 
@@ -49,10 +67,12 @@ export function ApplicationProviders({ children }: { children: ReactNode }) {
       }),
   );
   return (
-    <DiscussionServices>
-      <RegistrationServices>
-        <QueryClientProvider client={client}>{children}</QueryClientProvider>
-      </RegistrationServices>
-    </DiscussionServices>
+    <OrganizationServices>
+      <DiscussionServices>
+        <RegistrationServices>
+          <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        </RegistrationServices>
+      </DiscussionServices>
+    </OrganizationServices>
   );
 }

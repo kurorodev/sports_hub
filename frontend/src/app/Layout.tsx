@@ -28,8 +28,8 @@ export function Layout() {
               Активности
             </NavLink>
             <NavLink to="/events/new">Создать</NavLink>
-            <a href="/#how-it-works">Как это работает</a>
-            {session.data?.manageableOrganizationIds.length ? (
+            <NavLink to="/organizations">Организации</NavLink>
+            {session.data ? (
               <NavLink to="/organization">Организация</NavLink>
             ) : null}
             {session.data?.systemRoles.includes("ADMIN") && (

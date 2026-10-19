@@ -18,3 +18,9 @@ export type Page<T> = Omit<Schemas["PagedEvents"], "items"> & { items: T[] };
 
 export type CommentDto = Schemas["Comment"];
 export type CommentCreate = Schemas["CommentCreate"];
+
+export type OrganizationDto = Schemas["Organization"];
+export type OrganizationCreate = Schemas["OrganizationCreate"];
+export type OrganizationDecisionRequest =
+  Schemas["OrganizationDecisionRequest"];
+export type PagedOrganizationsDto = Schemas["PagedOrganizations"];

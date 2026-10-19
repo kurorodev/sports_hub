@@ -14,6 +14,7 @@ export const timezoneOffsets = Array.from(
 export const eventFormSchema = eventFieldsSchema
   .omit({ maxParticipants: true })
   .extend({
+    organizerChoice: z.string().min(1, "Выберите организатора"),
     capacity: eventFieldsSchema.shape.maxParticipants,
     sportChoice: z.string().min(1, "Выберите вид спорта"),
     customSportName: z.string(),
@@ -58,7 +59,10 @@ export function toEventInput(
     eventKind: values.eventKind,
     joinMode: values.joinMode,
     maxParticipants: values.capacity,
-    organizer: { type: "USER", id: organizerId },
+    organizer:
+      values.organizerChoice === "__personal__"
+        ? { type: "USER", id: organizerId }
+        : { type: "ORGANIZATION", id: values.organizerChoice },
     publishNow: true,
     startsAt: `${values.date}T${values.time}:00${values.timezoneOffset}`,
     sport:
