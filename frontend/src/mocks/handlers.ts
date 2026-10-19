@@ -1,3 +1,5 @@
+import { profilePatchSchema } from "../entities/profile/api/mappers";
+import { saveProfile } from "./profiles";
 import type { EventPreview, Session } from "../shared/api/types";
 import { saveModeration } from "./moderation";
 import {
@@ -9,6 +11,7 @@ import { z } from "zod";
 import { http, HttpResponse } from "msw";
 import {
   accounts,
+  mockProfiles,
   getEvents,
   getSports,
   makeSession,
@@ -564,6 +567,63 @@ export const handlers = [
     return json(saveComment(event.id, session.user, parsed.data.text), {
       status: 201,
     });
+  }),
+  http.get(`${api}/me/profile`, () => {
+    const session = makeSession(savedAccount() ?? "");
+    return session
+      ? json(session.user)
+      : json({ code: "UNAUTHENTICATED", message: "Войдите" }, { status: 401 });
+  }),
+  http.get(`${api}/users/:userId`, ({ params }) => {
+    const profile = mockProfiles().find((item) => item.id === params.userId);
+    return profile ? json(profile) : notFound();
+  }),
+  http.patch(`${api}/me/profile`, async ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+      return json(
+        { code: "FORBIDDEN", message: "Сессия изменилась" },
+        { status: 403 },
+      );
+    const parsed = profilePatchSchema.safeParse(
+      await request.json().catch(() => null),
+    );
+    if (!parsed.success)
+      return json(
+        { code: "VALIDATION_ERROR", message: "Проверьте поля профиля" },
+        { status: 400 },
+      );
+    const patch = parsed.data;
+    if (
+      patch.nickname &&
+      mockProfiles().some(
+        (item) =>
+          item.id !== session.user.id &&
+          item.nickname.toLowerCase() === patch.nickname!.trim().toLowerCase(),
+      )
+    )
+      return json(
+        { code: "CONFLICT", message: "Никнейм уже занят" },
+        { status: 409 },
+      );
+    if (
+      patch.sportsPreferences?.some(
+        (item) => !getSports().some((sport) => sport.id === item.sportId),
+      )
+    )
+      return notFound();
+    const normalized = Object.fromEntries(
+      Object.entries(patch).map(([field, value]) => [
+        field,
+        typeof value === "string" ? value.trim() : value,
+      ]),
+    );
+    return json(saveProfile({ ...session.user, ...normalized }));
   }),
   http.get(`${api}/demo/accounts`, () => json(accounts)),
   http.post(`${api}/demo/session`, async ({ request }) => {

@@ -1,3 +1,4 @@
+import { savedProfile, refreshMockUser } from "./profiles";
 import { getModerationRecords } from "./moderation";
 import { getOrganizations } from "./organizations";
 import type {
@@ -7,6 +8,7 @@ import type {
   Registration,
   PublicUser,
   Sport,
+  UserProfileDto,
 } from "../shared/api/types";
 import { z } from "zod";
 import {
@@ -68,7 +70,7 @@ export function makeSession(accountId: string): Session | undefined {
     )
     .map((item) => item.id);
   return {
-    user: {
+    user: savedProfile(mockId(account.id)) ?? {
       ...mockUser(account.id, account.label),
       sportsRoles: account.sportsRoles,
       sportsPreferences: [],
@@ -327,7 +329,9 @@ export function getRegistrations(eventId?: string): Registration[] {
     ...new Map(
       [...seedRegistrations, ...records].map((item) => [item.id, item]),
     ).values(),
-  ].filter((item) => !eventId || item.eventId === eventId);
+  ]
+    .filter((item) => !eventId || item.eventId === eventId)
+    .map((item) => ({ ...item, user: refreshMockUser(item.user) }));
 }
 export function saveRegistration(
   eventId: string,
@@ -412,6 +416,15 @@ export function getEvents(viewerId?: string): EventPreview[] {
     ).length;
     return {
       ...event,
+      organizer:
+        event.organizer.type === "USER"
+          ? {
+              ...event.organizer,
+              name:
+                savedProfile(event.organizer.id)?.displayName ??
+                event.organizer.name,
+            }
+          : event.organizer,
       ...(moderation
         ? {
             status: "UNPUBLISHED" as const,
@@ -499,4 +512,26 @@ export function decideRegistration(
     localStorage.setItem(registrationKey, JSON.stringify(records));
   memoryRegistrations = records;
   return updated;
+}
+
+export function mockProfiles(): UserProfileDto[] {
+  const users = [
+    ...accounts.map((account) => ({
+      ...mockUser(account.id, account.label),
+      sportsRoles: account.sportsRoles,
+    })),
+    ...getRegistrations().map((item) => item.user),
+  ];
+  return [
+    ...new Map(
+      users.map((user) => [
+        user.id,
+        savedProfile(user.id) ?? {
+          ...user,
+          sportsPreferences: [],
+          createdAt: "2026-10-01T12:00:00Z",
+        },
+      ]),
+    ).values(),
+  ];
 }

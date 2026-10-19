@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { BadgeCheck } from "lucide-react";
 import type { DiscussionComment } from "../model";
 export function CommentCard({
@@ -21,7 +22,11 @@ export function CommentCard({
       aria-label={`Сообщение: ${comment.author.displayName}`}
     >
       <header className="comment-heading">
-        <strong>{comment.author.displayName}</strong>
+        <strong>
+          <Link className="person-link" to={`/users/${comment.author.id}`}>
+            {comment.author.displayName}
+          </Link>
+        </strong>
         {organizerUserId === comment.author.id && (
           <span className="comment-organizer">
             <BadgeCheck size={16} />

@@ -38,3 +38,6 @@ export type PagedOrganizationsDto = Schemas["PagedOrganizations"];
 export type ModerationRequest = Schemas["ModerationRequest"];
 export type PagedEventDetailsDto = Schemas["PagedEventDetails"];
 export type PagedCommentsDto = Schemas["PagedComments"];
+
+export type UserProfileDto = Schemas["UserProfile"];
+export type ProfilePatchDto = Schemas["ProfilePatch"];

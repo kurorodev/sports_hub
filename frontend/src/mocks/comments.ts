@@ -1,3 +1,4 @@
+import { refreshMockUser } from "./profiles";
 import { z } from "zod";
 import type { CommentDto, PublicUser } from "../shared/api/types";
 
@@ -26,7 +27,9 @@ let memory: CommentDto[] = [];
 export function getComments(): CommentDto[] {
   const saved =
     typeof localStorage === "undefined" ? null : localStorage.getItem(key);
-  return saved === null ? memory : schema.parse(JSON.parse(saved));
+  return (saved === null ? memory : schema.parse(JSON.parse(saved))).map(
+    (item) => ({ ...item, author: refreshMockUser(item.author) }),
+  );
 }
 export function saveComment(
   eventId: string,
