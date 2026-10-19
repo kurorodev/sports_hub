@@ -2,7 +2,8 @@ import { sessionQuery } from "../../../entities/session";
 import { EventDiscussion } from "../../../features/event-discussion";
 import { RegistrationRequests } from "../../../features/review-registrations";
 import { isUuid } from "../../../shared/lib/identifiers";
-import { toEventParticipation } from "../../../entities/event";
+import { toEventParticipation, EventLocation } from "../../../entities/event";
+import { safeMapReturn } from "../../../shared/lib/activity-navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
@@ -29,6 +30,7 @@ import { Participants } from "../../../entities/registration";
 export function EventPage() {
   const { eventId = "" } = useParams();
   const location = useLocation();
+  const mapReturn = safeMapReturn(location.state);
   const session = useQuery(sessionQuery);
   const query = useQuery({
     ...eventQuery(eventId, session.data?.user.id),
@@ -78,9 +80,9 @@ export function EventPage() {
           </button>
         </div>
       )}
-      <Link to="/#activities" className="back-link">
+      <Link to={mapReturn ?? "/#activities"} className="back-link">
         <ArrowLeft size={18} />
-        Все активности
+        {mapReturn ? "Назад к карте" : "Все активности"}
       </Link>
       {created && (
         <div className="creation-success" role="status">
@@ -117,6 +119,11 @@ export function EventPage() {
             height="360"
           />
           <p className="detail-description">{event.description}</p>
+          <EventLocation
+            location={event.location}
+            eventId={event.id}
+            mapReturn={mapReturn}
+          />
           {event.viewerIsOrganizer && event.joinMode === "APPROVAL" && (
             <RegistrationRequests
               key={`${event.id}:${event.organizer.id}`}

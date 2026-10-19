@@ -18,6 +18,7 @@ export function useJoinEvent(eventId: string, joinMode: "OPEN" | "APPROVAL") {
     if (!ownStatus) return;
     // A polled decision changes public participants and the event's server counts too.
     void client.invalidateQueries({ queryKey: ["events"] });
+    void client.invalidateQueries({ queryKey: ["map", "events"] });
     void client.invalidateQueries({
       queryKey: [...registrationKeys.event(eventId), "participants"],
     });
@@ -25,6 +26,7 @@ export function useJoinEvent(eventId: string, joinMode: "OPEN" | "APPROVAL") {
   const refresh = (targetEventId: string) =>
     Promise.all([
       client.invalidateQueries({ queryKey: ["events"] }),
+      client.invalidateQueries({ queryKey: ["map", "events"] }),
       client.invalidateQueries({
         queryKey: registrationKeys.event(targetEventId),
       }),

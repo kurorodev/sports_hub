@@ -1,6 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useMapParams } from "./use-map-params";
+import { MapPin, ArrowUpRight, X } from "lucide-react";
+import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
+import {
+  listOnlyFilters,
+  readMapView,
+  writeMapView,
+  type MapView,
+} from "../../../shared/lib/activity-navigation";
 import { mapEventsQuery, sportsQuery } from "../../../entities/event";
 import {
   venuesQuery,
@@ -20,10 +29,88 @@ export function MapPage() {
   const session = useQuery(sessionQuery);
   const sports = useQuery(sportsQuery);
   const [bbox, setBbox] = useState("");
-  const [center, setCenter] = useState<Point>();
-  const [sportId, setSportId] = useState("");
-  const [showEvents, setShowEvents] = useState(true);
-  const [showVenues, setShowVenues] = useState(true);
+  const [params, setParams] = useMapParams();
+  const view = readMapView(params);
+  const sportId = params.get("sportId") ?? "";
+  const showEvents = params.get("events") !== "off";
+  const showVenues = params.get("venues") !== "off";
+  const selectedEventId = params.get("eventId"),
+    selectedVenueId = params.get("venueId");
+  const selectionKey = selectedEventId
+    ? `event:${selectedEventId}`
+    : selectedVenueId
+      ? `venue:${selectedVenueId}`
+      : "";
+  const selectionPanel = useRef<HTMLElement>(null);
+  const focusSelection = useRef(false);
+  const selectionTrigger = useRef<HTMLElement | null>(null);
+  const unsupported = listOnlyFilters
+    .filter(([key]) => Boolean(params.get(key)))
+    .map(([, label]) => label);
+  const setParam = (key: string, value: string) =>
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      return next;
+    });
+  const setShowEvents = (show: boolean) =>
+    setParam("events", show ? "" : "off");
+  const setShowVenues = (show: boolean) =>
+    setParam("venues", show ? "" : "off");
+  const rememberView = useCallback(
+    (nextView: MapView) => {
+      setParams(
+        (current) => {
+          const next = writeMapView(current, nextView);
+          return next.toString() === current.toString() ? current : next;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
+  function setCenter(point: Point) {
+    setParams((current) => writeMapView(current, { ...point, zoom: 16 }));
+  }
+  function select(kind: "event" | "venue", id: string, point?: Point) {
+    selectionTrigger.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    focusSelection.current = true;
+    setParams((current) => {
+      const next = point
+        ? writeMapView(current, { ...point, zoom: 17 })
+        : new URLSearchParams(current);
+      next.delete("eventId");
+      next.delete("venueId");
+      next.set(kind === "event" ? "eventId" : "venueId", id);
+      return next;
+    });
+  }
+  function closeSelection() {
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete("eventId");
+        next.delete("venueId");
+        return next;
+      },
+      { replace: true },
+    );
+    selectionTrigger.current?.focus({ preventScroll: true });
+  }
+  useEffect(() => {
+    if (selectionKey && focusSelection.current) {
+      selectionPanel.current?.focus({ preventScroll: true });
+      selectionPanel.current?.scrollIntoView({
+        block: "nearest",
+        behavior: "instant",
+      });
+      focusSelection.current = false;
+    }
+  }, [selectionKey]);
   const [creating, setCreating] = useState(false);
   const [reporting, setReporting] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
@@ -37,8 +124,12 @@ export function MapPage() {
     if (creating || reporting) panel.current?.focus();
   }, [creating, reporting]);
   const events = useQuery({
-    ...mapEventsQuery(bbox, sportId, session.data?.user.id),
-    enabled: Boolean(bbox) && showEvents && !session.isPending,
+    ...mapEventsQuery(bbox, sportId, session.data?.user.id, {
+      from: params.get("from") ?? undefined,
+      to: params.get("to") ?? undefined,
+    }),
+    enabled:
+      Boolean(bbox) && showEvents && !session.isPending && !session.isError,
   });
   const venues = useQuery({
     ...venuesQuery(bbox, sportId),
@@ -47,6 +138,12 @@ export function MapPage() {
   const eventItems = showEvents ? (events.data?.items ?? []) : [];
   const venueItems = showVenues ? (venues.data?.items ?? []) : [];
   const selectedVenue = venueItems.find((venue) => venue.id === reporting);
+  const selectedEvent = eventItems.find(
+    (event) => event.id === selectedEventId,
+  );
+  const selectedMapVenue = venueItems.find(
+    (venue) => venue.id === selectedVenueId,
+  );
   function report(id: string) {
     setReporting(id);
     setCreating(false);
@@ -74,6 +171,14 @@ export function MapPage() {
           Добавить площадку
         </button>
       </div>
+      <ActivityViewSwitch view="map" params={params} />
+      {unsupported.length > 0 && (
+        <p className="notice map-filter-notice">
+          На карте действуют вид спорта, даты и видимая область. Только в
+          списке: {unsupported.join(", ")}. Эти условия сохранены для возврата в
+          список.
+        </p>
+      )}
       <p className="field-hint">
         Начальная область: Самара · демо-регион. Для другого места найдите адрес
         или переместите карту.
@@ -84,7 +189,7 @@ export function MapPage() {
           Вид спорта на карте
           <select
             value={sportId}
-            onChange={(event) => setSportId(event.target.value)}
+            onChange={(event) => setParam("sportId", event.target.value)}
           >
             <option value="">Все виды спорта</option>
             {sports.data?.map((sport) => (
@@ -94,6 +199,31 @@ export function MapPage() {
             ))}
           </select>
         </label>
+        <details
+          className="map-date-filters"
+          open={Boolean(params.get("from") || params.get("to"))}
+        >
+          <summary>Даты встреч (UTC)</summary>
+          <div>
+            <label className="form-field">
+              Дата от (UTC)
+              <input
+                type="date"
+                value={params.get("from") ?? ""}
+                onChange={(event) => setParam("from", event.target.value)}
+              />
+            </label>
+            <label className="form-field">
+              Дата до (UTC)
+              <input
+                type="date"
+                min={params.get("from") ?? undefined}
+                value={params.get("to") ?? ""}
+                onChange={(event) => setParam("to", event.target.value)}
+              />
+            </label>
+          </div>
+        </details>
         <fieldset className="map-layers">
           <legend>Слои карты</legend>
           <label>
@@ -129,7 +259,9 @@ export function MapPage() {
         <ErrorState error={sports.error} retry={() => void sports.refetch()} />
       )}
       <div className="map-legend" aria-label="Обозначения карты">
-        <span>⌖ Мероприятие</span>
+        <span>
+          <MapPin size={16} /> Мероприятие
+        </span>
         {Object.entries(occupancyPresentation).map(([level, presentation]) => (
           <span key={level}>
             <i
@@ -144,15 +276,83 @@ export function MapPage() {
         Оценки оставляют пользователи, это не измерение в реальном времени.
         Свежесть — 90 минут.
       </p>
-      <GeoMap center={center} onBounds={setBbox}>
-        <MapMarkers
-          events={eventItems}
-          venues={venueItems}
-          now={now}
-          onReport={report}
-        />
-      </GeoMap>
+      <div className="map-explorer">
+        <GeoMap
+          center={view}
+          zoom={view?.zoom ?? 17}
+          onBounds={setBbox}
+          onView={rememberView}
+        >
+          <MapMarkers
+            events={eventItems}
+            venues={venueItems}
+            now={now}
+            onReport={report}
+            onSelect={select}
+          />
+        </GeoMap>
+        {selectionKey && (
+          <aside
+            className="map-selection"
+            ref={selectionPanel}
+            tabIndex={-1}
+            aria-label="Выбранный объект"
+          >
+            <div className="map-selection-heading">
+              <span className="eyebrow muted">
+                {selectedEventId ? "Мероприятие" : "Спортивная площадка"}
+              </span>
+              <button
+                className="map-selection-close"
+                aria-label="Закрыть карточку"
+                onClick={closeSelection}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {selectedEvent ? (
+              <MapEventSummary event={selectedEvent} />
+            ) : selectedMapVenue ? (
+              <>
+                <VenueSummary venue={selectedMapVenue} now={now} />
+                <button
+                  className="button primary"
+                  onClick={() => report(selectedMapVenue.id)}
+                >
+                  Оценить загруженность
+                </button>
+              </>
+            ) : events.isFetching || venues.isFetching || !bbox ? (
+              <p role="status">Ищем выбранный объект…</p>
+            ) : (
+              <p>
+                Объект не найден в этой области с текущими фильтрами. Он мог
+                быть снят с публикации. Измените фильтры или выберите другой
+                объект.
+              </p>
+            )}
+          </aside>
+        )}
+      </div>
       <div aria-live="polite" className="map-feedback">
+        {!showEvents && !showVenues && (
+          <p className="notice">
+            Оба слоя выключены. Включите мероприятия или площадки, чтобы увидеть
+            объекты.
+          </p>
+        )}
+        {showEvents && (
+          <p>
+            На карте — будущие опубликованные встречи с указанной точкой.
+            Встречи без координат доступны в списке.
+          </p>
+        )}
+        {session.isError && (
+          <ErrorState
+            error={session.error}
+            retry={() => void session.refetch()}
+          />
+        )}
         {(events.isFetching || venues.isFetching) && (
           <p>Обновляем объекты в этой области…</p>
         )}
@@ -189,7 +389,11 @@ export function MapPage() {
             <p>
               Войдите, чтобы{" "}
               {creating ? "добавить площадку" : "оценить загруженность"}.{" "}
-              <Link className="button primary" to="/login?next=map">
+              <Link
+                className="button primary"
+                to="/login?next=map"
+                state={{ mapReturn: `/map${params.size ? `?${params}` : ""}` }}
+              >
                 Войти и вернуться к карте
               </Link>
             </p>
@@ -199,8 +403,14 @@ export function MapPage() {
               session={session.data}
               sports={sports.data ?? []}
               onSuccess={(venue) => {
-                setCenter(venue.location);
-                setShowVenues(true);
+                setParams((current) => {
+                  const next = writeMapView(current, {
+                    ...venue.location,
+                    zoom: 16,
+                  });
+                  next.delete("venues");
+                  return next;
+                });
                 setCreating(false);
                 setNotice(
                   "Площадка добавлена. Теперь можно оценить её загруженность.",
@@ -241,6 +451,21 @@ export function MapPage() {
             {eventItems.map((event) => (
               <article className="map-result" key={event.id}>
                 <MapEventSummary event={event} />
+                <button
+                  className="button secondary"
+                  onClick={() => {
+                    if (
+                      typeof event.location.latitude === "number" &&
+                      typeof event.location.longitude === "number"
+                    )
+                      select("event", event.id, {
+                        latitude: event.location.latitude,
+                        longitude: event.location.longitude,
+                      });
+                  }}
+                >
+                  Показать на карте <ArrowUpRight size={16} />
+                </button>
               </article>
             ))}
           </section>
@@ -262,6 +487,12 @@ export function MapPage() {
             {venueItems.map((venue) => (
               <article className="map-result" key={venue.id}>
                 <VenueSummary venue={venue} now={now} />
+                <button
+                  className="button secondary"
+                  onClick={() => select("venue", venue.id, venue.location)}
+                >
+                  Показать на карте <ArrowUpRight size={16} />
+                </button>
                 <button
                   type="button"
                   className="button secondary"

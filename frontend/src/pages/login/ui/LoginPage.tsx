@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, Check, UserRound } from "lucide-react";
 import {
   apiConfig,
@@ -16,12 +16,15 @@ import {
   switchAccount,
 } from "../../../entities/session";
 
+import { safeMapReturn } from "../../../shared/lib/activity-navigation";
+
 const schema = z.object({
   accountId: z.string().min(1, "Выберите демо-аккаунт"),
 });
 type LoginValues = z.infer<typeof schema>;
 
 export function LoginPage() {
+  const location = useLocation();
   const accounts = useQuery(demoAccountsQuery);
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -40,7 +43,7 @@ export function LoginPage() {
       const eventId = params.get("eventId") ?? "";
       const destination =
         params.get("next") === "map"
-          ? "/map"
+          ? (safeMapReturn(location.state) ?? "/map")
           : params.get("next") === "organization"
             ? "/organization"
             : params.get("next") === "create-event"
@@ -52,6 +55,9 @@ export function LoginPage() {
                 : "/";
       navigate(destination, {
         replace: true,
+        state: safeMapReturn(location.state)
+          ? { mapReturn: safeMapReturn(location.state) }
+          : undefined,
       });
     },
   });

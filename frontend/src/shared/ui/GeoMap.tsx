@@ -11,17 +11,24 @@ import { DomEvent } from "leaflet";
 import { pointIcon } from "../lib/map-icons";
 import "leaflet/dist/leaflet.css";
 import { boundsToBbox, demoCenter, type Point } from "../lib/map";
+import type { MapView } from "../lib/activity-navigation";
 
 function Interactions({
   center,
   point,
   onPoint,
   onBounds,
+  onView,
+  zoom,
+  locate,
 }: {
   center?: Point;
   point?: Point;
   onPoint?: (point: Point) => void;
   onBounds?: (bbox: string) => void;
+  onView?: (view: MapView) => void;
+  zoom: number;
+  locate: boolean;
 }) {
   const map = useMap();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -31,8 +38,8 @@ function Interactions({
     longitude = center?.longitude;
   useEffect(() => {
     if (latitude != null && longitude != null)
-      map.setView([latitude, longitude], Math.max(13, map.getZoom()));
-  }, [map, latitude, longitude]);
+      map.setView([latitude, longitude], zoom);
+  }, [map, latitude, longitude, zoom]);
   useEffect(() => {
     onBounds?.(boundsToBbox(map.getBounds()));
   }, [map, onBounds]);
@@ -46,10 +53,15 @@ function Interactions({
       onPoint?.({ latitude: event.latlng.lat, longitude: event.latlng.lng }),
     moveend: () => {
       clearTimeout(timer.current);
-      timer.current = setTimeout(
-        () => onBounds?.(boundsToBbox(map.getBounds())),
-        300,
-      );
+      timer.current = setTimeout(() => {
+        onBounds?.(boundsToBbox(map.getBounds()));
+        const next = map.getCenter();
+        onView?.({
+          latitude: next.lat,
+          longitude: next.lng,
+          zoom: map.getZoom(),
+        });
+      }, 300);
     },
   });
   return (
@@ -68,36 +80,40 @@ function Interactions({
           }}
         />
       )}
-      <div className="map-location-control" ref={locationControl}>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            if (!navigator.geolocation) {
-              setMessage("Браузер не поддерживает определение местоположения");
-              return;
-            }
-            setMessage("Определяем местоположение…");
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                map.setView(
-                  [position.coords.latitude, position.coords.longitude],
-                  14,
-                );
-                setMessage("");
-              },
-              () =>
+      {locate && (
+        <div className="map-location-control" ref={locationControl}>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!navigator.geolocation) {
                 setMessage(
-                  "Не удалось определить местоположение. Найдите адрес или переместите карту.",
-                ),
-              { timeout: 10_000 },
-            );
-          }}
-        >
-          Моё местоположение
-        </button>
-        {message && <p role="status">{message}</p>}
-      </div>
+                  "Браузер не поддерживает определение местоположения",
+                );
+                return;
+              }
+              setMessage("Определяем местоположение…");
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  map.setView(
+                    [position.coords.latitude, position.coords.longitude],
+                    14,
+                  );
+                  setMessage("");
+                },
+                () =>
+                  setMessage(
+                    "Не удалось определить местоположение. Найдите адрес или переместите карту.",
+                  ),
+                { timeout: 10_000 },
+              );
+            }}
+          >
+            Моё местоположение
+          </button>
+          {message && <p role="status">{message}</p>}
+        </div>
+      )}
     </>
   );
 }
@@ -109,6 +125,10 @@ export function GeoMap({
   onBounds,
   children,
   compact = false,
+  zoom = 17,
+  onView,
+  locate = true,
+  tileErrorMessage,
 }: {
   center?: Point;
   point?: Point;
@@ -116,6 +136,10 @@ export function GeoMap({
   onBounds?: (bbox: string) => void;
   children?: ReactNode;
   compact?: boolean;
+  zoom?: number;
+  onView?: (view: MapView) => void;
+  locate?: boolean;
+  tileErrorMessage?: string;
 }) {
   const [tileError, setTileError] = useState(false);
   return (
@@ -125,7 +149,7 @@ export function GeoMap({
           (center ?? demoCenter).latitude,
           (center ?? demoCenter).longitude,
         ]}
-        zoom={17}
+        zoom={zoom}
         zoomControl={false}
         minZoom={8}
         maxBounds={[
@@ -145,8 +169,8 @@ export function GeoMap({
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
           }
           eventHandlers={{
+            loading: () => setTileError(false),
             tileerror: () => setTileError(true),
-            tileload: () => setTileError(false),
           }}
         />
         <Interactions
@@ -154,14 +178,18 @@ export function GeoMap({
           point={point}
           onPoint={onPoint}
           onBounds={onBounds}
+          onView={onView}
+          zoom={zoom}
+          locate={locate}
         />
         {children}
       </MapContainer>
       {tileError && (
         <p className="map-tile-warning" role="status">
-          {compact
-            ? "Подложка карты недоступна. Адрес можно ввести вручную."
-            : "Подложка карты недоступна. Объекты доступны в списке под картой."}
+          {tileErrorMessage ??
+            (compact
+              ? "Подложка карты недоступна. Адрес можно ввести вручную."
+              : "Подложка карты недоступна. Объекты доступны в списке под картой.")}
         </p>
       )}
     </div>

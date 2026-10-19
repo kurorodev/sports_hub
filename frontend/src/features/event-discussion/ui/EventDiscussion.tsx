@@ -183,6 +183,7 @@ export function EventDiscussion({
           <Link
             className="button secondary"
             to={`/login?next=event-discussion&eventId=${encodeURIComponent(eventId)}`}
+            state={location.state}
           >
             Войти и написать
           </Link>

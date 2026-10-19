@@ -35,6 +35,7 @@ export function useReviewRegistration(
           queryKey: registrationKeys.event(input.eventId),
         }),
         client.invalidateQueries({ queryKey: ["events"] }),
+        client.invalidateQueries({ queryKey: ["map", "events"] }),
       ]);
     },
   });

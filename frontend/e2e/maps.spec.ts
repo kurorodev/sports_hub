@@ -3,9 +3,9 @@ import { test, expect, type Page } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-19T12:00:00Z"));
   // Browser checks exercise our map and markers without depending on a public tile server.
-  await page.route("https://tile.openstreetmap.org/**", (route) =>
-    route.abort(),
-  );
+  await page
+    .context()
+    .route("https://tile.openstreetmap.org/**", (route) => route.abort());
 });
 async function login(page: Page) {
   await page.goto("/login");

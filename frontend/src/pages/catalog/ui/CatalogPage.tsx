@@ -13,6 +13,7 @@ import { eventsQuery, sportsQuery } from "../../../entities/event";
 import { EventCard } from "../../../entities/event";
 import { errorMessage } from "../../../shared/api/client";
 import { EmptyState, ErrorState, Skeletons } from "../../../shared/ui/Feedback";
+import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -87,6 +88,7 @@ export function CatalogPage() {
             <ArrowUpRight size={18} />
           </Link>
         </div>
+        <ActivityViewSwitch view="list" params={params} />
         <form
           className="search-bar"
           onSubmit={(event) => {
@@ -115,6 +117,7 @@ export function CatalogPage() {
               <option value="">Все города</option>
               <option>Москва</option>
               <option>Санкт-Петербург</option>
+              <option>Самара</option>
             </select>
           </label>
           <button className="button primary" type="submit">

@@ -9,20 +9,23 @@ import type {
   Sport,
   MapEventsResponse,
 } from "../../../shared/api/types";
+import { dateBoundary } from "../../../shared/lib/activity-navigation";
 export const mapEventsQuery = (
   bbox: string,
   sportId: string,
   viewerId?: string,
+  dates: { from?: string; to?: string } = {},
 ) =>
   queryOptions({
-    queryKey: ["map", "events", bbox, sportId, viewerId ?? "guest"],
+    queryKey: ["map", "events", bbox, sportId, viewerId ?? "guest", dates],
     queryFn: ({ signal }) =>
       request<MapEventsResponse>(
-        `/map/events?${new URLSearchParams({ bbox, ...(sportId ? { sportId } : {}), limit: "300" })}`,
+        `/map/events?${new URLSearchParams({ bbox, ...(sportId ? { sportId } : {}), ...(dates.from ? { from: dateBoundary(dates.from) } : {}), ...(dates.to ? { to: dateBoundary(dates.to, true) } : {}), limit: "300" })}`,
         { signal },
       ),
     enabled: Boolean(bbox),
     retry: false,
+    refetchInterval: 10000,
   });
 import type { CreateEventInput } from "../../../shared/api/event-schema";
 

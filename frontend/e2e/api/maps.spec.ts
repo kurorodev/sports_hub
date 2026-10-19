@@ -1,4 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
+import { setupMapEvent } from "../helpers/maps";
+import { signInAs } from "../helpers/approval";
+import { findModerationEvent } from "../helpers/moderation";
 
 async function login(page: Page) {
   await page.goto("/login");
@@ -20,9 +23,9 @@ async function manualPoint(page: Page) {
   await page.getByRole("button", { name: "Подтвердить адрес точки" }).click();
 }
 test.beforeEach(async ({ page }) => {
-  await page.route("https://tile.openstreetmap.org/**", (route) =>
-    route.abort(),
-  );
+  await page
+    .context()
+    .route("https://tile.openstreetmap.org/**", (route) => route.abort());
 });
 test("Java map: disabled geocoder keeps event creation with a pin working", async ({
   page,
@@ -101,4 +104,81 @@ test("Java map: a new venue becomes LOW after a real report", async ({
   await expect(card).toContainText("Свободно / мало людей");
   await page.reload();
   await expect(card).toContainText("Свободно / мало людей");
+});
+
+test("Java map: returning after join refreshes counts and moderation removes the selected event", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(60000);
+  await signInAs(page, "athlete-a");
+  const event = await setupMapEvent(
+    page,
+    `Карта и модерация Java ${Date.now()}`,
+    new Date(Date.now() + 7 * 86400000).toISOString(),
+  );
+  const context = await browser.newContext({
+    viewport: { width: 375, height: 1000 },
+    serviceWorkers: "block",
+    baseURL: "http://127.0.0.1:5174",
+  });
+  try {
+    const viewer = await context.newPage();
+    await viewer
+      .context()
+      .route("https://tile.openstreetmap.org/**", (route) => route.abort());
+    await signInAs(viewer, "athlete-b");
+    await viewer.goto(
+      `/map?lat=53.19556&lng=50.10102&zoom=17&eventId=${event.id}&venues=off`,
+    );
+    const selected = viewer.getByRole("complementary", {
+      name: "Выбранный объект",
+    });
+    await expect(selected).toContainText(event.title);
+    await expect(selected).toContainText("0 из 10 участников");
+    await selected
+      .getByRole("link", { name: "Подробнее", exact: true })
+      .click();
+    await viewer
+      .getByRole("button", { name: "Присоединиться", exact: true })
+      .click();
+    await expect(
+      viewer.getByText("Вы участвуете", { exact: true }),
+    ).toBeVisible();
+    await viewer
+      .getByRole("link", { name: "Назад к карте", exact: true })
+      .click();
+    await expect(selected).toContainText("1 из 10 участников");
+    await signInAs(page, "admin");
+    const row = await findModerationEvent(page, event.title);
+    await row
+      .getByRole("button", { name: "Снять с публикации", exact: true })
+      .click();
+    await page
+      .getByLabel("Причина модерации", { exact: true })
+      .fill("Место встречи требует уточнения.");
+    await page
+      .getByRole("button", {
+        name: "Подтвердить: снять с публикации",
+        exact: true,
+      })
+      .click();
+    await expect(selected).toContainText("Объект не найден", {
+      timeout: 15000,
+    });
+    await expect(
+      viewer.getByTitle(`Мероприятие: ${event.title}`, { exact: true }),
+    ).toHaveCount(0);
+    expect(
+      await viewer.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await viewer.screenshot({
+      path: "test-results/java-map-moderation.png",
+      fullPage: true,
+    });
+  } finally {
+    await context.close();
+  }
 });

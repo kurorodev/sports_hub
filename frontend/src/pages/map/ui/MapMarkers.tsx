@@ -1,6 +1,6 @@
 import { Marker, Popup, Tooltip } from "react-leaflet";
 import { divIcon } from "leaflet";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { EventCardDto, VenueMapItem } from "../../../shared/api/types";
 import { hasPoint } from "../../../shared/lib/map";
 import { pointIcon } from "../../../shared/lib/map-icons";
@@ -28,6 +28,7 @@ const venueIcons = Object.fromEntries(
 );
 
 export function MapEventSummary({ event }: { event: EventCardDto }) {
+  const location = useLocation();
   return (
     <>
       <h3>{event.title}</h3>
@@ -43,7 +44,11 @@ export function MapEventSummary({ event }: { event: EventCardDto }) {
         {event.spotsLeft != null ? ` · Свободно: ${event.spotsLeft}` : ""}
       </p>
       <p>{event.joinMode === "OPEN" ? "Свободная запись" : "По заявке"}</p>
-      <Link className="button secondary" to={`/events/${event.id}`}>
+      <Link
+        className="button secondary"
+        to={`/events/${event.id}`}
+        state={{ mapReturn: `${location.pathname}${location.search}` }}
+      >
         Подробнее
       </Link>
     </>
@@ -54,11 +59,13 @@ export function MapMarkers({
   venues,
   now,
   onReport,
+  onSelect,
 }: {
   events: EventCardDto[];
   venues: VenueMapItem[];
   now: number;
   onReport: (id: string) => void;
+  onSelect: (kind: "event" | "venue", id: string) => void;
 }) {
   return (
     <>
@@ -71,6 +78,7 @@ export function MapMarkers({
             icon={pointIcon}
             title={`Мероприятие: ${event.title}`}
             alt={`Мероприятие: ${event.title}`}
+            eventHandlers={{ click: () => onSelect("event", event.id) }}
           >
             <Tooltip>
               {event.title} · {event.sport.name} · {eventDate(event.startsAt)}{" "}
@@ -89,6 +97,7 @@ export function MapMarkers({
           icon={venueIcons[currentOccupancy(venue, now)]}
           title={`Площадка: ${venue.name} — ${occupancyPresentation[currentOccupancy(venue, now)].label}`}
           alt={`Площадка: ${venue.name}`}
+          eventHandlers={{ click: () => onSelect("venue", venue.id) }}
         >
           <Tooltip>
             {venue.name} ·{" "}

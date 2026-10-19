@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import type { EventParticipation } from "../../../entities/event/model";
 import {
@@ -14,6 +14,7 @@ export function JoinAction({
   event: EventParticipation;
   publicationClosed?: boolean;
 }) {
+  const location = useLocation();
   const { session, viewerId, own, mutation, join } = useJoinEvent(
     event.eventId,
     event.joinMode,
@@ -62,6 +63,7 @@ export function JoinAction({
         <Link
           className="button primary full-width"
           to={`/login?next=join-event&eventId=${encodeURIComponent(event.eventId)}`}
+          state={location.state}
         >
           Войти для записи
           <ArrowUpRight size={18} />
