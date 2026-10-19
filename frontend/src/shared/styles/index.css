@@ -2963,7 +2963,9 @@ input[type="radio"] {
   font-size: 0.875rem;
 }
 .mention-link {
-  color: var(--color-ink);
+  color: #8a6500;
+  background: #fff4c2;
+  border-radius: 4px;
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
