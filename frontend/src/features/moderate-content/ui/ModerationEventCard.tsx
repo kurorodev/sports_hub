@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { ModerationEvent } from "../../../entities/moderation/model";
 import { moderationStatuses } from "../../../entities/moderation";
-import { eventDate } from "../../../entities/event";
+import { eventDate, OrganizerPreview } from "../../../entities/event";
 import { ModerationReasonForm } from "./ModerationReasonForm";
 import { useModerateContent } from "./use-moderate-content";
 export function ModerationEventCard({
@@ -30,16 +30,7 @@ export function ModerationEventCard({
         {event.address}
       </p>
       <p className="join-note">
-        Организатор:{" "}
-        {event.organizer.type === "ORGANIZATION" ? (
-          <Link to={`/organizations/${event.organizer.id}`}>
-            {event.organizer.name}
-          </Link>
-        ) : (
-          <Link className="person-link" to={`/users/${event.organizer.id}`}>
-            {event.organizer.name}
-          </Link>
-        )}
+        Организатор: <OrganizerPreview organizer={event.organizer} />
       </p>
       <p className="join-note">
         Подтверждённых участников: {event.confirmedParticipants}

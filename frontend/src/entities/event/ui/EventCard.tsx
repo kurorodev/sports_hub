@@ -6,6 +6,7 @@ import {
   Building2,
   UserRound,
 } from "lucide-react";
+import { OrganizerPreview } from "./OrganizerPreview";
 import { Link } from "react-router-dom";
 import type { EventCardDto } from "../../../shared/api/types";
 import {
@@ -72,15 +73,7 @@ export function EventCard({
         </p>
         <div className="event-organizer">
           <OrganizerIcon size={16} />
-          {event.organizer.type === "ORGANIZATION" ? (
-            <Link to={`/organizations/${event.organizer.id}`}>
-              {event.organizer.name}
-            </Link>
-          ) : (
-            <Link className="person-link" to={`/users/${event.organizer.id}`}>
-              {event.organizer.name}
-            </Link>
-          )}
+          <OrganizerPreview organizer={event.organizer} />
         </div>
         <div className="card-bottom">
           <span className={places > 0 ? "places" : "places full"}>

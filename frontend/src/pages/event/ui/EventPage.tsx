@@ -23,6 +23,7 @@ import {
   skillLabels,
   participantCount,
   eventTimezone,
+  OrganizerPreview,
 } from "../../../entities/event";
 import { JoinAction } from "../../../features/join-event";
 import { Participants } from "../../../entities/registration";
@@ -183,15 +184,7 @@ export function EventPage() {
           </p>
           <p>
             <Building2 size={20} />
-            {event.organizer.type === "ORGANIZATION" ? (
-              <Link to={`/organizations/${event.organizer.id}`}>
-                {event.organizer.name}
-              </Link>
-            ) : (
-              <Link className="person-link" to={`/users/${event.organizer.id}`}>
-                {event.organizer.name}
-              </Link>
-            )}
+            <OrganizerPreview organizer={event.organizer} />
           </p>
           <div className="detail-condition">
             {event.joinMode === "OPEN"
