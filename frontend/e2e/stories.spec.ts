@@ -77,7 +77,7 @@ for (const viewport of [
     await expect(editor).not.toBeVisible();
     await expect(
       page.getByRole("button", { name: "Удалить сторис 1", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await page
       .getByRole("button", {
         name: "Сторис 1 из 1. Не просмотрено",

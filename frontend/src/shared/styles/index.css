@@ -3974,8 +3974,6 @@ select:focus:not([aria-invalid="true"]),
 .stories-strip { display: flex; align-items: flex-start; gap: var(--space-3); width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; padding: var(--space-2) var(--space-1); scrollbar-width: thin; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; }
 .story-item { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); flex: 0 0 88px; min-width: 0; scroll-snap-align: start; }
 .story-item > .story-bubble { width: 100%; flex: none; }
-.story-bubble-delete { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--color-outline); border-radius: var(--radius-control); color: var(--color-danger); background: var(--color-surface); cursor: pointer; }
-.story-bubble-delete:hover { background: var(--color-danger-bg); border-color: var(--color-danger); }
 .story-deleting { animation: story-loader-spin 0.8s linear infinite; }
 .story-bubble { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); flex: 0 0 88px; min-width: 0; border: 0; padding: 0; background: transparent; color: var(--color-ink); cursor: pointer; border-radius: var(--radius-control); }
 .story-bubble-ring { display: grid; place-items: center; width: 76px; height: 76px; padding: 3px; border: 3px solid var(--color-brand); border-radius: 50%; background: var(--color-surface); overflow: hidden; }

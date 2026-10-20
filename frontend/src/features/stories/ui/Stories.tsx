@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LoaderCircle, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { sessionQuery } from "../../../entities/session";
 import { deleteStory, storiesQuery } from "../../../entities/story";
 import type { Story, StoryFeed } from "../../../shared/api/types";
@@ -182,26 +182,6 @@ function StoriesFeed({
                 )}
               </span>
             </button>
-            {admin && (
-              <button
-                type="button"
-                className="story-bubble-delete"
-                aria-label={tr("Удалить сторис {0}", [storyIndex + 1])}
-                title={tr("Удалить сторис")}
-                disabled={removal.isPending}
-                onClick={() => removal.mutate(story.id)}
-              >
-                {removal.isPending && removal.variables === story.id ? (
-                  <LoaderCircle
-                    size={20}
-                    className="story-deleting"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <Trash2 size={20} aria-hidden="true" />
-                )}
-              </button>
-            )}
           </div>
         ))}
       </div>
