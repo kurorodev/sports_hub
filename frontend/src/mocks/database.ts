@@ -454,8 +454,11 @@ export function saveRegistration(
     rank: user.rank,
     ratingPoints: user.ratingPoints,
   };
+  const existing = getRegistrations(eventId).find(
+    (item) => item.user.id === user.id && item.status === "CANCELLED",
+  );
   const registration: Registration = {
-    id: crypto.randomUUID(),
+    id: existing?.id ?? crypto.randomUUID(),
     eventId,
     user: publicUser,
     status,
@@ -465,7 +468,9 @@ export function saveRegistration(
   };
   const seedIds = new Set(seedRegistrations.map((item) => item.id));
   const records = [
-    ...getRegistrations().filter((item) => !seedIds.has(item.id)),
+    ...getRegistrations().filter(
+      (item) => item.id !== registration.id && !seedIds.has(item.id),
+    ),
     registration,
   ];
   if (typeof localStorage !== "undefined")
@@ -694,4 +699,23 @@ export function mockProfiles(): UserProfileDto[] {
       ]),
     ).values(),
   ];
+}
+
+export function cancelRegistration(registration: Registration): Registration {
+  const updated: Registration = {
+    ...registration,
+    status: "CANCELLED",
+    updatedAt: new Date().toISOString(),
+  };
+  const seedIds = new Set(seedRegistrations.map((item) => item.id));
+  const records = [
+    ...getRegistrations().filter(
+      (item) => item.id !== updated.id && !seedIds.has(item.id),
+    ),
+    updated,
+  ];
+  if (typeof localStorage !== "undefined")
+    localStorage.setItem(registrationKey, JSON.stringify(records));
+  memoryRegistrations = records;
+  return updated;
 }

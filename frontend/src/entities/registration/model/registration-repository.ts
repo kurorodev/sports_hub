@@ -12,6 +12,7 @@ export interface RegistrationRepository {
     page: number,
     signal?: AbortSignal,
   ): Promise<ParticipantPage>;
+  cancel(eventId: string): Promise<Registration>;
   join(eventId: string): Promise<Registration>;
   listRequests(
     eventId: string,

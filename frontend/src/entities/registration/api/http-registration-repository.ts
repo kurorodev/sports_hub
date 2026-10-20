@@ -100,6 +100,10 @@ export function createHttpRegistrationRepository(
           }),
         ),
       ),
+    cancel: (eventId) =>
+      adaptFailure(async () =>
+        toRegistration(await http(`${path(eventId)}/registrations/me`, { method: "DELETE" })),
+      ),
     join: (eventId) =>
       adaptFailure(async () =>
         toRegistration(

@@ -79,7 +79,7 @@ public class Views {
         return new Api.EventCard(detail.id(),detail.title(),detail.eventKind(),detail.sport(),detail.startsAt(),detail.location(),detail.skillLevel(),detail.joinMode(),detail.organizer(),detail.maxParticipants(),detail.confirmedCount(),detail.spotsLeft(),detail.viewerRegistrationStatus(),detail.customSportName());
     }
     public Api.Registration registration(RegistrationEntity r) {
-        return new Api.Registration(r.id,r.eventId,eventUser(r.userId,db.get(EventEntity.class,r.eventId)),r.status,r.message,r.decisionReason,r.createdAt,r.updatedAt,r.decidedAt);
+        return new Api.Registration(r.id,r.eventId,eventUser(r.userId,db.get(EventEntity.class,r.eventId)),r.status,r.message,r.decisionReason,r.createdAt,r.updatedAt,r.decidedAt,null);
     }
     public Api.PublicUser eventUser(UUID userId,EventEntity event) {
         UUID owner=event.organizerUserId!=null?event.organizerUserId:db.get(OrganizationEntity.class,event.organizerOrganizationId).createdBy;

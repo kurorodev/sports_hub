@@ -3980,3 +3980,38 @@ select:focus:not([aria-invalid="true"]),
 .map-selection-venue .venue-week-track { height: 40px; }
 .map-selection-venue .venue-week-bar { max-height: 40px; }
 @media (min-width:1024px) { .map-selection-venue { width: 360px; } }
+
+/* Personal participation and its confirmation dialog. */
+.my-events-page > header { margin-bottom: 24px; }
+.my-events-page > header h1 { margin: 8px 0 12px; }
+.my-events-page > header p { color: var(--color-ink-muted); }
+.my-events-list { display: grid; gap: 16px; }
+.my-event { display: flex; align-items: center; gap: 24px; padding: 24px; border: 1px solid var(--color-outline); border-radius: var(--radius-card); background: var(--color-surface); min-width: 0; }
+.my-event > img { flex-shrink: 0; width: 104px; height: 104px; object-fit: cover; border-radius: 16px; }
+.my-event-content { flex: 1; min-width: 0; }
+.my-event-content h2 { margin: 10px 0; font-size: 20px; overflow-wrap: anywhere; }
+.my-event-content p { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0 0; color: var(--color-ink-muted); font-size: 13px; overflow-wrap: anywhere; }
+.my-event-content p svg { flex-shrink: 0; margin-top: 2px; }
+.my-event-labels { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--color-ink-muted); }
+.my-event-status { padding: 4px 10px; border-radius: var(--radius-pill); background: var(--color-surface-alt); }
+.my-event-status.success { color: var(--color-success); }
+.my-event-status.danger { color: var(--color-danger); }
+.my-event-status.warning { color: var(--color-ink); }
+.my-event-actions { display: grid; gap: 10px; flex-shrink: 0; }
+.my-event-actions .button { width: 100%; }
+.my-events-empty { display: grid; justify-items: start; gap: 16px; padding: clamp(24px, 5vw, 48px); border: 1px solid var(--color-outline); border-radius: var(--radius-card); }
+.my-events-empty h2, .my-events-empty p { margin: 0; }
+.my-events-empty p { color: var(--color-ink-muted); }
+.cancel-participation-dialog { width: min(480px, calc(100vw - 24px)); margin: auto; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.cancel-participation-dialog h2 { margin-top: 0; }
+.cancel-participation-dialog > p { margin: 16px 0 24px; line-height: 1.6; }
+.participation-dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+@media (min-width: 1024px) { .main-nav { gap: clamp(12px, 2vw, 28px); } .header-inner { gap: 24px; } }
+@media (max-width: 767px) {
+  .my-event { flex-wrap: wrap; align-items: flex-start; gap: 16px; padding: 20px; }
+  .my-event > img { width: 64px; height: 64px; border-radius: 12px; }
+  .my-event-content { flex-basis: calc(100% - 80px); }
+  .my-event-content h2 { font-size: 18px; }
+  .my-event-actions { display: flex; flex-wrap: wrap; width: 100%; }
+  .my-event-actions .button { flex: 1 1 140px; }
+}

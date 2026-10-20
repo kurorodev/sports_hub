@@ -71,10 +71,20 @@ public class RegistrationService {
         var u=access.user();db.get(EventEntity.class,eventId);
         return view.registration(db.first(RegistrationEntity.class,"e.eventId=:event and e.userId=:user",Map.of("event",eventId,"user",u.id)).orElseThrow(Problem::notFound));
     }
-    public PageResult<Api.Registration> myRegistrations(Api.RegistrationStatus status,int page,int size) {
+    public PageResult<Api.Registration> myRegistrations(Api.RegistrationView bucket,Api.RegistrationStatus status,int page,int size) {
         Map<String,Object> p=new HashMap<>(Map.of("user",access.user().id));String condition="e.userId=:user";
         if(status!=null){condition+=" and e.status=:status";p.put("status",status);}
-        return page(condition,p,page,size);
+        if(bucket!=null) {
+            String active="(e.status in (:active) and e.eventId in (select ev.id from EventEntity ev where ev.status=:published and coalesce(ev.endsAt,ev.startsAt)>:now))";
+            condition+=" and "+(bucket==Api.RegistrationView.UPCOMING?active:"not "+active);
+            p.put("active",List.of(Api.RegistrationStatus.CONFIRMED,Api.RegistrationStatus.PENDING,Api.RegistrationStatus.WAITLISTED));
+            p.put("published",Api.EventStatus.PUBLISHED);p.put("now",clock.instant());
+        }
+        var items=db.list(RegistrationEntity.class,condition,p,"e.updatedAt desc,e.id asc",PageResult.offset(page,size),size).stream().map(r -> {
+            var registration=view.registration(r);
+            return new Api.Registration(registration.id(),r.eventId,registration.user(),r.status,r.message,r.decisionReason,r.createdAt,r.updatedAt,r.decidedAt,view.event(db.get(EventEntity.class,r.eventId)));
+        }).toList();
+        return PageResult.of(items,page,size,db.count(RegistrationEntity.class,condition,p));
     }
     public PageResult<Api.Registration> registrations(UUID eventId,Api.RegistrationStatus status,int page,int size) {
         var e=db.get(EventEntity.class,eventId);access.user();if(!access.owns(e) && !access.admin())throw Problem.forbidden();

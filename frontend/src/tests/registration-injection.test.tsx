@@ -70,6 +70,7 @@ describe("React adapter with an injected repository, without HTTP", () => {
     let saved: Registration | null = null;
     const repository: RegistrationRepository = {
       findMine: vi.fn(async () => saved),
+      cancel: vi.fn(),
       listRequests: vi.fn(),
       decide: vi.fn(),
       join: vi.fn(async () => {
@@ -93,6 +94,7 @@ describe("React adapter with an injected repository, without HTTP", () => {
     });
     const repository: RegistrationRepository = {
       findMine: vi.fn(async () => null),
+      cancel: vi.fn(),
       listRequests: vi.fn(),
       decide: vi.fn(),
       join: vi.fn(() => pending),

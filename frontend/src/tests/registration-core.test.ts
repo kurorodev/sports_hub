@@ -20,6 +20,7 @@ const registration: Registration = {
 
 function repository(result: Registration | null): RegistrationRepository {
   return {
+    cancel: vi.fn(),
     listRequests: vi.fn(),
     decide: vi.fn(),
     join: vi.fn(async () => {

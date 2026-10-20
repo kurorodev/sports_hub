@@ -576,7 +576,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Мои заявки и участия */
+        /**
+         * Мои заявки и участия
+         * @description Личные участия с данными мероприятия. UPCOMING — активные записи на опубликованные незавершённые мероприятия; HISTORY — остальные записи, включая отменённые и отклонённые. Без view возвращаются все записи.
+         */
         get: operations["getMeRegistrations"];
         put?: never;
         post?: never;
@@ -1736,6 +1739,8 @@ export interface components {
             message?: string | null;
         };
         Registration: {
+            /** @description Данные мероприятия включены в личный список GET /me/registrations. */
+            readonly event?: components["schemas"]["Event"] | null;
             /** Format: uuid */
             id: string;
             /** Format: uuid */
@@ -3716,6 +3721,7 @@ export interface operations {
     getMeRegistrations: {
         parameters: {
             query?: {
+                view?: "UPCOMING" | "HISTORY";
                 status?: components["schemas"]["RegistrationStatus"];
                 page?: number;
                 size?: number;

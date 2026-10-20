@@ -1618,7 +1618,7 @@ paths:
       - Registrations
       summary: Мои заявки и участия
       operationId: getMeRegistrations
-      description: ''
+      description: Личные участия с данными мероприятия. UPCOMING — активные записи на опубликованные незавершённые мероприятия; HISTORY — остальные записи, включая отменённые и отклонённые. Без view возвращаются все записи.
       responses:
         '200':
           description: Успешный ответ
@@ -1633,6 +1633,12 @@ paths:
         '500':
           $ref: '#/components/responses/500'
       parameters:
+      - name: view
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [UPCOMING, HISTORY]
       - name: status
         in: query
         required: false
@@ -4534,6 +4540,12 @@ components:
     Registration:
       type: object
       properties:
+        event:
+          allOf:
+          - $ref: '#/components/schemas/Event'
+          nullable: true
+          readOnly: true
+          description: Данные мероприятия включены в личный список GET /me/registrations.
         id:
           type: string
           format: uuid
