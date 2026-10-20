@@ -1252,6 +1252,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Активные сторис для всех вошедших пользователей; срок строго 24 часа. */
+        get: operations["listStories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Опубликовать сторис (только ADMIN); expiresAt задаёт сервер: createdAt + 24 часа. */
+        post: operations["createStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/stories/{storyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Удалить сторис раньше срока (только ADMIN). */
+        delete: operations["deleteStory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{storyId}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отметить просмотр для текущего пользователя; первый просмотр сохраняется. */
+        post: operations["viewStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{storyId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        /** Изображение активной сторис; удалённое или просроченное недоступно. */
+        get: operations["getStoryImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2003,6 +2094,33 @@ export interface components {
         MapVenuesResponse: {
             items: components["schemas"]["VenueMapItem"][];
             truncated: boolean;
+        };
+        Story: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            text: string;
+            imageUrl: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Всегда createdAt + 24 часа.
+             */
+            expiresAt: string;
+            /** Format: date-time */
+            readAt: string | null;
+        };
+        StoryFeed: {
+            items: components["schemas"]["Story"][];
+            /** Format: date-time */
+            asOf: string;
+        };
+        StoryCreate: {
+            title: string;
+            text: string;
+            /** @description PNG/JPEG data URL: до 2 МБ, размеры до 4096×4096. Необязательно. */
+            imageData?: string | null;
         };
     };
     responses: {
@@ -5081,6 +5199,127 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    listStories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сторис от новых к старым, персональные отметки просмотра и серверное время. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryFeed"];
+                };
+            };
+            401: components["responses"]["401"];
+        };
+    };
+    createStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Опубликовано. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            400: components["responses"]["400"];
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+        };
+    };
+    deleteStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Удалено; повторное удаление не меняет результат. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+        };
+    };
+    viewStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Персональный readAt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+        };
+    };
+    getStoryImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Проверенное изображение. Cache-Control: no-store. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                };
+            };
+            401: components["responses"]["401"];
+            404: components["responses"]["404"];
         };
     };
 }

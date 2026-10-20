@@ -7,8 +7,6 @@ import { registrationPresentation } from "../../../entities/registration";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  ArrowDown,
-  ArrowUpRight,
   ChevronDown,
   Plus,
   MapPin,
@@ -26,6 +24,7 @@ import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
 import { Select } from "../../../shared/ui/Select";
 import { useEffect, useState } from "react";
 import { canonicalCityName, russianCities } from "../../../shared/lib/cities";
+import { Stories } from "../../../features/stories";
 
 export function CatalogPage() {
   const session = useQuery(sessionQuery);
@@ -133,65 +132,45 @@ export function CatalogPage() {
   ].filter((key) => params.has(key)).length;
   return (
     <>
-      <section className="hero">
-        <div className="hero-copy">
-          <span className="eyebrow">
-            <span className="live-dot" />
-            {tr("Люди. Спорт. Твой ритм.")}
-          </span>
-          <h1>
-            {tr("Вместе —")}
-            <br />
-            {tr("больше ")}
-            <span>{tr("спорта.")}</span>
-          </h1>
-          <p>
-            {tr("Найди компанию для спорта.")}
-            <br />
-            {tr("От первой пробежки до игры на равных.")}
-          </p>
-          <a className="button primary" href="#activities">
-            {tr("Выбрать активность")}
-            <ArrowDown size={18} />
-          </a>
-          <span className="hero-note">
-            {tr("Любой уровень. Главное — начать.")}
-          </span>
-        </div>
-        <div className="hero-visual" aria-hidden="true">
-          <img
-            src="/art/sports/panorama.jpg"
-            alt=""
-            width="1672"
-            height="941"
-            fetchPriority="high"
-          />
-          <div className="hero-sticker">
-            {tr("ТВОЙ СЛЕДУЮЩИЙ")}
-            <br />
-            <strong>{tr("«Я С ВАМИ!»")}</strong>
-            <ArrowUpRight size={28} />
+      <section className="home-intro" aria-labelledby="home-intro-title">
+        <div className="home-banner">
+          <div className="home-banner-copy">
+            <h1 id="home-intro-title">{tr("Спорт начинается с компании.")}</h1>
+            <p>{tr("Найди встречу, к которой хочется присоединиться.")}</p>
+            {!isAdmin && (
+              <Link className="button primary catalog-create" to="/events/new">
+                <Plus size={18} aria-hidden="true" />
+                {tr("Создать встречу")}
+              </Link>
+            )}
           </div>
-          <span className="visual-note">{tr("Больше, чем просто спорт")}</span>
+          <div className="home-banner-visual" aria-hidden="true">
+            <img
+              src="/art/sports/panorama.jpg"
+              alt=""
+              width="1672"
+              height="941"
+            />
+          </div>
         </div>
+        <Stories />
       </section>
-      <section id="activities" className="catalog-section">
-        <div className="section-heading">
+      <section
+        id="activities"
+        className="catalog-section home-catalog"
+        aria-labelledby="catalog-heading"
+      >
+        <div className="home-catalog-heading">
           <div>
-            <span className="eyebrow muted">{tr("Занимайтесь вместе")}</span>
-            <h2>
-              {tr("Найди свою компанию")}
-              <span className="brand-dot">.</span>
-            </h2>
+            <h2 id="catalog-heading">{tr("Найди встречу")}</h2>
+            <p>
+              {tr(
+                "Выбери спорт и город, затем присоединяйся к подходящей встрече.",
+              )}
+            </p>
           </div>
-          {!isAdmin && (
-            <Link className="button primary catalog-create" to="/events/new">
-              <Plus size={18} aria-hidden="true" />
-              {tr("Создать встречу")}
-            </Link>
-          )}
+          <ActivityViewSwitch view="list" params={params} />
         </div>
-        <ActivityViewSwitch view="list" params={params} />
         <form
           className="search-bar"
           onSubmit={(event) => {
