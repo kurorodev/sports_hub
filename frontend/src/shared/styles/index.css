@@ -257,6 +257,16 @@ button:disabled {
   /* The supplied wordmarks contain transparent space above and below the artwork. */
   object-fit: cover;
 }
+.site-header .brand {
+  width: 140px;
+  min-width: 0;
+}
+.site-header .brand-logo {
+  width: 100%;
+  max-width: 100%;
+  height: 36px;
+  object-fit: contain;
+}
 .brand-dot {
   color: var(--color-brand);
 }
@@ -1174,9 +1184,11 @@ input[type="radio"] {
   .header-inner {
     padding-inline: 16px;
   }
-  .brand-logo {
-    width: 160px;
-    height: 40px;
+  .site-header .brand {
+    width: 120px;
+  }
+  .site-header .brand-logo {
+    height: 30px;
   }
   .header-account {
     max-width: 190px;
@@ -3667,9 +3679,11 @@ input[type="radio"] {
   }
 }
 @media (max-width: 374px) {
+  .site-header .brand {
+    width: 104px;
+  }
   .site-header .brand-logo {
-    width: 136px;
-    height: 34px;
+    height: 26px;
   }
   .header-inner {
     column-gap: var(--space-2);
