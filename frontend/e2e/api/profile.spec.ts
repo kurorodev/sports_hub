@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
+import { activeSportsRoles } from "../../src/shared/model/sports-roles";
 import type {
   UserProfileDto,
   ProfilePatchDto,
@@ -59,7 +60,7 @@ for (const width of [375, 768, 1440]) {
       await page
         .getByLabel("Когда удобно заниматься", { exact: true })
         .selectOption("MORNING");
-      await page.getByLabel("Тренер", { exact: true }).check();
+      await page.getByLabel("Организатор спорта", { exact: true }).check();
       await page.getByLabel("Легкая атлетика", { exact: true }).check();
       await page
         .getByLabel("Уровень: Легкая атлетика", { exact: true })
@@ -164,7 +165,7 @@ for (const width of [375, 768, 1440]) {
         bio: original.bio ?? null,
         city: original.city ?? null,
         avatarUrl: original.avatarUrl ?? null,
-        sportsRoles: original.sportsRoles,
+        sportsRoles: activeSportsRoles(original.sportsRoles),
         sportsPreferences: original.sportsPreferences,
         preferredTime: original.preferredTime ?? null,
       };
