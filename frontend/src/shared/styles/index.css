@@ -1108,7 +1108,26 @@ input[type="radio"] {
     grid-template-columns: 1fr;
     gap: var(--space-5);
   }
-  .filters-panel {
+.distance-filter {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin: 0;
+  min-width: 0;
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+.distance-filter legend { padding-inline: 6px; font-size: 14px; font-weight: 750; }
+.filter-fields > .distance-filter { grid-column: 1 / -1; }
+.distance-filter legend svg { vertical-align: middle; margin-right: 6px; }
+.distance-filter label { display: grid; gap: var(--space-2); font-size: 13px; }
+.distance-filter select { width: 100%; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid var(--color-outline); border-radius: var(--radius-control); background: var(--color-surface); }
+.distance-filter .button { min-width: 0; white-space: normal; padding-inline: 10px; font-size: 12px; }
+.distance-filter .field-hint, .distance-filter .field-error { margin: 0; }
+.map-toolbar > .distance-filter { flex: 1 1 240px; }
+.event-distance { color: var(--color-ink); font-weight: 650; }
+.filters-panel {
     border: 1px solid var(--color-outline);
     padding: 8px 16px;
     border-radius: var(--radius-control);

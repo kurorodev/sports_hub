@@ -1,3 +1,4 @@
+import { EventDistance } from "../../../shared/ui/EventDistance";
 import { Link, useLocation } from "react-router-dom";
 import type { EventCardDto, VenueMapItem } from "../../../shared/api/types";
 import { hasPoint } from "../../../shared/lib/map";
@@ -29,6 +30,7 @@ export function MapEventSummary({ event }: { event: EventCardDto }) {
         {participantCount(event.confirmedCount, event.maxParticipants)}
         {event.spotsLeft != null ? ` · Свободно: ${event.spotsLeft}` : ""}
       </p>
+      <EventDistance location={event.location} />
       <p>{event.joinMode === "OPEN" ? "Свободная запись" : "По заявке"}</p>
       <Link
         className="button secondary"

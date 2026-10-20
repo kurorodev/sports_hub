@@ -1,3 +1,4 @@
+import { CurrentLocationProvider } from "./CurrentLocationProvider";
 import { createHttpNotificationRepository } from "../entities/notification/api/http-notification-repository";
 import { NotificationRepositoryProvider } from "../entities/notification";
 import { createHttpProfileRepository } from "../entities/profile/api/http-profile-repository";
@@ -109,22 +110,24 @@ export function ApplicationProviders({ children }: { children: ReactNode }) {
       }),
   );
   return (
-    <SupportProvider repository={supportRepository}>
-      <NotificationRepositoryProvider repository={notificationRepository}>
-        <ProfileServices>
-          <ModerationServices>
-            <OrganizationServices>
-              <DiscussionServices>
-                <RegistrationServices>
-                  <QueryClientProvider client={client}>
-                    {children}
-                  </QueryClientProvider>
-                </RegistrationServices>
-              </DiscussionServices>
-            </OrganizationServices>
-          </ModerationServices>
-        </ProfileServices>
-      </NotificationRepositoryProvider>
-    </SupportProvider>
+    <CurrentLocationProvider>
+      <SupportProvider repository={supportRepository}>
+        <NotificationRepositoryProvider repository={notificationRepository}>
+          <ProfileServices>
+            <ModerationServices>
+              <OrganizationServices>
+                <DiscussionServices>
+                  <RegistrationServices>
+                    <QueryClientProvider client={client}>
+                      {children}
+                    </QueryClientProvider>
+                  </RegistrationServices>
+                </DiscussionServices>
+              </OrganizationServices>
+            </ModerationServices>
+          </ProfileServices>
+        </NotificationRepositoryProvider>
+      </SupportProvider>
+    </CurrentLocationProvider>
   );
 }

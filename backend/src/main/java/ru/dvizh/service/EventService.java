@@ -90,7 +90,7 @@ public class EventService {
     }
     private record Query(String where,Map<String,Object> params) {}
     private Query filters(Map<String,String> f) {
-        Set<String> allowed=Set.of("q","sportId","sport","city","from","to","skillLevel","joinMode","eventKind","organizerType","hasSpots","includePast","sort","page","size");
+        Set<String> allowed=Set.of("q","sportId","sport","city","from","to","skillLevel","joinMode","eventKind","organizerType","hasSpots","includePast","sort","page","size","originLatitude","originLongitude","radiusMeters");
         for(String key:f.keySet())if(!allowed.contains(key))throw Problem.invalid("Неизвестный фильтр: "+key);
         StringBuilder where=new StringBuilder("e.status=:published");var p=new HashMap<String,Object>();p.put("published",Api.EventStatus.PUBLISHED);
         if(!bool(f,"includePast",false)) { where.append(" and e.startsAt>=:now");p.put("now",clock.instant()); }
@@ -111,6 +111,7 @@ public class EventService {
             where.append(available?" and (e.maxParticipants is null or e.maxParticipants > (select count(r) from RegistrationEntity r where r.eventId=e.id and r.status=:confirmed))":" and (e.maxParticipants is not null and e.maxParticipants <= (select count(r) from RegistrationEntity r where r.eventId=e.id and r.status=:confirmed))");
             p.put("confirmed",Api.RegistrationStatus.CONFIRMED);
         }
+        where.append(EventDistance.condition(f,p));
         return new Query(where.toString(),p);
     }
     public PageResult<Api.Event> mine(Api.EventStatus status,int page,int size) {

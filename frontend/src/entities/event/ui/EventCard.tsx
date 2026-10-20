@@ -1,3 +1,4 @@
+import { EventDistance } from "../../../shared/ui/EventDistance";
 import {
   ArrowUpRight,
   CalendarDays,
@@ -71,6 +72,7 @@ export function EventCard({
             {event.location.city} · {event.location.address}
           </span>
         </p>
+        <EventDistance location={event.location} />
         <div className="event-organizer">
           <OrganizerIcon size={16} />
           <OrganizerPreview organizer={event.organizer} />

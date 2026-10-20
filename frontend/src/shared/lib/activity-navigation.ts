@@ -16,6 +16,7 @@ const catalogKeys = [
   "sort",
   "page",
   "size",
+  "radiusMeters",
 ];
 export const listOnlyFilters = [
   ["q", "поиск по тексту"],

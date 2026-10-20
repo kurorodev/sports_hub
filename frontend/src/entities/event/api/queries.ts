@@ -1,3 +1,5 @@
+import { distanceParams } from "../../../shared/lib/distance";
+import type { Point } from "../../../shared/lib/map";
 import { isUuid } from "../../../shared/lib/identifiers";
 import { queryOptions } from "@tanstack/react-query";
 import { request } from "../../../shared/api/client";
@@ -15,15 +17,24 @@ export const mapEventsQuery = (
   sportId: string,
   viewerId?: string,
   dates: { from?: string; to?: string } = {},
+  distance?: { radius: string; origin: Point | null },
 ) =>
   queryOptions({
-    queryKey: ["map", "events", bbox, sportId, viewerId ?? "guest", dates],
+    queryKey: [
+      "map",
+      "events",
+      bbox,
+      sportId,
+      viewerId ?? "guest",
+      dates,
+      distance,
+    ],
     queryFn: ({ signal }) =>
       request<MapEventsResponse>(
-        `/map/events?${new URLSearchParams({ bbox, ...(sportId ? { sportId } : {}), ...(dates.from ? { from: dateBoundary(dates.from) } : {}), ...(dates.to ? { to: dateBoundary(dates.to, true) } : {}), limit: "300" })}`,
+        `/map/events?${distanceParams(new URLSearchParams({ ...(distance?.radius ? { radiusMeters: distance.radius } : {}), bbox, ...(sportId ? { sportId } : {}), ...(dates.from ? { from: dateBoundary(dates.from) } : {}), ...(dates.to ? { to: dateBoundary(dates.to, true) } : {}), limit: "300" }), distance?.origin)}`,
         { signal },
       ),
-    enabled: Boolean(bbox),
+    enabled: Boolean(bbox) && (!distance?.radius || Boolean(distance.origin)),
     retry: false,
     refetchInterval: 10000,
   });
@@ -41,11 +52,16 @@ export function createEvent(input: CreateEventInput) {
   });
 }
 
-export const eventsQuery = (params: URLSearchParams) =>
+export const eventsQuery = (params: URLSearchParams, origin?: Point | null) =>
   queryOptions({
-    queryKey: ["events", params.toString()],
+    queryKey: [
+      "events",
+      params.toString(),
+      params.has("radiusMeters") ? origin : undefined,
+    ],
+    enabled: !params.has("radiusMeters") || Boolean(origin),
     queryFn: ({ signal }) => {
-      const apiParams = new URLSearchParams(params);
+      const apiParams = distanceParams(params, origin);
       // Calendar filters have an explicit UTC boundary; never send a date-only value to Java.
       for (const key of ["from", "to"]) {
         const value = apiParams.get(key);

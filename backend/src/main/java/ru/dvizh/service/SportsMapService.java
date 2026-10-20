@@ -18,6 +18,10 @@ public class SportsMapService {
     public SportsMapService(Store db,Access access,Views views,Clock clock,SportsCatalog catalog) { this.db=db;this.access=access;this.views=views;this.clock=clock;this.catalog=catalog; }
     @Transactional(readOnly=true)
     public Api.MapEventsResponse events(String bbox, UUID sportId, int limit, Instant from, Instant to) {
+        return events(bbox,sportId,limit,from,to,Map.of());
+    }
+    @Transactional(readOnly=true)
+    public Api.MapEventsResponse events(String bbox, UUID sportId, int limit, Instant from, Instant to,Map<String,String> filters) {
         var bounds=MapBounds.parse(bbox); MapBounds.limit(limit);
         Instant now=clock.instant();
         if(from!=null && to!=null && !from.isBefore(to)) throw Problem.invalid("from должен быть раньше to");
@@ -25,6 +29,7 @@ public class SportsMapService {
         String condition=MapBounds.CONDITION+" and e.status=:status and e.startsAt>=:from";
         if(to!=null) {condition+=" and e.startsAt<=:to"; params.put("to",to);}
         if(sportId!=null) {condition+=" and e.sportId=:sport"; params.put("sport",catalog.resolve(sportId).id);}
+        condition+=EventDistance.condition(filters,params);
         var rows=db.list(EventEntity.class,condition,params,"e.startsAt asc,e.id asc",0,limit+1);
         return new Api.MapEventsResponse(rows.stream().limit(limit).map(views::card).toList(),rows.size()>limit);
     }
