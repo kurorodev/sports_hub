@@ -30,6 +30,7 @@ export async function request<T>(
   const headers = new Headers(init.headers);
   if (init.body) headers.set("Content-Type", "application/json");
   const method = (init.method ?? "GET").toUpperCase();
+  // До создания сессии CSRF-токена ещё нет; остальные изменения подтверждаем токеном текущего аккаунта.
   if (
     ["POST", "PATCH", "DELETE"].includes(method) &&
     ![
@@ -44,6 +45,7 @@ export async function request<T>(
   }
   let response: Response;
   try {
+    // HttpOnly-cookie читает сервер; браузер отправляет её вместе с запросом.
     response = await fetch(`${apiConfig.baseUrl}${path}`, {
       ...init,
       headers,

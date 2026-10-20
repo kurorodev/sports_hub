@@ -48,7 +48,7 @@ export function saveComment(
   text: string,
 ): CommentDto {
   const existing = getComments();
-  // Keep a stable publication order even when browser tests freeze the clock.
+  // При одинаковом времени публикации сохраняем порядок сообщений, в том числе с замороженными часами.
   const lastTime = existing.reduce(
     (latest, item) => Math.max(latest, Date.parse(item.createdAt)),
     0,

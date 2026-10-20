@@ -134,7 +134,7 @@ for (const viewport of [
     await expect(confirmation).toBeVisible();
     await expect(confirmation).toContainText("Восстановить её не получится.");
     if (viewport.width === 375) {
-      // The eight-second story timer must not advance behind the warning.
+      // Пока открыто предупреждение об удалении, восьмисекундный таймер сторис должен стоять на паузе.
       await page.waitForTimeout(8200);
       await expect(confirmation).toBeVisible();
     }

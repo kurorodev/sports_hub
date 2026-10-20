@@ -829,7 +829,7 @@ export const handlers = [
         { status: 409 },
       );
     const hash = await hashMockPassword(password);
-    // Recheck uniqueness after asynchronous hashing.
+    // За время хеширования другой запрос мог занять этот логин; проверяем повторно.
     if (
       mockProfiles().some(
         (u) => u.nickname.toLowerCase() === nickname.toLowerCase(),
@@ -1415,7 +1415,7 @@ export const handlers = [
           { code: "EVENT_FULL", message: "Все места уже заняты" },
           { status: 409 },
         );
-      // Validation + append run synchronously in this mock context, including duplicate/capacity checks.
+      // Проверка лимита и добавление записи идут без await, чтобы запросы мока не заняли одно место.
       const registration = saveRegistration(
         event.id,
         session.user,
@@ -1507,7 +1507,7 @@ export const handlers = [
           },
           { status: 422 },
         );
-      // No await between reading current state and saving the decision: atomic in this mock context.
+      // Между чтением заявки и решением нет await: другой запрос мока не изменит статус посередине.
       const event = getEvents(session.user.id).find(
         (item) => item.id === params.eventId,
       );

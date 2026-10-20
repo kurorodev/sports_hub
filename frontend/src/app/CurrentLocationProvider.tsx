@@ -88,7 +88,7 @@ export function CurrentLocationProvider({ children }: { children: ReactNode }) {
               "Доступ к геолокации запрещён. Разрешите его в настройках браузера и повторите попытку.",
             );
           } else {
-            // A temporary loss of GPS must not cancel the subscription to the next fix.
+            // При временной потере GPS ждём следующую координату, не отключая отслеживание.
             setPosition(null);
             setAccuracy(null);
             setStatus("error");

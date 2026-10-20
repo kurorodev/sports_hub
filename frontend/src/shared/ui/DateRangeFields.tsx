@@ -31,7 +31,7 @@ function DateField({
         value={value}
         aria-describedby={error ? `${id}-error` : undefined}
         onChange={(next) => {
-          // Check the live date too when a tab has stayed open across midnight.
+          // Вкладка могла остаться открытой после полуночи; проверяем актуальную нижнюю границу даты.
           if (
             next &&
             (next < calendarDate() || next < min || (max && next > max))

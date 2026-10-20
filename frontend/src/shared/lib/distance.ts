@@ -23,7 +23,7 @@ export function formatDistance(meters: number) {
 }
 export function distanceParams(params: URLSearchParams, origin?: Point | null) {
   const next = new URLSearchParams(params);
-  // Origin parameters only belong to API requests; never reuse URL coordinates as GPS.
+  // Координаты из URL задают поиск, а не подтверждённое местоположение пользователя.
   next.delete("originLatitude");
   next.delete("originLongitude");
   if (next.has("radiusMeters") && origin) {

@@ -13,7 +13,7 @@ import ru.sport.api.*;
 import ru.sport.domain.*;
 import ru.sport.persistence.Store;
 
-/** Explicit interests lead the ranking; age never assigns or forbids a sport. */
+/** Сначала учитываем выбранные интересы; возраст проверяем по условиям встречи, не определяя по нему вид спорта. */
 @Service @Transactional(readOnly=true)
 public class RecommendationService {
     private final Store db;private final Access access;private final Views views;private final Clock clock;
@@ -38,7 +38,7 @@ public class RecommendationService {
         var ownedOrgs=db.list(OrganizationEntity.class,"e.createdBy=:user",Map.of("user",user.id)).stream().map(o -> o.id).collect(Collectors.toSet());
         var registered=db.list(RegistrationEntity.class,"e.userId=:user",Map.of("user",user.id)).stream().map(r -> r.eventId).collect(Collectors.toSet());
         var candidates=db.list(EventEntity.class,"e.status=:status and e.startsAt>:now",Map.of("status",Api.EventStatus.PUBLISHED,"now",now));
-        // One grouped read, rather than a participant-count query for every candidate.
+        // Считаем участников одним запросом, чтобы число обращений к БД не росло с каждой встречей.
         Map<UUID,Long> counts=new HashMap<>();
         for(var row:em.createQuery("select r.eventId,count(r.id) from RegistrationEntity r where r.status=:confirmed and r.eventId in (select e.id from EventEntity e where e.status=:published and e.startsAt>:now) group by r.eventId",Object[].class)
             .setParameter("confirmed",Api.RegistrationStatus.CONFIRMED).setParameter("published",Api.EventStatus.PUBLISHED).setParameter("now",now).getResultList())counts.put((UUID)row[0],(Long)row[1]);
@@ -48,7 +48,7 @@ public class RecommendationService {
             if(user.id.equals(event.organizerUserId) || ownedOrgs.contains(event.organizerOrganizationId) || registered.contains(event.id))continue;
             if(!otherCities && !selectedCity.isEmpty() && !selectedCity.equals(city(event.city)))continue;
             UUID sport=canonical.get(event.sportId);if(sport==null)continue;
-            // A custom activity named exactly like an existing category is still that interest.
+            // Свободное название, совпавшее с категорией, должно учитываться как интерес к этой категории.
             if(sports.get(sport).isCustom && event.customSportName!=null)sport=names.getOrDefault(normalized(event.customSportName),sport);
             var level=favorites.get(sport);
             if(level==null)level=favorites.get(canonical.get(event.sportId));
@@ -64,7 +64,7 @@ public class RecommendationService {
             ranked.add(new Ranked(event,score,reasons));
         }
         ranked.sort(Comparator.comparingInt(Ranked::score).reversed().thenComparing(r -> r.event.startsAt).thenComparing(r -> r.event.id.toString()));
-        // DTO projection only for the requested page, after scoring and filtering.
+        // Собираем карточки после отбора страницы, чтобы не загружать детали всей выдачи.
         return PageResult.of(ranked.stream().skip(offset).limit(size).map(r -> new Api.RecommendedEvent(views.card(r.event),r.score,r.reasons)).toList(),page,size,ranked.size());
     }
 }

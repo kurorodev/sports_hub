@@ -62,7 +62,7 @@ export const eventsQuery = (params: URLSearchParams, origin?: Point | null) =>
     enabled: !params.has("radiusMeters") || Boolean(origin),
     queryFn: ({ signal }) => {
       const apiParams = distanceParams(params, origin);
-      // Calendar filters have an explicit UTC boundary; never send a date-only value to Java.
+      // Граница дня задана в UTC; дата без времени и смещения изменила бы диапазон на сервере.
       for (const key of ["from", "to"]) {
         const value = apiParams.get(key);
         if (value && /^\d{4}-\d{2}-\d{2}$/.test(value))
@@ -82,7 +82,7 @@ export const eventQuery = (id: string, viewerId?: string) =>
     queryFn: async ({ signal }) => {
       const path = `/events/${encodeURIComponent(id)}`;
       const event = await request<EventPreview>(path, { signal });
-      // /team supplies server availability; the UI does not infer rights from its clock.
+      // Доступность записи берём из /team: часы устройства не определяют права участника.
       const team = await request<TeamStatus>(`${path}/team`, { signal });
       if (team.eventId !== event.id)
         throw new Error("Несогласованные данные события");

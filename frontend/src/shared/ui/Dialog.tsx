@@ -35,6 +35,7 @@ export function Dialog({
       }}
       onClick={(event) => {
         if (event.target !== event.currentTarget) return;
+        // target === dialog бывает и при клике по его отступам; закрываем только клик за внешней границей.
         const r = event.currentTarget.getBoundingClientRect();
         if (
           event.clientX < r.left ||

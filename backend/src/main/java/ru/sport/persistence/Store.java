@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import ru.sport.api.Problem;
 import ru.sport.domain.BaseEntity;
 
-/** Parameterized JPQL. All query fragments are constants owned by services. */
+/** Значения передаём параметрами JPQL; фрагменты запросов формируют сервисы, а не клиент. */
 @Repository
 public class Store {
     @PersistenceContext private EntityManager em;
@@ -22,9 +22,10 @@ public class Store {
         return entity;
     }
     public <T extends BaseEntity> T add(T entity) { em.persist(entity); return entity; }
-    /** A candidate query may have cached an older version before another transaction acquired the lock. */
+    /** После ожидания блокировки перечитываем сущность: в контексте JPA могла остаться устаревшая версия. */
     public <T> T refreshLocked(T entity) { em.flush();em.refresh(entity,LockModeType.PESSIMISTIC_WRITE);return entity; }
     public void flush() { em.flush(); }
+    // Массовый JPQL обходит контекст JPA: сначала сохраняем изменения, после запроса сбрасываем устаревшие сущности.
     public int execute(String jpql,Map<String,?> params) {
         em.flush();var query=em.createQuery(jpql);params.forEach(query::setParameter);
         int changed=query.executeUpdate();em.clear();return changed;

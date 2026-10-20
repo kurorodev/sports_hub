@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run from a regular Debian 13 terminal. Elevation applies only to system setup.
+# Запускать из обычного терминала Debian 13; права администратора нужны только для установки в систему.
 task_mode="${1:-install}"
 if [[ "$#" -gt 1 || ( "$task_mode" != install && "$task_mode" != --check ) ]]; then
   printf 'Использование: bash %s [--check]\n' "$0" >&2

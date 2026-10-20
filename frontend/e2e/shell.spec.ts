@@ -90,7 +90,7 @@ test("demo session restores and account switch removes privileges", async ({
 
 test("keyboard navigation and required account selection", async ({ page }) => {
   await page.goto("/login");
-  // Wait for the account form, including async bootstrap, before the first Tab.
+  // Начинаем обход клавиатурой после загрузки формы, иначе фокус попадёт на промежуточный экран.
   await expect(
     page.getByRole("button", { name: "Войти в аккаунт" }),
   ).toBeVisible();

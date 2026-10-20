@@ -158,7 +158,7 @@ for (const width of [375, 768, 1440]) {
         fullPage: true,
       });
     } finally {
-      // Keep shared demo accounts unchanged for S1–S6 and subsequent test runs.
+      // Восстанавливаем общий демо-аккаунт, чтобы изменения профиля не влияли на другие сценарии.
       const session: Session = await (
         await page.request.get("/api/v1/session")
       ).json();

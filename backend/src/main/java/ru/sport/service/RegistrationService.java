@@ -16,9 +16,11 @@ public class RegistrationService {
         if(e.status!=Api.EventStatus.PUBLISHED || !e.startsAt.isAfter(clock.instant()))
             throw Problem.conflict(Api.ErrorCode.EVENT_NOT_AVAILABLE,"Запись недоступна: событие не опубликовано или уже началось");
     }
+    // Лимит занимают только подтверждённые участники; заявки и очередь его не расходуют.
     private boolean full(EventEntity e) { return e.maxParticipants!=null && view.registrations(e.id,Api.RegistrationStatus.CONFIRMED)>=e.maxParticipants; }
     private void capacity(EventEntity e) { if(full(e))throw Problem.conflict(Api.ErrorCode.EVENT_FULL,"Свободных мест нет"); }
     @Transactional public Api.Registration join(UUID eventId,Api.RegistrationCreate request,boolean waitlist) {
+        // Запись, решение по заявке и отмена блокируют одно событие, чтобы не занять последнее место дважды.
         var u=access.participant();var e=db.lock(EventEntity.class,eventId);available(e);
         var existing=db.first(RegistrationEntity.class,"e.eventId=:event and e.userId=:user",Map.of("event",eventId,"user",u.id));
         if(existing.isPresent() && existing.get().status!=Api.RegistrationStatus.CANCELLED)
@@ -28,7 +30,7 @@ public class RegistrationService {
         } else if(e.joinMode==Api.JoinMode.OPEN) capacity(e);
         var r=existing.orElseGet(RegistrationEntity::new);
         r.eventId=eventId;r.userId=u.id;r.message=request.message();r.decisionReason=null;r.decidedAt=null;r.decidedBy=null;r.updatedAt=clock.instant();
-        // Rejoining a cancelled registration joins at the end of the queue.
+        // При повторной записи место в очереди определяется новым updatedAt; исходную дату создания сохраняем.
         if(existing.isEmpty())r.createdAt=clock.instant();
         r.status=waitlist?Api.RegistrationStatus.WAITLISTED:e.joinMode==Api.JoinMode.OPEN?Api.RegistrationStatus.CONFIRMED:Api.RegistrationStatus.PENDING;
         if(existing.isEmpty())db.add(r);
@@ -55,6 +57,7 @@ public class RegistrationService {
         db.first(ParticipationEntity.class,"e.registrationId=:reg",Map.of("reg",r.id)).ifPresent(p -> p.status="CANCELLED");
         db.flush();
         if(occupied && e.joinMode==Api.JoinMode.OPEN && e.status==Api.EventStatus.PUBLISHED) {
+            // Освободившееся место получает первый в очереди; повторная запись встаёт в её конец по updatedAt.
             db.list(RegistrationEntity.class,"e.eventId=:event and e.status=:status",Map.of("event",eventId,"status",Api.RegistrationStatus.WAITLISTED),"e.updatedAt asc,e.id asc",0,1).stream().findFirst().ifPresent(next -> {
                 next.status=Api.RegistrationStatus.CONFIRMED;next.updatedAt=clock.instant();next.decidedAt=clock.instant();participation(e,next);notifications.registration(e,next,false);
             });

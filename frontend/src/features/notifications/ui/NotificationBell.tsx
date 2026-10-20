@@ -75,7 +75,7 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
   const pages = accessLost ? undefined : query.data?.pages;
   const first = pages?.[0];
   const count = first?.unreadCount ?? 0;
-  // Refetching a page while new items arrive can shift pagination; never show duplicate cards.
+  // Новые уведомления сдвигают страницы при обновлении; убираем дубли по id.
   const items = [
     ...new Map(
       pages?.flatMap((p) => p.items).map((item) => [item.id, item]),
@@ -101,7 +101,7 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
           setOpen(true);
           read.reset();
           readAll.reset();
-          // Read only a successful, fresh snapshot, never cached data after a failed load.
+          // После ошибки загрузки не отмечаем прочитанными данные из старого кэша.
           const result = await query.refetch();
           const snapshot = result.data?.pages[0];
           if (

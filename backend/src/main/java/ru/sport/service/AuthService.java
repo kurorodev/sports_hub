@@ -20,7 +20,7 @@ public class AuthService {
             throw Problem.conflict(Api.ErrorCode.CONFLICT,"Никнейм уже занят");
         var user=new UserEntity();user.nickname=request.nickname();user.normalizedNickname=normalized;user.displayName=request.displayName();
         user.passwordHash=encoder.encode(request.password());
-        // Password accounts never receive a demoAccount: demo login cannot bypass the password.
+        // У парольного аккаунта нет demoAccount: демонстрационный вход не должен обходить пароль.
         db.add(user);db.flush();return user.id;
     }
     public UUID login(Api.AuthLoginRequest request) {

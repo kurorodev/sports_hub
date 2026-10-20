@@ -11,7 +11,7 @@ import type {
 import { hasPoint } from "../shared/lib/map";
 import { eventFieldsSchema } from "../shared/api/event-schema";
 
-// A real reference point, not a geocoder: https://www.wikidata.org/wiki/Q4365616
+// Координаты площади для демоданных: https://www.wikidata.org/wiki/Q4365616
 export const demoSuggestion: GeoSuggestion = {
   id: "demo-kuybyshev-square",
   label: "Самара, площадь Куйбышева",
@@ -119,7 +119,7 @@ function venueItems(): VenueMapItem[] {
     const levels = latest
       .map((report) => ["LOW", "MEDIUM", "HIGH"].indexOf(report.level))
       .sort((a, b) => a - b);
-    // Only public DTO fields leave the mock backend.
+    // В ответе мока оставляем только поля публичного контракта.
     return {
       id: venue.id,
       name: venue.name,

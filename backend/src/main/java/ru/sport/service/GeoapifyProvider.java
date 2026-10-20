@@ -28,13 +28,13 @@ public class GeoapifyProvider implements GeocodingProvider {
             if(!results.isArray())throw unavailable();
             return results;
         } catch(InterruptedException e) {Thread.currentThread().interrupt();throw unavailable();}
-        catch(Exception e) {throw unavailable();} // Never expose URLs or API keys in errors/logs.
+        catch(Exception e) {throw unavailable();} // Ошибка провайдера может содержать URL с API-ключом; не передаём её наружу.
     }
     public List<Api.GeoSuggestion> suggest(String query,String city,int limit) {
         String text=city==null||city.isBlank()?query:city+", "+query;
         String parameters="text="+encode(text)+"&limit="+limit;
         var rows=fetch("autocomplete",parameters);
-        // Autocomplete has less coverage than full geocoding for some Russian streets.
+        // Некоторые российские адреса отсутствуют в подсказках, но находятся полным геокодированием.
         if(rows.isEmpty())rows=fetch("search",parameters);
         List<Api.GeoSuggestion> result=new ArrayList<>();
         for(var row:rows) {

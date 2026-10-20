@@ -20,7 +20,7 @@ class AdminPanelTest extends ApiTestSupport {
     @Test void categoryAndPhotoArePersistentAndPublicButOnlyAdminCanWrite() throws Exception {
         var user=login("athlete-a");var admin=login("admin");String name="Падел "+UUID.randomUUID();
         var body=Map.of("name",name,"imageData",image());
-        call(null,"POST","/admin/sports",body,403); // CSRF also protects unauthenticated writes.
+        call(null,"POST","/admin/sports",body,403); // CSRF проверяется и у запросов записи без авторизации.
         call(user,"POST","/admin/sports",body,403);
         var sport=json(call(admin,"POST","/admin/sports",body,201));String id=sport.path("id").asText();
         assertThat(sport.path("isCustom").asBoolean()).isFalse();

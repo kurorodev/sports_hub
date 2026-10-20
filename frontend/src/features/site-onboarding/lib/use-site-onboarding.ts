@@ -15,7 +15,7 @@ export function useSiteOnboarding() {
     try {
       localStorage.setItem(storageKey, "seen");
     } catch {
-      /* The guide still closes when browser storage is unavailable. */
+      /* Закрываем знакомство с сайтом и при недоступном хранилище. */
     }
     setOpen(false);
   }

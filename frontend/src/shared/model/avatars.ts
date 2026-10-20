@@ -36,7 +36,7 @@ export function avatarSource(
 ) {
   if (url && safeAvatarUrl(url)) {
     const character = avatarCharacter(url);
-    // A contextual organizer override must not downgrade an administrator.
+    // Контекст организатора не должен скрывать системную роль администратора.
     return character && tone && !url.startsWith("/avatars/admin/")
       ? avatarPath(character, tone)
       : url;

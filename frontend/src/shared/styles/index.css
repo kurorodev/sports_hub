@@ -259,7 +259,7 @@ button:disabled {
   display: block;
   width: 192px;
   height: 46px;
-  /* The supplied wordmarks contain transparent space above and below the artwork. */
+  /* В исходных логотипах есть прозрачные поля; компенсируем их при размещении знака. */
   object-fit: cover;
 }
 .site-header .brand {
@@ -580,7 +580,7 @@ button:disabled {
   font-size: 12px;
   color: var(--color-ink);
 }
-/* Searchable sport picker, shared by the catalog and the map. */
+/* Выбор вида спорта в каталоге и на карте. */
 .sport-select { position: relative; min-width: 0; }
 .sport-select.is-open { z-index: 50; }
 .sport-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px; padding: 11px 13px; border: 1px solid var(--color-outline); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink); text-align: left; font-size: 14px; transition: border-color .15s; }
@@ -1095,7 +1095,6 @@ input[type="radio"] {
   color: var(--color-ink-muted);
   margin-bottom: var(--space-6);
 }
-/* Shared by catalog and map at every breakpoint. */
 .distance-filter {
   display: grid;
   gap: var(--space-3);
@@ -1375,7 +1374,7 @@ input[type="radio"] {
   }
 }
 
-/* S1: event creation uses the same surfaces, controls and spacing tokens. */
+/* Создание встречи. */
 .create-page {
   padding-block: var(--space-8) var(--space-16);
 }
@@ -1549,7 +1548,7 @@ input[type="radio"] {
   }
 }
 
-/* S3: API-confirmed participation and a public participant list. */
+/* Запись и состав участников. */
 .join-feedback,
 .registration-status,
 .detail-summary > .join-note {
@@ -1671,7 +1670,6 @@ input[type="radio"] {
   }
 }
 
-/* Server registration statuses use the same semantic tokens on cards and details. */
 .registration-status.warning,
 .card-registration.warning {
   color: var(--color-warning);
@@ -1688,7 +1686,7 @@ input[type="radio"] {
   background: var(--color-surface-alt);
 }
 
-/* S4: organizer requests stay readable as cards at every breakpoint. */
+/* Заявки организатора. */
 .requests-panel {
   padding: var(--space-6);
   margin-block: var(--space-6);
@@ -1789,7 +1787,7 @@ input[type="radio"] {
   }
 }
 
-/* Public event discussion. Long messages stay inside the event column. */
+/* Обсуждение события. */
 .discussion-panel {
   margin-block: var(--space-6);
   padding: var(--space-6);
@@ -1894,7 +1892,7 @@ input[type="radio"] {
   }
 }
 
-/* Organization applications, public profiles and admin decisions share card surfaces. */
+/* Организации и решения по допуску. */
 .organization-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -1906,7 +1904,6 @@ input[type="radio"] {
 .organization-toolbar > .form-field {
   margin-bottom: 0;
 }
-/* Aligned comment filters and visible search suggestions. */
 .comment-filter-panel { margin-block: var(--space-6); padding: var(--space-6); background: var(--color-surface); border: 1px solid var(--color-outline); border-radius: var(--radius-card); }
 .comment-filter-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: var(--space-6); }
 .comment-filter-heading h3 { font-size: 16px; letter-spacing: -0.02em; }
@@ -2191,7 +2188,7 @@ input[type="radio"] {
   overflow-wrap: anywhere;
 }
 
-/* Maps share the existing form, card and status tokens. */
+/* Карта и выбранные объекты. */
 .geo-map {
   position: relative;
   width: 100%;
@@ -2502,7 +2499,7 @@ input[type="radio"] {
   }
 }
 
-/* Admin moderation uses the same cards and controls on small and large screens. */
+/* Модерация контента. */
 .admin-sections {
   display: flex;
   flex-wrap: wrap;
@@ -2583,7 +2580,7 @@ input[type="radio"] {
   }
 }
 
-/* One navigation between catalog and map; filters remain in the URL. */
+/* Переключение списка и карты. */
 .activity-view-switch {
   display: inline-flex;
   gap: var(--space-1);
@@ -2779,7 +2776,7 @@ input[type="radio"] {
   min-height: 200px;
   padding: 24px;
 }
-/* Public and own profiles share the same identity and sport details. */
+/* Профиль пользователя. */
 .person-link {
   font-weight: 700;
   text-decoration: underline;
@@ -3023,7 +3020,6 @@ input[type="radio"] {
   }
 }
 
-/* Signup and participation conditions share the existing form/card tokens. */
 .signup-fields {
   border: 0;
   padding: 0;
@@ -3113,7 +3109,7 @@ input[type="radio"] {
   text-underline-offset: 3px;
 }
 
-/* Personal notifications use the same controls and surfaces as the rest of the product. */
+/* Личные уведомления. */
 .header-actions {
   display: flex;
   align-items: center;
@@ -3362,7 +3358,7 @@ input[type="radio"] {
   }
 }
 
-/* Interactive organizer previews render in a portal to escape card clipping. */
+/* Портал выводит превью организатора за границы карточки события. */
 .hover-card-anchor {
   display: inline-flex;
   align-items: center;
@@ -3442,7 +3438,7 @@ input[type="radio"] {
 .organizer-preview-manual-copy { width: 100%; margin-top: var(--space-2); }
 .clipboard-selection-helper { position: fixed; top: 0; left: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; font-size: 16px; pointer-events: none; }
 
-/* Private support, reports and the administrator's queue. */
+/* Поддержка и очередь обращений. */
 .support-header-link { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px; width: 44px; height: 44px; color: var(--color-header-text); border: 1px solid var(--color-dark-line); border-radius: var(--radius-control); }
 .support-header-link:hover { color: var(--color-brand); }
 .support-hero { padding-block: var(--space-8); max-width: 800px; }
@@ -3531,7 +3527,6 @@ input[type="radio"] {
   .support-reply > button, .support-form > button { width: 100%; }
 }
 
-/* Supplied sport illustrations and selectable characters. */
 .sport-tab { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .sport-tab > img, .sport-option-icon { flex: 0 0 28px; width: 28px; height: 28px; object-fit: cover; border-radius: 50%; background: #fff; }
 .sport-select-trigger > span, .sport-select-options > button > span { flex: 1; }
@@ -3559,7 +3554,6 @@ input[type="radio"] {
   .avatar-choice-check { width: 18px; height: 18px; right: 0; bottom: 0; }
 }
 
-/* Spacing shared by form stacks and actions, including narrow viewports. */
 .signup-fields > .form-field {
   margin-bottom: 0;
 }
@@ -3693,7 +3687,7 @@ input[type="radio"] {
   .map-toolbar > .distance-filter > .reset-button { grid-column: 1 / -1; }
 }
 
-/* One dropdown menu across forms, filters and cabinets. The native field only carries form events. */
+/* Видимое меню отделено от нативного поля, которое сохраняет события формы. */
 .native-select > .sport-select { width: 100%; }
 .native-select > select.select-native-input,
 .city-select > input.select-native-input {
@@ -3723,7 +3717,7 @@ input[type="radio"] {
 .city-field .sport-select-menu { min-width: min(240px, calc(100vw - 64px)); right: 0; left: auto; }
 .sport-select-trigger:disabled { cursor: not-allowed; }
 
-/* Fields share one border: light when idle, dark when focused or open. */
+/* Фокус меняет цвет существующей границы, не добавляя вторую обводку. */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
 textarea:focus,
 select:focus,
@@ -3740,7 +3734,6 @@ select:focus:not([aria-invalid="true"]),
   border-color: var(--color-focus);
 }
 
-/* Calendar uses the same surface, border and shadow as other dropdown menus. */
 .date-picker.is-open .date-picker-trigger > svg { transform: none; }
 .date-picker-panel {
   right: auto;
@@ -3790,18 +3783,16 @@ select:focus:not([aria-invalid="true"]),
 .textarea-control.is-over-limit .textarea-meta { color: var(--color-danger); }
 .textarea-control textarea[aria-invalid="true"] { border-color: var(--color-danger); }
 
-/* GPS position is distinct from event and venue pins. */
 .map-current-location { z-index: 5; width: 48px; height: 48px; display: grid; place-items: center; pointer-events: none; border-radius: 50%; background: rgb(227 49 62 / 12%); }
 .map-current-location > svg { display: block; filter: drop-shadow(0 2px 3px rgb(91 13 22 / 35%)); }
 .map-current-location-key { color: #e3313e; fill: #e3313e; }
 
-/* Keep venue details and rating in a single map card. */
 .map-venue-rating { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-outline); }
 .map-venue-rating > .button { margin-top: 0; margin-bottom: var(--space-4); }
 .map-selection .occupancy-options { grid-template-columns: minmax(0, 1fr); }
 .map-selection .occupancy-form .button { width: 100%; }
 
-/* Preference questionnaire and personal recommendations. */
+/* Анкета и рекомендации. */
 .questionnaire-dialog,
 .questionnaire-confirm {
   width: min(640px, calc(100vw - 24px));
@@ -3864,7 +3855,6 @@ select:focus:not([aria-invalid="true"]),
   .questionnaire-actions > .button { flex: 1 1 auto; justify-content: center; }
   .recommendations-heading > .button { width: 100%; }
 }
-/* Administrative pages use one spacing scale and the same filter panel. */
 .admin-workspace { max-width: 1180px; margin-inline: auto; }
 .admin-workspace > h1 { margin-block: 8px 24px; }
 .admin-workspace > section > h2 { margin-block: 28px 16px; }
@@ -3966,7 +3956,7 @@ select:focus:not([aria-invalid="true"]),
 .venue-week-legend > li { display: inline-flex; align-items: center; gap: 5px; }
 .venue-week-legend > li > span { width: 6px; height: 6px; border-radius: 50%; background: var(--occupancy-color); }
 
-/* Stories are published by the platform team and expire after 24 hours. */
+/* Новости платформы и просмотр сторис. */
 .stories-section { margin-block: var(--space-6); min-width: 0; }
 .stories-heading { display: flex; align-items: end; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-3); }
 .stories-heading h2 { font-size: 22px; line-height: 1.2; margin-top: var(--space-1); }
@@ -4063,7 +4053,6 @@ select:focus:not([aria-invalid="true"]),
   .home-banner-visual { display: none; }
 }
 
-/* Fit the venue summary and demo chart in the map overlay without clipping content. */
 .map-selection-venue { padding: 16px; }
 .map-selection-venue .map-selection-heading { margin-bottom: 8px; }
 .map-selection-venue h3 { font-size: 18px; line-height: 1.3; }
@@ -4074,7 +4063,7 @@ select:focus:not([aria-invalid="true"]),
 .map-selection-venue .venue-week-bar { max-height: 40px; }
 @media (min-width:1024px) { .map-selection-venue { width: 360px; } }
 
-/* Personal participation and its confirmation dialog. */
+/* Управление своим участием. */
 .my-events-page > header { margin-bottom: 24px; }
 .my-events-page > header h1 { margin: 8px 0 12px; }
 .my-events-page > header p { color: var(--color-ink-muted); }
@@ -4114,7 +4103,7 @@ select:focus:not([aria-invalid="true"]),
 .cancel-event-title { font-weight: 700; overflow-wrap: anywhere; }
 .my-events-page .organization-hub-nav { flex-wrap: wrap; }
 
-/* A short, dismissible introduction; the controls stay reachable on small screens. */
+/* Знакомство с сайтом. */
 .site-guide-dialog { width: min(620px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; }
 .site-guide-dialog[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
 .site-guide-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px 0; }
@@ -4171,7 +4160,7 @@ select:focus:not([aria-invalid="true"]),
   .site-guide-actions { padding: 16px 20px 20px; }
   .site-guide-actions > .button { min-width: 0; flex: 1; }
 }
-/* The heading receives reading focus after a step change; controls keep their focus ring. */
+/* После смены шага фокус чтения переходит на заголовок; кнопки сохраняют видимый фокус. */
 .site-guide-copy h2:focus { outline: none; }
 
 .recommendations-options { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 16px; border: 1px solid var(--color-outline); border-radius: 14px; background: var(--color-surface-alt); }

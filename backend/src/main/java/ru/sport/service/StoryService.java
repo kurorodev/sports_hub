@@ -27,6 +27,7 @@ public class StoryService {
         access.requireAdmin();validator.validate("StoryCreate",input);
         var story=new StoryEntity();story.authorId=access.user().id;
         story.title=input.path("title").asText().strip();story.text=input.path("text").asText().strip();
+        // Срок всегда 24 часа по серверным часам; клиент не задаёт дату окончания.
         story.createdAt=clock.instant();story.updatedAt=story.createdAt;story.expiresAt=story.createdAt.plus(Duration.ofHours(24));
         StoryImageEntity image=null;
         if(input.hasNonNull("imageData"))image=decode(input.path("imageData").asText());
@@ -38,12 +39,12 @@ public class StoryService {
         access.requireAdmin();var story=db.lock(StoryEntity.class,id);
         if(story.deletedAt!=null)return;
         story.deletedAt=clock.instant();story.updatedAt=story.deletedAt;
-        // Flush the deletion marker before clearing the persistence context in execute().
+        // execute() сохраняет deletedAt до очистки контекста JPA; иначе отметка удаления потеряется.
         db.execute("delete from StoryImageEntity e where e.id=:id",Map.of("id",id));
     }
     @Transactional public StoryApi.Story view(UUID id) {
         var user=access.user();var story=db.lock(StoryEntity.class,id);active(story);
-        // The story lock serializes repeated views and deletion; no duplicate per-user records.
+        // Просмотр и удаление блокируют одну сторис: повторный запрос не создаст вторую отметку пользователя.
         var previous=db.first(StoryViewEntity.class,"e.storyId=:story and e.userId=:user",Map.of("story",id,"user",user.id));
         if(previous.isPresent())return dto(story,previous.get().createdAt);
         var view=new StoryViewEntity();view.storyId=id;view.userId=user.id;view.createdAt=clock.instant();view.updatedAt=view.createdAt;db.add(view);
@@ -53,6 +54,7 @@ public class StoryService {
         access.user();active(db.get(StoryEntity.class,id));return db.get(StoryImageEntity.class,id);
     }
     private void active(StoryEntity story) {
+        // Срок проверяем и при прямом запросе картинки, чтобы URL не обходил истечение сторис.
         var now=clock.instant();
         if(story.deletedAt!=null || story.createdAt.isAfter(now) || !story.expiresAt.isAfter(now))throw Problem.notFound();
     }
@@ -62,6 +64,7 @@ public class StoryService {
             if(!data.startsWith("data:image/png;base64,") && !data.startsWith("data:image/jpeg;base64,"))throw new IOException();
             byte[] bytes=Base64.getDecoder().decode(data.substring(data.indexOf(',')+1));
             if(bytes.length==0 || bytes.length>2*1024*1024)throw new IOException();
+            // Размеры проверяем до декодирования, а повторное сохранение убирает исходные метаданные файла.
             try(var stream=ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
                 var readers=ImageIO.getImageReaders(stream);if(!readers.hasNext())throw new IOException();var reader=readers.next();
                 try {

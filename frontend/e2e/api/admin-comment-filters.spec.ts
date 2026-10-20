@@ -70,7 +70,7 @@ for (const width of [320, 375, 768, 1440]) {
     await authorOption.click();
     await expect(page.getByText("Найдено комментариев: 13")).toBeVisible();
     await expect(page).not.toHaveURL(/authorId=/);
-    // Both settings may be changed immediately, without losing the preceding URL update.
+    // Быстрый выбор двух фильтров не должен затирать предыдущее изменение URL.
     await page.getByLabel("Последние 10 комментариев").click();
     await page.getByLabel("За последние 24 часа").click();
     await expect(page.getByLabel("Последние 10 комментариев")).toBeChecked();

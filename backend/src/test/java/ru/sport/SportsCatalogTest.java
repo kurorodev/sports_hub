@@ -31,7 +31,7 @@ class SportsCatalogTest extends ApiTestSupport {
         assertThat(custom.path("sport").path("id").asText()).isEqualTo(other);
         assertThat(custom.path("customSportName").asText()).isEqualTo("Флорбол");
         assertThat(getJson(null,"/sports")).isEqualTo(before);
-        assertThat(getJson(null,"/sports?q=Флорбол")).hasSize(1); // Official category, independent of the custom label.
+        assertThat(getJson(null,"/sports?q=Флорбол")).hasSize(1); // Категория из справочника не зависит от свободного названия события.
         assertThat(getJson(viewer,"/events?q=Флорбол").path("items").toString()).contains(id);
         var body=new LinkedHashMap<String,Object>();
         body.put("title","Шахматы в парке");body.put("description","Играем в шахматы и разбираем партии вместе");

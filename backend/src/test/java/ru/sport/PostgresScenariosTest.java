@@ -6,7 +6,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
-/** Runs S1-S6 against the production database engine and the same Flyway migration. */
 @Tag("postgres") @Testcontainers
 class PostgresScenariosTest extends CoreScenariosTest {
     @Container static final PostgreSQLContainer<?> postgres=new PostgreSQLContainer<>("postgres:17.6-alpine");

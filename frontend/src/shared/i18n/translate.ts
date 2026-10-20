@@ -1,7 +1,7 @@
 import messages from "./en.json";
 import { getPreferences } from "./preferences";
 const english: Record<string, string> = messages;
-/** Translate interface copy only; interpolated user content is left intact. */
+/** Переводим интерфейс; имена, сообщения и другие пользовательские вставки сохраняем. */
 export function tr(text: string, values: readonly (string | number)[] = []) {
   const key = text.trim();
   const translated =

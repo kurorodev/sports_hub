@@ -1,4 +1,4 @@
-/** Clipboard API requires a secure origin; the selection fallback also supports LAN HTTP. */
+/** В локальной сети по HTTP Clipboard API может быть недоступен; оставляем копирование через выделение. */
 export async function copyText(
   text: string,
   container: HTMLElement = document.body,
@@ -8,7 +8,7 @@ export async function copyText(
       await navigator.clipboard.writeText(text);
       return;
     } catch {
-      // A browser may deny the modern API while still allowing an explicit copy gesture.
+      // Отказ Clipboard API не исключает копирование через выделение по действию пользователя.
     }
   }
   const previous = document.activeElement;

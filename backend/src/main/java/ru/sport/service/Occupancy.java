@@ -17,7 +17,7 @@ public final class Occupancy {
         if(latest.isEmpty()) return new Api.VenueOccupancy(Api.OccupancyLevel.UNKNOWN,historicalLast,null,0);
         var sorted=latest.values().stream().map(r->r.level.ordinal()).sorted().toList();
         Instant last=latest.values().stream().map(r->r.createdAt).max(Instant::compareTo).orElseThrow();
-        // Earliest expiry triggers a refresh of the aggregate, including a possible median change.
+        // Пересчитываем сводку при истечении первого отчёта: после его удаления может измениться медиана.
         Instant validUntil=latest.values().stream().map(r->r.createdAt.plus(TTL)).min(Instant::compareTo).orElseThrow();
         return new Api.VenueOccupancy(Api.OccupancyLevel.values()[sorted.get(sorted.size()/2)],last,validUntil,latest.size());
     }
