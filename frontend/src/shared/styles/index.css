@@ -3493,3 +3493,8 @@ input[type="radio"] {
   .support-section-heading .eyebrow { font-size: 10px; }
   .support-reply > button, .support-form > button { width: 100%; }
 }
+
+/* GPS position is distinct from event and venue pins. */
+.map-current-location { z-index: 5; width: 48px; height: 48px; display: grid; place-items: center; pointer-events: none; border-radius: 50%; background: rgb(227 49 62 / 12%); }
+.map-current-location > svg { display: block; filter: drop-shadow(0 2px 3px rgb(91 13 22 / 35%)); }
+.map-current-location-key { color: #e3313e; fill: #e3313e; }
