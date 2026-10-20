@@ -108,6 +108,7 @@ export function RegisterPage() {
             >
               <input
                 id="signup-name"
+                placeholder="Например, Алексей"
                 autoComplete="name"
                 required
                 maxLength={100}
@@ -124,6 +125,7 @@ export function RegisterPage() {
             >
               <input
                 id="signup-password"
+                placeholder="Придумайте пароль"
                 type="password"
                 autoComplete="new-password"
                 required

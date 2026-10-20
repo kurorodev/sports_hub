@@ -1,3 +1,5 @@
+import { Textarea } from "../../../shared/ui/Textarea";
+import { Select } from "../../../shared/ui/Select";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -78,11 +80,11 @@ export function ProfileForm({
   const mutation = useUpdateProfile(onSaved);
   const errors = form.formState.errors;
   const fields = [
-    ["name", "Имя в профиле", 100],
-    ["handle", "Никнейм", 41],
-    ["firstName", "Имя (необязательно)", 80],
-    ["lastName", "Фамилия (необязательно)", 80],
-    ["city", "Город", 100],
+    ["name", "Имя в профиле", 100, "Например, Алексей"],
+    ["handle", "Никнейм", 41, "Например, @alex_sport"],
+    ["firstName", "Имя (необязательно)", 80, "Например, Алексей"],
+    ["lastName", "Фамилия (необязательно)", 80, "Например, Иванов"],
+    ["city", "Город", 100, "Например, Самара"],
   ] as const;
   return (
     <form
@@ -137,7 +139,7 @@ export function ProfileForm({
       <fieldset disabled={mutation.isPending}>
         <legend>Знакомство</legend>
         <div className="profile-form-grid">
-          {fields.map(([field, label, max]) => (
+          {fields.map(([field, label, max, placeholder]) => (
             <FormField
               key={field}
               id={`profile-${field}`}
@@ -151,6 +153,7 @@ export function ProfileForm({
             >
               <input
                 id={`profile-${field}`}
+                placeholder={placeholder}
                 {...form.register(field)}
                 maxLength={max}
                 autoComplete={
@@ -176,8 +179,9 @@ export function ProfileForm({
           hint="До 1000 символов. Например, какой спорт любите и какую компанию ищете."
           error={errors.about?.message}
         >
-          <textarea
+          <Textarea
             id="profile-about"
+            placeholder="Расскажите, каким спортом занимаетесь и с кем хотите тренироваться"
             {...form.register("about")}
             rows={5}
             maxLength={1000}
@@ -188,14 +192,14 @@ export function ProfileForm({
           />
         </FormField>
         <FormField id="profile-time" label="Когда удобно заниматься">
-          <select id="profile-time" {...form.register("preferredTime")}>
+          <Select id="profile-time" {...form.register("preferredTime")}>
             <option value="">Не указано</option>
             {preferredTimes.map((value) => (
               <option value={value} key={value}>
                 {timeLabels[value]}
               </option>
             ))}
-          </select>
+          </Select>
         </FormField>
       </fieldset>
       <fieldset disabled={mutation.isPending}>
@@ -258,7 +262,7 @@ export function ProfileForm({
               label={`Уровень: ${sports.data?.find((sport) => sport.id === item.sportId)?.name ?? "Вид спорта недоступен"}`}
               error={errors.preferences?.[index]?.level?.message}
             >
-              <select
+              <Select
                 id={`profile-level-${item.sportId}`}
                 {...form.register(`preferences.${index}.level`)}
               >
@@ -267,7 +271,7 @@ export function ProfileForm({
                     {levelLabels[level]}
                   </option>
                 ))}
-              </select>
+              </Select>
             </FormField>
             <button
               className="button secondary"

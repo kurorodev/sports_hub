@@ -54,6 +54,7 @@ export function PasswordLoginForm({
         >
           <input
             id="login-password"
+            placeholder="Введите пароль"
             type="password"
             autoComplete="current-password"
             maxLength={128}

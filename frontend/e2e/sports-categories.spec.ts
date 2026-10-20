@@ -9,23 +9,26 @@ for (const width of [375, 768, 1440]) {
     await page.clock.setFixedTime(new Date("2026-10-19T12:00:00Z"));
     await page.context().route(/^https:\/\//, (route) => route.abort());
     await signInAs(page, "user-alex");
-    const category = page.getByLabel("Категория спорта", { exact: true });
-    await expect(category.locator("option")).toHaveCount(202);
+    const category = page.getByLabel("Вид спорта", { exact: true });
+    await category.click();
+    await expect(page.getByRole("option")).toHaveCount(202);
     await expect(
-      category.locator("option").filter({ hasText: /^Другое$/ }),
+      page.getByRole("option", { name: "Другое", exact: true }),
     ).toHaveCount(1);
-    await category.selectOption({ label: "Легкая атлетика" });
+    await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Утро. Парк. Лёгкий бег." }),
     ).toBeVisible();
     await page.goto("/events/new");
     const sport = page.getByLabel("Вид спорта", { exact: true });
-    await expect(sport.locator("option")).toHaveCount(202);
-    await sport.selectOption({ label: "Шахматы" });
+    await sport.click();
+    await expect(page.getByRole("option")).toHaveCount(202);
+    await page.getByRole("option", { name: "Шахматы", exact: true }).click();
     await expect(
       page.getByLabel("Название активности", { exact: true }),
     ).toHaveCount(0);
-    await sport.selectOption({ label: "Другое" });
+    await sport.click();
+    await page.getByRole("option", { name: "Другое", exact: true }).click();
     const label = `Новая активность ${width}`;
     await page.getByLabel("Название активности", { exact: true }).fill(label);
     await page
@@ -49,17 +52,20 @@ for (const width of [375, 768, 1440]) {
       page.getByText(`Активность: ${label}`, { exact: true }),
     ).toBeVisible();
     await signInAs(page, "user-maria");
-    await category.selectOption({ label: "Другое" });
+    await category.click();
+    await page.getByRole("option", { name: "Другое", exact: true }).click();
     await expect(
       page.getByRole("heading", {
         name: `Пробуем новое ${width}`,
         exact: true,
       }),
     ).toBeVisible();
-    await expect(category.locator("option")).toHaveCount(202);
+    await category.click();
+    await expect(page.getByRole("option")).toHaveCount(202);
     await expect(
-      category.locator("option").filter({ hasText: label }),
+      page.getByRole("option").filter({ hasText: label }),
     ).toHaveCount(0);
+    await category.click();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

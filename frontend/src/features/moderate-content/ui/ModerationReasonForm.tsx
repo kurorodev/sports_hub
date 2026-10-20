@@ -1,3 +1,4 @@
+import { Textarea } from "../../../shared/ui/Textarea";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,9 +64,10 @@ export function ModerationReasonForm({
             hint="Обязательна: от 3 до 1000 символов."
             error={form.formState.errors.reason?.message}
           >
-            <textarea
+            <Textarea
               id={`moderation-reason-${id}`}
               {...form.register("reason")}
+              placeholder="Укажите, какие правила нарушены и что нужно исправить"
               rows={3}
               maxLength={1000}
               disabled={pending}

@@ -139,6 +139,7 @@ export function LocationPicker({
         >
           <input
             id={`${idPrefix}-city`}
+            placeholder="Например, Самара"
             value={value.city}
             onChange={(e) => edit("city", e.target.value)}
             maxLength={120}
@@ -159,6 +160,7 @@ export function LocationPicker({
             <input
               ref={addressRef}
               id={`${idPrefix}-address`}
+              placeholder="Улица, дом или название площадки"
               value={value.address}
               onChange={(e) => edit("address", e.target.value)}
               onFocus={() => setOpen(search)}

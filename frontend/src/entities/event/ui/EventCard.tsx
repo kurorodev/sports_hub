@@ -38,7 +38,6 @@ export function EventCard({
           height="360"
         />
         <span className="sport-badge">{event.sport.name}</span>
-        <span className="art-caption">Иллюстрация</span>
       </div>
       <div className="event-card-body">
         <div className="event-meta-top">

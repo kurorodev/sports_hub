@@ -1,3 +1,4 @@
+import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -40,6 +41,7 @@ export function AdminOrganizations({ viewerId }: { viewerId: string }) {
           <div>
             <input
               id="admin-organization-search"
+              placeholder="Например, беговой клуб"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
             />
@@ -50,7 +52,7 @@ export function AdminOrganizations({ viewerId }: { viewerId: string }) {
         </form>
         <div className="form-field">
           <label htmlFor="organization-status">Статус организаций</label>
-          <select
+          <Select
             id="organization-status"
             value={status ?? ""}
             onChange={(event) => {
@@ -70,7 +72,7 @@ export function AdminOrganizations({ viewerId }: { viewerId: string }) {
             <option value="APPROVED">Одобренные</option>
             <option value="REJECTED">Отклонённые</option>
             <option value="">Все статусы</option>
-          </select>
+          </Select>
         </div>
         <button
           className="button secondary"

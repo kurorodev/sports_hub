@@ -1,3 +1,4 @@
+import { Textarea } from "../../../shared/ui/Textarea";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -90,9 +91,10 @@ export function RequestRow({
                 error={form.formState.errors.reason?.message}
                 hint="Заявитель увидит эту причину."
               >
-                <textarea
+                <Textarea
                   id={`reason-${registration.id}`}
                   {...form.register("reason")}
+                  placeholder="Объясните участнику причину отказа"
                   maxLength={1000}
                   rows={3}
                   disabled={mutation.isPending}

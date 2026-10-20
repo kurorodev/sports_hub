@@ -1,3 +1,4 @@
+import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSupportRepository } from "../../../entities/support";
@@ -74,19 +75,20 @@ export function ApproveVenueForm({
             minLength={3}
             maxLength={120}
             value={name}
+            placeholder="Например, футбольное поле в парке"
             onChange={(e) => setName(e.target.value)}
           />
         </label>
         <label className="form-field">
           Вид спорта площадки
-          <select value={sportId} onChange={(e) => setSportId(e.target.value)}>
+          <Select value={sportId} onChange={(e) => setSportId(e.target.value)}>
             <option value="">Без привязки к виду спорта</option>
             {sports.data?.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <LocationPicker
           value={location}

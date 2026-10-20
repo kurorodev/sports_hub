@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "API_");
   const proxy = { "/api/v1": env.API_PROXY_TARGET || "http://127.0.0.1:8080" };
   return {
+    define: {
+      "import.meta.env.VITE_APP_NAME": JSON.stringify(branding.name),
+    },
     plugins: [
       react(),
       tailwindcss(),
@@ -22,6 +25,8 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       host: "0.0.0.0",
+      port: 3000,
+      strictPort: true,
       proxy,
     },
     preview: { host: "0.0.0.0", proxy },

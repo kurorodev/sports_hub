@@ -1,3 +1,4 @@
+import { Textarea } from "./Textarea";
 import {
   useId,
   useLayoutEffect,
@@ -52,7 +53,7 @@ export function MentionInput({ value, onChange, onKeyDown, ...props }: Props) {
   }
   return (
     <div className="mention-input">
-      <textarea
+      <Textarea
         {...props}
         ref={input}
         value={value}

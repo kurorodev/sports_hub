@@ -38,9 +38,8 @@ test("Java map: disabled geocoder keeps event creation with a pin working", asyn
   await page.goto("/events/new");
   const title = `Встреча с точкой Java ${Date.now()}`;
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
-  await page
-    .getByLabel("Вид спорта", { exact: true })
-    .selectOption({ label: "Легкая атлетика" });
+  await page.getByLabel("Вид спорта", { exact: true }).click();
+  await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
   await page
     .getByLabel("О встрече", { exact: true })
     .fill("Знакомимся и занимаемся вместе на выбранной точке карты.");

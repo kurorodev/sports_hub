@@ -1,6 +1,7 @@
 import { Navigation } from "lucide-react";
 import { useCurrentLocation } from "../lib/current-location-context";
 import { distanceRadii, formatDistance } from "../lib/distance";
+import { Select } from "./Select";
 
 export function DistanceFilter({
   value,
@@ -30,7 +31,7 @@ export function DistanceFilter({
       </button>
       <label>
         Расстояние до мероприятия
-        <select
+        <Select
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={!location.position}
@@ -41,7 +42,7 @@ export function DistanceFilter({
               До {formatDistance(radius)}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <p className="field-hint">
         По прямой до точки встречи. Максимальный радиус — 5 км.

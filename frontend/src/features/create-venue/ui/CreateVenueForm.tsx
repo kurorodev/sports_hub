@@ -1,3 +1,4 @@
+import { Select } from "../../../shared/ui/Select";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -77,6 +78,7 @@ export function CreateVenueForm({
           Название площадки
           <input
             {...form.register("name")}
+            placeholder="Например, футбольное поле в парке"
             maxLength={120}
             aria-invalid={Boolean(errors.name)}
           />
@@ -88,14 +90,14 @@ export function CreateVenueForm({
         )}
         <div className="form-field">
           <label htmlFor="venue-sport">Вид спорта площадки</label>
-          <select id="venue-sport" {...form.register("sportId")}>
+          <Select id="venue-sport" {...form.register("sportId")}>
             <option value="">Любой спорт</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <Controller
           control={form.control}

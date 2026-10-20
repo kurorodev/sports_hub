@@ -21,6 +21,7 @@ export function MapSearch({ onSelect }: { onSelect: (point: Point) => void }) {
         Найти город или адрес
         <input
           type="search"
+          placeholder="Например, Самара или улица, дом"
           maxLength={160}
           value={text}
           onChange={(event) => {

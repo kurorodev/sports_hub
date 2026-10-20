@@ -1,3 +1,5 @@
+import { Textarea } from "../../../shared/ui/Textarea";
+import { Select } from "../../../shared/ui/Select";
 import { useState, lazy, Suspense } from "react";
 import {
   useInfiniteQuery,
@@ -347,7 +349,7 @@ export function SupportThread({
             >
               <label className="form-field">
                 {admin ? "Ответ пользователю" : "Ваше сообщение в поддержку"}
-                <textarea
+                <Textarea
                   disabled={pending}
                   required
                   maxLength={5000}
@@ -358,7 +360,7 @@ export function SupportThread({
                 />
               </label>
               <p className="field-hint">
-                {text.length} / 5000. Переписка видна только автору и
+                Переписка видна только автору и
                 администраторам.
               </p>
               <button
@@ -433,7 +435,7 @@ function TicketControls({
     >
       <label className="form-field">
         Изменить статус
-        <select
+        <Select
           disabled={pending}
           value={status}
           onChange={(e) => setStatus(e.target.value as SupportStatus)}
@@ -443,11 +445,11 @@ function TicketControls({
               {statusLabels[s]}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <label className="form-field">
         Приоритет обращения
-        <select
+        <Select
           disabled={pending}
           value={priority}
           onChange={(e) => setPriority(e.target.value as SupportPriority)}
@@ -457,7 +459,7 @@ function TicketControls({
               {priorityLabels[p]}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <button
         className="button primary full-width"

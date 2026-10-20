@@ -1,3 +1,5 @@
+import { Textarea } from "../../../shared/ui/Textarea";
+import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
@@ -85,7 +87,7 @@ export function CreateSupportForm({
           <p>{comment.text}</p>
           <label className="form-field">
             Причина жалобы
-            <select
+            <Select
               disabled={mutation.isPending}
               value={reason}
               onChange={(e) => setReason(e.target.value as typeof reason)}
@@ -95,13 +97,13 @@ export function CreateSupportForm({
                   {reasonLabels[r]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
         </div>
       ) : (
         <label className="form-field">
           Тема обращения
-          <select
+          <Select
             disabled={mutation.isPending}
             value={category}
             onChange={(e) => {
@@ -116,7 +118,7 @@ export function CreateSupportForm({
                   {categoryLabels[c]}
                 </option>
               ))}
-          </select>
+          </Select>
         </label>
       )}
       <label className="form-field">
@@ -153,7 +155,7 @@ export function CreateSupportForm({
       )}
       <label className="form-field">
         Подробности
-        <textarea
+        <Textarea
           disabled={mutation.isPending}
           required
           minLength={10}
@@ -170,7 +172,7 @@ export function CreateSupportForm({
           }
         />
         <span className="field-hint">
-          {description.length} / 5000. Не отправляйте пароли и платёжные данные.
+          Не отправляйте пароли и платёжные данные.
         </span>
       </label>
       {mutation.isError && (

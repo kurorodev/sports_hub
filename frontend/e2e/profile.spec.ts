@@ -38,13 +38,19 @@ for (const width of [320, 375, 768, 1024, 1440]) {
       .getByLabel("Уровень: Легкая атлетика", { exact: true })
       .selectOption("AMATEUR");
     await page
+      .getByText("Использовать своё изображение по ссылке", { exact: true })
+      .click();
+    await page
       .getByLabel("Ссылка на аватар", { exact: true })
       .fill("javascript:alert(1)");
     await page
       .getByRole("button", { name: "Сохранить профиль", exact: true })
       .click();
     await expect(
-      page.getByText(/Укажите ссылку http или https без логина/),
+      page.getByText(
+        "Выберите аватар или укажите ссылку http/https без логина и пароля, до 2048 символов",
+        { exact: true },
+      ),
     ).toBeVisible();
     await page
       .getByLabel("Ссылка на аватар", { exact: true })

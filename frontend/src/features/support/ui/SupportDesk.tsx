@@ -1,3 +1,4 @@
+import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
@@ -132,7 +133,7 @@ export function SupportDesk({
           </label>
           <label className="form-field">
             Статус обращения
-            <select
+            <Select
               value={status ?? ""}
               onChange={(e) => change("status", e.target.value)}
             >
@@ -142,11 +143,11 @@ export function SupportDesk({
                   {statusLabels[s]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="form-field">
             Категория
-            <select
+            <Select
               value={category ?? ""}
               onChange={(e) => change("category", e.target.value)}
             >
@@ -156,7 +157,7 @@ export function SupportDesk({
                   {categoryLabels[c]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <button className="button secondary" type="submit">
             Найти

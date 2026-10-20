@@ -45,9 +45,8 @@ export async function findOrganizationsForReview(page: Page, q: string) {
 }
 export async function publishOrganizationEvent(page: Page, title: string) {
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
-  await page
-    .getByLabel("Вид спорта", { exact: true })
-    .selectOption({ label: "Легкая атлетика" });
+  await page.getByLabel("Вид спорта", { exact: true }).click();
+  await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
   await page
     .getByLabel("О встрече", { exact: true })
     .fill(

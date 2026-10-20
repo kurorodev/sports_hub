@@ -31,9 +31,8 @@ for (const width of [375, 768, 1440]) {
     const date = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
     await page.goto("/events/new");
     await page.getByLabel("Название встречи", { exact: true }).fill(title);
-    await page
-      .getByLabel("Вид спорта", { exact: true })
-      .selectOption("__custom__");
+    await page.getByLabel("Вид спорта", { exact: true }).click();
+    await page.getByRole("option", { name: "Другое", exact: true }).click();
     await page.getByLabel("Название активности", { exact: true }).fill(sport);
     await page
       .getByLabel("О встрече", { exact: true })

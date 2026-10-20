@@ -1,3 +1,4 @@
+import { Textarea } from "../../../shared/ui/Textarea";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -93,9 +94,10 @@ export function OrganizationDecisionCard({
                 hint="Обязательна: от 3 до 1000 символов. Представитель увидит её."
                 error={form.formState.errors.reason?.message}
               >
-                <textarea
+                <Textarea
                   id={reasonId}
                   {...form.register("reason")}
+                  placeholder="Объясните представителю причину отказа"
                   rows={3}
                   maxLength={1000}
                   disabled={mutation.isPending}

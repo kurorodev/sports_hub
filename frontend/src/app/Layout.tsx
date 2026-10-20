@@ -24,7 +24,7 @@ export function Layout() {
       )}
       <header className="site-header">
         <div className="header-inner">
-          <Brand />
+          <Brand homeMark={location.pathname === "/"} />
           <nav className="main-nav" aria-label="Основная навигация">
             <NavLink to="/" end>
               Активности
@@ -51,7 +51,7 @@ export function Layout() {
               />
             )}
             <Link
-              className="header-account"
+              className={`header-account${session.data ? " is-authenticated" : ""}`}
               to={session.data ? "/profile" : "/login"}
             >
               {session.data ? (
@@ -71,7 +71,7 @@ export function Layout() {
               ) : (
                 <UserRound size={18} />
               )}
-              <span>
+              <span className="header-account-name">
                 {session.isPending
                   ? "Сессия…"
                   : (session.data?.user.displayName ?? "Войти")}

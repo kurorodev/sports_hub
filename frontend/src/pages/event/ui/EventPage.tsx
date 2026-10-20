@@ -102,7 +102,7 @@ export function EventPage() {
         {event.viewerIsOrganizer && (
           <span className="owner-label">Вы организатор</span>
         )}
-        <span className="eyebrow muted">{event.sport.name} · Иллюстрация</span>
+        <span className="eyebrow muted">{event.sport.name}</span>
         {event.customSportName && (
           <p className="field-hint">Активность: {event.customSportName}</p>
         )}

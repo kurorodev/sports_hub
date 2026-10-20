@@ -14,9 +14,8 @@ async function signIn(page: Page, name: string) {
 async function createOpenEvent(page: Page, title: string) {
   await page.goto("/events/new");
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
-  await page
-    .getByLabel("Вид спорта", { exact: true })
-    .selectOption("147eb74c-0000-4000-8000-000000000000");
+  await page.getByLabel("Вид спорта", { exact: true }).click();
+  await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
   await page
     .getByLabel("О встрече", { exact: true })
     .fill("Вместе бежим в спокойном темпе, после можно выпить кофе.");

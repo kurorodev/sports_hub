@@ -1,3 +1,4 @@
+import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -36,6 +37,7 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
           <div>
             <input
               id="moderation-search"
+              placeholder="Название встречи или ключевое слово"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
             />
@@ -46,7 +48,7 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
         </form>
         <div className="form-field">
           <label htmlFor="moderation-status">Статус мероприятий</label>
-          <select
+          <Select
             id="moderation-status"
             value={status ?? ""}
             onChange={(e) => {
@@ -68,7 +70,7 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
             <option value="DRAFT">Черновики</option>
             <option value="DELETED">Удалённые</option>
             <option value="">Все статусы</option>
-          </select>
+          </Select>
         </div>
         <button
           className="button secondary"

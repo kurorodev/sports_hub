@@ -6,6 +6,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowDown,
   ArrowUpRight,
+  Plus,
   MapPin,
   Search,
   SlidersHorizontal,
@@ -18,6 +19,7 @@ import { EmptyState, ErrorState, Skeletons } from "../../../shared/ui/Feedback";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
+import { Select } from "../../../shared/ui/Select";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -105,9 +107,9 @@ export function CatalogPage() {
               Найди свою компанию<span className="brand-dot">.</span>
             </h2>
           </div>
-          <Link className="button secondary catalog-create" to="/events/new">
+          <Link className="button primary catalog-create" to="/events/new">
+            <Plus size={18} aria-hidden="true" />
             Создать встречу
-            <ArrowUpRight size={18} />
           </Link>
         </div>
         <ActivityViewSwitch view="list" params={params} />
@@ -132,7 +134,7 @@ export function CatalogPage() {
           <label className="city-field">
             <MapPin size={19} />
             <span className="sr-only">Город</span>
-            <select
+            <Select
               value={params.get("city") ?? ""}
               onChange={(event) => setFilter("city", event.target.value)}
             >
@@ -140,7 +142,7 @@ export function CatalogPage() {
               <option>Москва</option>
               <option>Санкт-Петербург</option>
               <option>Самара</option>
-            </select>
+            </Select>
           </label>
           <button className="button primary" type="submit">
             Найти
@@ -199,7 +201,7 @@ export function CatalogPage() {
                   onChange={(value) => setFilter("radiusMeters", value)}
                 />
                 <div className="form-field">
-                  <label htmlFor="catalog-sport">Категория спорта</label>
+                  <label htmlFor="catalog-sport">Вид спорта</label>
                   <SearchableSelect
                     id="catalog-sport"
                     value={params.get("sportId") ?? ""}
@@ -219,25 +221,31 @@ export function CatalogPage() {
                   to={params.get("to") ?? ""}
                   onChange={setFilter}
                 />
-                <label>
-                  Уровень
-                  <select
+                <div className="form-field">
+                  <label htmlFor="catalog-level">Уровень</label>
+                  <SearchableSelect
+                    id="catalog-level"
+                    searchable={false}
                     value={params.get("skillLevel") ?? ""}
-                    onChange={(event) =>
-                      setFilter("skillLevel", event.target.value)
-                    }
-                  >
-                    <option value="">Любой</option>
-                    <option value="BEGINNER">Начинающий</option>
-                    <option value="AMATEUR">Любитель</option>
-                    <option value="ADVANCED">Продвинутый</option>
-                    <option value="PROFESSIONAL">Профессиональный</option>
-                    <option value="ANY">Любой уровень</option>
-                  </select>
-                </label>
+                    onChange={(value) => setFilter("skillLevel", value)}
+                    options={[
+                      { id: "", name: "Любой" },
+                      { id: "BEGINNER", name: "Начинающий" },
+                      { id: "AMATEUR", name: "Любитель" },
+                      { id: "ADVANCED", name: "Продвинутый" },
+                      { id: "PROFESSIONAL", name: "Профессиональный" },
+                      { id: "ANY", name: "Любой уровень" },
+                    ]}
+                    searchLabel="Поиск уровня"
+                    placeholder="Выберите уровень"
+                    searchPlaceholder="Найти уровень…"
+                    listLabel="Уровни подготовки"
+                    hint="Выберите уровень подготовки"
+                  />
+                </div>
                 <label>
                   Как присоединиться
-                  <select
+                  <Select
                     value={params.get("joinMode") ?? ""}
                     onChange={(event) =>
                       setFilter("joinMode", event.target.value)
@@ -246,7 +254,7 @@ export function CatalogPage() {
                     <option value="">Все варианты</option>
                     <option value="OPEN">Свободная запись</option>
                     <option value="APPROVAL">По заявке</option>
-                  </select>
+                  </Select>
                 </label>
                 <label className="checkbox-field">
                   <input
@@ -303,13 +311,13 @@ export function CatalogPage() {
               </p>
               <label>
                 <span className="sr-only">Сортировка</span>
-                <select
+                <Select
                   value={params.get("sort") ?? "startsAt,asc"}
                   onChange={(event) => setFilter("sort", event.target.value)}
                 >
                   <option value="startsAt,asc">Дата: сначала ранние</option>
                   <option value="startsAt,desc">Дата: сначала поздние</option>
-                </select>
+                </Select>
               </label>
             </div>
             {needsLocation ? (

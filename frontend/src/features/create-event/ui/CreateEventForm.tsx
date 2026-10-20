@@ -1,3 +1,5 @@
+import { Textarea } from "../../../shared/ui/Textarea";
+import { Select } from "../../../shared/ui/Select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -8,8 +10,10 @@ import { ApiError, errorMessage } from "../../../shared/api/client";
 import type { Session, Sport } from "../../../shared/api/types";
 import { LocationPicker } from "../../../shared/ui/LocationPicker";
 import { FormField } from "../../../shared/ui/FormField";
+import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
+import { DatePicker } from "../../../shared/ui/DatePicker";
 import { useCurrentDate } from "../../../shared/hooks/use-current-date";
-import { createEvent, sportsQuery } from "../../../entities/event";
+import { createEvent, sportIcon, sportsQuery } from "../../../entities/event";
 import {
   customSportValue,
   eventFormSchema,
@@ -152,41 +156,42 @@ export function CreateEventForm({
                 required
               />
             </FormField>
-            <div className="form-two-columns">
-              <FormField
-                id="event-sport"
-                label="Вид спорта"
-                error={errors.sportChoice?.message}
-              >
-                <select
-                  {...accessibility("event-sport", errors.sportChoice?.message)}
-                  {...form.register("sportChoice")}
-                  required
-                >
-                  <option value="">Выберите спорт</option>
-                  {sports
-                    .filter((sport) => !sport.isCustom)
-                    .map((sport) => (
-                      <option key={sport.id} value={sport.id}>
-                        {sport.name}
-                      </option>
-                    ))}
-                  <option value={customSportValue}>Другое</option>
-                </select>
-              </FormField>
-              <FormField
-                id="event-kind"
-                label="Формат встречи"
-                error={errors.eventKind?.message}
-              >
-                <select
-                  {...accessibility("event-kind", errors.eventKind?.message)}
-                  {...form.register("eventKind")}
-                >
-                  <option value="ACTIVITY">Совместная активность</option>
-                </select>
-              </FormField>
-            </div>
+            <FormField
+              id="event-sport"
+              label="Вид спорта"
+              error={errors.sportChoice?.message}
+            >
+              <Controller
+                control={form.control}
+                name="sportChoice"
+                render={({ field }) => (
+                  <SearchableSelect
+                    {...accessibility("event-sport", errors.sportChoice?.message)}
+                    ref={field.ref}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    disabled={mutation.isPending}
+                    aria-required="true"
+                    options={[
+                      { id: "", name: "Выберите спорт" },
+                      ...sports
+                        .filter((sport) => !sport.isCustom)
+                        .map((sport) => ({
+                          id: sport.id,
+                          name: sport.name,
+                          imageUrl: sportIcon(sport.name),
+                        })),
+                      {
+                        id: customSportValue,
+                        name: "Другое",
+                        imageUrl: sportIcon("Другое"),
+                      },
+                    ]}
+                  />
+                )}
+              />
+            </FormField>
             {sportChoice === customSportValue && (
               <FormField
                 id="custom-sport"
@@ -213,7 +218,7 @@ export function CreateEventForm({
               hint="Как всё пройдёт, что взять с собой, есть ли расходы? От 10 до 5000 символов."
               error={errors.description?.message}
             >
-              <textarea
+              <Textarea
                 {...accessibility(
                   "event-description",
                   errors.description?.message,
@@ -232,13 +237,14 @@ export function CreateEventForm({
               hint="Что взять с собой, какая подготовка нужна? Необязательно, до 2000 символов."
               error={errors.requirements?.message}
             >
-              <textarea
+              <Textarea
                 {...accessibility(
                   "event-requirements",
                   errors.requirements?.message,
                   true,
                 )}
                 {...form.register("requirements")}
+                placeholder="Например, удобная обувь, вода и базовая подготовка"
                 rows={3}
                 maxLength={2000}
               />
@@ -270,14 +276,25 @@ export function CreateEventForm({
                 label="Дата"
                 error={errors.date?.message}
               >
-                <input
-                  {...accessibility("event-date", errors.date?.message)}
-                  {...form.register("date", {
-                    onChange: () => void form.trigger("date"),
-                  })}
-                  type="date"
-                  min={today}
-                  required
+                <Controller
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <DatePicker
+                      {...accessibility("event-date", errors.date?.message)}
+                      ref={field.ref}
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        void form.trigger("date");
+                      }}
+                      min={today}
+                      today={today}
+                      disabled={mutation.isPending}
+                      required
+                    />
+                  )}
                 />
               </FormField>
               <FormField
@@ -299,7 +316,7 @@ export function CreateEventForm({
               hint="Часовой пояс будет указан рядом со временем встречи."
               error={errors.timezoneOffset?.message}
             >
-              <select
+              <Select
                 {...accessibility(
                   "event-timezone",
                   errors.timezoneOffset?.message,
@@ -317,7 +334,7 @@ export function CreateEventForm({
                         : ""}
                   </option>
                 ))}
-              </select>
+              </Select>
             </FormField>
           </fieldset>
           <fieldset disabled={mutation.isPending}>
@@ -330,7 +347,7 @@ export function CreateEventForm({
                 label="Уровень участников"
                 error={errors.skillLevel?.message}
               >
-                <select
+                <Select
                   {...accessibility("event-level", errors.skillLevel?.message)}
                   {...form.register("skillLevel")}
                 >
@@ -339,7 +356,7 @@ export function CreateEventForm({
                   <option value="AMATEUR">Любитель</option>
                   <option value="ADVANCED">Продвинутый</option>
                   <option value="PROFESSIONAL">Профессиональный</option>
-                </select>
+                </Select>
               </FormField>
               <FormField
                 id="event-capacity"
@@ -367,13 +384,13 @@ export function CreateEventForm({
                   : "Каждую заявку нужно будет одобрить организатору."
               }
             >
-              <select
+              <Select
                 {...accessibility("event-join", errors.joinMode?.message, true)}
                 {...form.register("joinMode")}
               >
                 <option value="OPEN">Свободная запись</option>
                 <option value="APPROVAL">По заявке</option>
-              </select>
+              </Select>
             </FormField>
           </fieldset>
           <div className="publish-panel">
@@ -382,7 +399,7 @@ export function CreateEventForm({
               label="Организатор встречи"
               error={errors.organizerChoice?.message}
             >
-              <select
+              <Select
                 id="event-organizer"
                 {...form.register("organizerChoice")}
                 disabled={mutation.isPending}
@@ -396,7 +413,7 @@ export function CreateEventForm({
                     Организация: {organization.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </FormField>
             <p>
               После публикации встречу увидят другие пользователи. Организации

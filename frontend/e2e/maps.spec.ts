@@ -31,9 +31,8 @@ for (const width of [375, 1440]) {
     await page.goto("/events/new");
     const title = `Встреча на карте ${width}`;
     await page.getByLabel("Название встречи", { exact: true }).fill(title);
-    await page
-      .getByLabel("Вид спорта", { exact: true })
-      .selectOption({ label: "Баскетбол" });
+    await page.getByLabel("Вид спорта", { exact: true }).click();
+    await page.getByRole("option", { name: "Баскетбол", exact: true }).click();
     await page
       .getByLabel("О встрече", { exact: true })
       .fill("Собираемся вместе, знакомимся и играем в баскетбол.");

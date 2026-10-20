@@ -43,7 +43,9 @@ export function SupportPage({ create = false }: { create?: boolean }) {
       ) ?? "HELP";
     return (
       <section className="support-create-page">
-        <Link to="/support">← В поддержку</Link>
+        <Link className="back-link" to="/support">
+          ← В поддержку
+        </Link>
         <h1>Новое обращение</h1>
         <p>Расскажите нам о вопросе, ошибке или идее.</p>
         <CreateSupportForm

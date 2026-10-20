@@ -13,9 +13,8 @@ async function signIn(page: Page, name: string) {
 
 async function fillEvent(page: Page, title: string, sport: string) {
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
-  await page
-    .getByLabel("Вид спорта", { exact: true })
-    .selectOption("__custom__");
+  await page.getByLabel("Вид спорта", { exact: true }).click();
+  await page.getByRole("option", { name: "Другое", exact: true }).click();
   await page
     .getByLabel("Название активности", { exact: true })
     .fill(sport);

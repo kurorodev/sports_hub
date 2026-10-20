@@ -5,6 +5,23 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-19T00:00:00Z"));
 });
 
+test("starts when the browser blocks branding JSON requests", async ({ page }) => {
+  const blockedRequests: string[] = [];
+  await page.route(/\/branding\.json(?:\?|$)/, (route) => {
+    blockedRequests.push(route.request().url());
+    return route.abort("blockedbyclient");
+  });
+  await page.goto("/");
+  await expect(
+    page.getByRole("banner").getByRole("link", {
+      name: `${branding.name} — на главную`,
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page).toHaveTitle(`${branding.name} — спорт начинается с компании`);
+  expect(blockedRequests).toEqual([]);
+});
+
 test("catalog, URL filters, detail and not-found", async ({ page }) => {
   await page.goto("/?includePast=true");
   await expect(

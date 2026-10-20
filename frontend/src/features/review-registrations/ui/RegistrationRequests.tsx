@@ -1,3 +1,4 @@
+import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
@@ -77,7 +78,7 @@ export function RegistrationRequests({
       <div className="request-toolbar">
         <label>
           Статус заявок
-          <select
+          <Select
             value={status}
             onChange={(event) => {
               setStatus(event.target.value as Registration["status"] | "");
@@ -89,7 +90,7 @@ export function RegistrationRequests({
             <option value="CONFIRMED">Одобренные</option>
             <option value="REJECTED">Отклонённые</option>
             <option value="">Все заявки</option>
-          </select>
+          </Select>
         </label>
         <button
           className="button secondary"

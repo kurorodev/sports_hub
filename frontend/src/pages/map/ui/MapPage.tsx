@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useMapParams } from "./use-map-params";
-import { MapPin, ArrowUpRight, X } from "lucide-react";
+import { MapPin, ArrowUpRight, ChevronDown, X } from "lucide-react";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
@@ -38,6 +38,20 @@ export function MapPage() {
   const sports = useQuery(sportsQuery);
   const [bbox, setBbox] = useState("");
   const [params, setParams] = useMapParams();
+  const [datesOpen, setDatesOpen] = useState(
+    () => Boolean(params.get("from") || params.get("to")),
+  );
+  const dateFilters = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (!datesOpen) return;
+    function outside(event: PointerEvent) {
+      if (!dateFilters.current?.contains(event.target as Node)) {
+        setDatesOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [datesOpen]);
   const view = readMapView(params);
   const { position } = useCurrentLocation();
   const radius = params.get("radiusMeters") ?? "";
@@ -239,10 +253,28 @@ export function MapPage() {
           />
         </div>
         <details
+          ref={dateFilters}
           className="map-date-filters"
-          open={Boolean(params.get("from") || params.get("to"))}
+          open={datesOpen}
+          onToggle={(event) => setDatesOpen(event.currentTarget.open)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setDatesOpen(false);
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              setDatesOpen(false);
+              dateFilters.current?.querySelector("summary")?.focus();
+            }
+          }}
         >
-          <summary>Даты встреч (UTC)</summary>
+          <summary>
+            Даты встреч (UTC)
+            <ChevronDown size={17} aria-hidden="true" />
+          </summary>
           <div>
             <DateRangeFields
               from={params.get("from") ?? ""}

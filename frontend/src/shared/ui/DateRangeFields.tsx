@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { useCurrentDate } from "../hooks/use-current-date";
 import { calendarDate } from "../lib/calendar-date";
+import { DatePicker } from "./DatePicker";
 
 function DateField({
   label,
@@ -20,21 +21,18 @@ function DateField({
   return (
     <div className="form-field">
       <label htmlFor={id}>{label}</label>
-      <input
+      <DatePicker
         id={id}
-        type="date"
         min={min}
         max={max}
         value={value}
         aria-describedby={error ? `${id}-error` : undefined}
-        onChange={(event) => {
-          const next = event.currentTarget.value;
+        onChange={(next) => {
           // Check the live date too when a tab has stayed open across midnight.
           if (
             next &&
             (next < calendarDate() || next < min || (max && next > max))
           ) {
-            event.currentTarget.value = value;
             setError(
               next < calendarDate()
                 ? "Выберите сегодняшнюю или будущую дату"

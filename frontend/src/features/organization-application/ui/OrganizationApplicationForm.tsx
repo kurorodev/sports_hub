@@ -1,3 +1,4 @@
+import { Textarea } from "../../../shared/ui/Textarea";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -75,6 +76,7 @@ export function OrganizationApplicationForm({
         >
           <input
             id="organization-name"
+            placeholder="Например, беговой клуб «Темп»"
             {...form.register("name")}
             maxLength={160}
             required
@@ -90,8 +92,9 @@ export function OrganizationApplicationForm({
           hint="Чем занимаетесь, кого ждёте на встречах. От 10 до 2000 символов."
           error={error.description?.message}
         >
-          <textarea
+          <Textarea
             id="organization-description"
+            placeholder="Расскажите, какие тренировки и мероприятия вы проводите и кого ждёте"
             {...form.register("description")}
             rows={4}
             maxLength={2000}

@@ -87,9 +87,8 @@ for (const width of [375, 768, 1440]) {
     const requirements =
       "Возьмите воду и удобную обувь.\n<strong>Это обычный текст</strong>";
     await page.getByLabel("Название встречи", { exact: true }).fill(title);
-    await page
-      .getByLabel("Вид спорта", { exact: true })
-      .selectOption({ label: "Легкая атлетика" });
+    await page.getByLabel("Вид спорта", { exact: true }).click();
+    await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
     await page
       .getByLabel("О встрече", { exact: true })
       .fill("Знакомимся и бежим в парке в спокойном темпе.");

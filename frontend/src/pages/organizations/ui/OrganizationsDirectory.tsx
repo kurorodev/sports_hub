@@ -50,6 +50,7 @@ export function OrganizationsDirectory() {
         <div>
           <input
             id="organization-search"
+            placeholder="Например, беговой клуб"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
           />
