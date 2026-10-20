@@ -372,7 +372,6 @@ export function MapPage() {
             venues={venueItems}
             now={now}
             onSelect={select}
-            popupEnabled={!reporting}
           />
         </GeoMap>
         {selectionKey && (

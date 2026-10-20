@@ -23,7 +23,7 @@ async function selectLocation(page: Page) {
 }
 
 for (const width of [375, 1440]) {
-  test(`event pin persists, tooltip and popup lead to the same event at ${width}px`, async ({
+  test(`event pin opens one card leading to the same event at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 1000 });
@@ -67,11 +67,12 @@ for (const width of [375, 1440]) {
     await marker.focus();
     await expect(page.locator(".map-marker-tooltip")).toContainText(title);
     await marker.click();
-    await expect(page.locator(".maplibregl-popup")).toContainText(title);
-    await page
-      .locator(".maplibregl-popup")
-      .getByRole("link", { name: "Подробнее" })
-      .click();
+    const selected = page.getByRole("complementary", {
+      name: "Выбранный объект",
+    });
+    await expect(selected).toContainText(title);
+    await expect(page.locator(".maplibregl-popup")).toHaveCount(0);
+    await selected.getByRole("link", { name: "Подробнее" }).click();
     await expect(page).toHaveURL(detailUrl);
   });
 }
@@ -287,10 +288,11 @@ for (const width of [375, 1440]) {
     await expect(selected).toHaveCount(0);
     await expect(page.locator(".occupancy-form")).toHaveCount(0);
 
-    // An event popup must not overlap the rating or return after cancelling it.
+    // Switching from an event to a venue keeps a single selection card.
     await page.goto("/map");
     await page.locator(".map-pin-event").first().press("Enter");
-    await expect(page.locator(".maplibregl-popup")).toHaveCount(1);
+    await expect(selected).toContainText("Встреча рядом с площадкой");
+    await expect(page.locator(".maplibregl-popup")).toHaveCount(0);
     await venue
       .getByRole("button", { name: "Оценить загруженность", exact: true })
       .click();

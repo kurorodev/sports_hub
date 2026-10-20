@@ -46,13 +46,11 @@ export function MapMarkers({
   venues,
   now,
   onSelect,
-  popupEnabled = true,
 }: {
   events: EventCardDto[];
   venues: VenueMapItem[];
   now: number;
   onSelect: (kind: "event" | "venue", id: string) => void;
-  popupEnabled?: boolean;
 }) {
   return (
     <>
@@ -61,7 +59,6 @@ export function MapMarkers({
         .map((event) => (
           <GeoMarker
             key={event.id}
-            popupEnabled={popupEnabled}
             point={{
               latitude: event.location.latitude!,
               longitude: event.location.longitude!,
@@ -75,9 +72,7 @@ export function MapMarkers({
                 {participantCount(event.confirmedCount, event.maxParticipants)}
               </>
             }
-          >
-            <MapEventSummary event={event} />
-          </GeoMarker>
+          />
         ))}
       {venues.map((venue) => {
         const presentation =
