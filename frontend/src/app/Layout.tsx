@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, UserRound, LifeBuoy } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "../shared/ui/Brand";
+import { Avatar } from "../shared/ui/Avatar";
 import { apiConfig } from "../shared/api/client";
 import { sessionQuery } from "../entities/session";
 
@@ -53,7 +54,23 @@ export function Layout() {
               className="header-account"
               to={session.data ? "/profile" : "/login"}
             >
-              <UserRound size={18} />
+              {session.data ? (
+                <Avatar
+                  id={session.data.user.id}
+                  name={session.data.user.displayName}
+                  url={session.data.user.avatarUrl}
+                  tone={
+                    session.data.systemRoles.includes("ADMIN")
+                      ? "admin"
+                      : session.data.systemRoles.includes("ORGANIZATION")
+                        ? "organizer"
+                        : "user"
+                  }
+                  size={32}
+                />
+              ) : (
+                <UserRound size={18} />
+              )}
               <span>
                 {session.isPending
                   ? "Сессия…"

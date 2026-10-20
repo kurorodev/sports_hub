@@ -43,7 +43,7 @@ public class ProfileService {
         if(patch.has("bio"))u.bio=text(patch,"bio");
         if(patch.has("city"))u.city=text(patch,"city");
         if(patch.has("preferredTime"))u.preferredTime=text(patch,"preferredTime");
-        if(patch.has("avatarUrl"))u.avatarUrl=text(patch,"avatarUrl");
+        if(patch.has("avatarUrl"))u.avatarUrl=AvatarImages.normalize(text(patch,"avatarUrl"));
         if(patch.has("sportsRoles")) {
             u.sportsRoles.clear(); for(var role:patch.path("sportsRoles"))u.sportsRoles.add(Api.SportsRole.valueOf(role.asText()));
         }

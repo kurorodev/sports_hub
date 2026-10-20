@@ -1,4 +1,4 @@
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +22,9 @@ import { handleSchema } from "../../../shared/api/signup-schema";
 import { FormField } from "../../../shared/ui/FormField";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import { useUpdateProfile } from "./use-update-profile";
+import { AvatarPicker } from "./AvatarPicker";
+import { avatarCharacter } from "../../../shared/model/avatars";
+import { sessionQuery } from "../../../entities/session";
 const schema = z.object({
   handle: handleSchema,
   name: z
@@ -38,7 +41,7 @@ const schema = z.object({
     .trim()
     .refine(
       (value) => !value || safeAvatarUrl(value),
-      "Укажите ссылку http или https без логина и пароля, до 2048 символов",
+      "Выберите аватар или укажите ссылку http/https без логина и пароля, до 2048 символов",
     ),
   roles: z.array(z.enum(sportRoles)),
   preferences: z.array(
@@ -65,6 +68,13 @@ export function ProfileForm({
     name: "preferences",
   });
   const sports = useQuery(sportsQuery);
+  const session = useQuery(sessionQuery);
+  const avatarUrl = useWatch({ control: form.control, name: "avatarUrl" });
+  const avatarTone = session.data?.systemRoles.includes("ADMIN")
+    ? "admin"
+    : session.data?.systemRoles.includes("ORGANIZATION")
+      ? "organizer"
+      : "user";
   const mutation = useUpdateProfile(onSaved);
   const errors = form.formState.errors;
   const fields = [
@@ -73,7 +83,6 @@ export function ProfileForm({
     ["firstName", "Имя (необязательно)", 80],
     ["lastName", "Фамилия (необязательно)", 80],
     ["city", "Город", 100],
-    ["avatarUrl", "Ссылка на аватар", 2048],
   ] as const;
   return (
     <form
@@ -89,6 +98,43 @@ export function ProfileForm({
         поделиться.
       </p>
       <fieldset disabled={mutation.isPending}>
+        <legend>Аватар</legend>
+        <AvatarPicker
+          viewerId={profile.id}
+          value={avatarUrl}
+          tone={avatarTone}
+          onChange={(value) =>
+            form.setValue("avatarUrl", value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+        />
+        <details className="avatar-custom">
+          <summary>Использовать своё изображение по ссылке</summary>
+          <FormField
+            id="profile-avatarUrl"
+            label="Ссылка на аватар"
+            error={errors.avatarUrl?.message}
+            hint="Ссылка http или https. Недоступное изображение заменим первой буквой имени."
+          >
+            <input
+              id="profile-avatarUrl"
+              value={avatarCharacter(avatarUrl) ? "" : avatarUrl}
+              onChange={(event) =>
+                form.setValue("avatarUrl", event.target.value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              maxLength={2048}
+              placeholder="https://…"
+              aria-invalid={Boolean(errors.avatarUrl)}
+            />
+          </FormField>
+        </details>
+      </fieldset>
+      <fieldset disabled={mutation.isPending}>
         <legend>Знакомство</legend>
         <div className="profile-form-grid">
           {fields.map(([field, label, max]) => (
@@ -100,9 +146,7 @@ export function ProfileForm({
               hint={
                 field === "handle"
                   ? "Можно с @ или без. 3–40 латинских букв, цифр, _ или -."
-                  : field === "avatarUrl"
-                    ? "Аватар по ссылке. Если изображение недоступно, покажем первую букву имени."
-                    : undefined
+                  : undefined
               }
             >
               <input
@@ -120,11 +164,7 @@ export function ProfileForm({
                 }
                 aria-invalid={Boolean(errors[field])}
                 aria-describedby={
-                  errors[field]
-                    ? `profile-${field}-error`
-                    : field === "avatarUrl"
-                      ? "profile-avatarUrl-hint"
-                      : undefined
+                  errors[field] ? `profile-${field}-error` : undefined
                 }
               />
             </FormField>

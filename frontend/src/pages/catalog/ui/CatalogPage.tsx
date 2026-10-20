@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { eventsQuery, sportsQuery } from "../../../entities/event";
+import { eventsQuery, sportsQuery, sportIcon } from "../../../entities/event";
 import { EventCard } from "../../../entities/event";
 import { errorMessage } from "../../../shared/api/client";
 import { EmptyState, ErrorState, Skeletons } from "../../../shared/ui/Feedback";
@@ -76,7 +76,13 @@ export function CatalogPage() {
           <span className="hero-note">Любой уровень. Главное — начать.</span>
         </div>
         <div className="hero-visual" aria-hidden="true">
-          <img src="/art/hero.svg" alt="" width="640" height="440" />
+          <img
+            src="/art/sports/panorama.jpg"
+            alt=""
+            width="1672"
+            height="941"
+            fetchPriority="high"
+          />
           <div className="hero-sticker">
             ТВОЙ СЛЕДУЮЩИЙ
             <br />
@@ -144,6 +150,14 @@ export function CatalogPage() {
               aria-pressed={(params.get("sportId") ?? "") === sport.id}
               onClick={() => setFilter("sportId", sport.id)}
             >
+              {sportIcon(sport.name) && (
+                <img
+                  src={sportIcon(sport.name)}
+                  alt=""
+                  width="28"
+                  height="28"
+                />
+              )}
               {sport.name}
             </button>
           ))}
@@ -182,7 +196,10 @@ export function CatalogPage() {
                     value={params.get("sportId") ?? ""}
                     options={[
                       { id: "", name: "Все виды спорта" },
-                      ...(sports.data ?? []),
+                      ...(sports.data ?? []).map((sport) => ({
+                        ...sport,
+                        imageUrl: sportIcon(sport.name),
+                      })),
                     ]}
                     onChange={(value) => setFilter("sportId", value)}
                     disabled={sports.isPending}

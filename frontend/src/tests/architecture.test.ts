@@ -18,6 +18,25 @@ function lint(file: string, code: string) {
 }
 
 describe("architectural dependency boundaries", () => {
+  it("allows pure shared models and keeps them independent of UI and HTTP", () => {
+    expect(
+      lint(
+        "entities/profile/model/index.js",
+        'export { safeAvatarUrl } from "../../../shared/model/avatars";',
+      ),
+    ).toEqual([]);
+    expect(
+      lint(
+        "shared/model/avatars.js",
+        'import { request } from "../api/client";',
+      ).some((issue) => issue.messageId === "core"),
+    ).toBe(true);
+    expect(
+      lint("shared/model/avatars.js", 'import React from "react";').some(
+        (issue) => issue.messageId === "core",
+      ),
+    ).toBe(true);
+  });
   it("allows a use case to depend on a pure entity model", () => {
     expect(
       lint(

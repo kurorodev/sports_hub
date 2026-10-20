@@ -10,6 +10,7 @@ export {
   eventDate,
   sportArt,
   sportImage,
+  sportIcon,
   skillLabels,
   participantCount,
   eventTimezone,

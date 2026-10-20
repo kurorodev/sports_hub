@@ -18,7 +18,7 @@ function describe(filename) {
     relative,
     layer,
     slice,
-    core: /^(entities|features)\/[^/]+\/model(?:\/|$)/.test(relative),
+    core: /^(?:(entities|features)\/[^/]+\/model|shared\/model)(?:\/|$)/.test(relative),
   };
 }
 
@@ -51,7 +51,8 @@ export const boundaries = {
         const ownModel =
           to?.core && from.layer === to.layer && from.slice === to.slice;
         const entityModel = to?.core && to.layer === "entities";
-        if (!ownModel && !entityModel) {
+        const sharedModel = to?.core && to.layer === "shared";
+        if (!ownModel && !entityModel && !sharedModel) {
           context.report({ node, messageId: "core" });
           return;
         }

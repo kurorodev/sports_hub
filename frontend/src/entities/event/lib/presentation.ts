@@ -1,9 +1,13 @@
-// Presentation-only assets. Sport identifiers and labels await the shared contract.
+// Supplied illustrations; sport identifiers continue to come from the API catalog.
 export const sportArt: Record<string, string> = {
-  running: "/art/running.svg",
-  basketball: "/art/basketball.svg",
-  tennis: "/art/tennis.svg",
-  chess: "/art/chess.svg",
+  running: "/art/sports/running.jpg",
+  basketball: "/art/sports/basketball.jpg",
+  tennis: "/art/sports/tennis.jpg",
+  chess: "/art/sports/chess.jpg",
+  football: "/art/sports/football.jpg",
+  volleyball: "/art/sports/volleyball.jpg",
+  "table-tennis": "/art/sports/table-tennis.jpg",
+  skiing: "/art/sports/skiing.jpg",
 };
 export function eventDate(value: string) {
   // Preserve the event's supplied offset rather than silently converting to the viewer's zone.
@@ -28,15 +32,24 @@ export function participantCount(count: number, limit?: number | null) {
     ? `Участников: ${count} · без лимита`
     : `${count} из ${limit} участников`;
 }
-export function sportImage(name: string) {
+export function sportIcon(name: string) {
   const key: Record<string, string> = {
     бег: "running",
     "легкая атлетика": "running",
     баскетбол: "basketball",
     теннис: "tennis",
     шахматы: "chess",
+    футбол: "football",
+    волейбол: "volleyball",
+    "настольный теннис": "table-tennis",
+    "лыжные гонки": "skiing",
+    "лыжный спорт": "skiing",
+    "горнолыжный спорт": "skiing",
   };
-  return sportArt[key[name.toLocaleLowerCase("ru")]] ?? "/art/activity.svg";
+  return sportArt[key[name.toLocaleLowerCase("ru").replaceAll("ё", "е")]];
+}
+export function sportImage(name: string) {
+  return sportIcon(name) ?? "/art/sports/panorama.jpg";
 }
 export function eventTimezone(value: string) {
   return value.endsWith("Z") ? "UTC" : `UTC${value.slice(-6)}`;

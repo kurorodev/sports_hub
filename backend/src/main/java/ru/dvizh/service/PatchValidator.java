@@ -49,6 +49,7 @@ public class PatchValidator {
                 if(schema.path("minLength").asInt(0)>0 && text.isBlank()) fail(path);
                 try {
                     switch(schema.path("format").asText()) {
+                        case "uri-reference" -> AvatarImages.validate(text);
                         case "uuid" -> UUID.fromString(text);
                         case "date-time" -> OffsetDateTime.parse(text);
                         case "uri" -> { URI uri=URI.create(text); if(!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) || uri.getHost()==null || uri.getUserInfo()!=null || text.length()>2048) fail(path); }

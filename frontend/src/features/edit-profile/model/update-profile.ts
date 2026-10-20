@@ -8,6 +8,7 @@ import {
   type ProfileChanges,
   type ProfileRepository,
 } from "../../../entities/profile/model";
+import { avatarCharacter } from "../../../shared/model/avatars";
 const text = (value: string) => value.trim() || null;
 export function normalizeProfile(draft: ProfileDraft): ProfileChanges {
   const result: ProfileChanges = {
@@ -69,11 +70,17 @@ export async function updateProfile(
     "lastName",
     "about",
     "city",
-    "avatarUrl",
     "preferredTime",
   ] as const;
+  const receivedCharacter = avatarCharacter(result.avatarUrl);
+  const sameAvatar =
+    result.avatarUrl === changes.avatarUrl ||
+    (receivedCharacter !== null &&
+      (changes.avatarUrl === null ||
+        receivedCharacter === avatarCharacter(changes.avatarUrl)));
   if (
     result.id !== viewerId ||
+    !sameAvatar ||
     fields.some((field) => result[field] !== changes[field]) ||
     rolesKey(result.roles) !== rolesKey(changes.roles) ||
     preferencesKey(result.preferences) !== preferencesKey(changes.preferences)

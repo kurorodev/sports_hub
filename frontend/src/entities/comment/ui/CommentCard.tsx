@@ -1,4 +1,5 @@
 import { MentionText } from "../../../shared/ui/MentionText";
+import { Avatar } from "../../../shared/ui/Avatar";
 import { Link } from "react-router-dom";
 import { BadgeCheck } from "lucide-react";
 import type { DiscussionComment } from "../model";
@@ -27,6 +28,13 @@ export function CommentCard({
       aria-label={`Сообщение: ${comment.author.displayName}`}
     >
       <header className="comment-heading">
+        <Avatar
+          id={comment.author.id}
+          name={comment.author.displayName}
+          url={comment.author.avatarUrl}
+          tone={organizerUserId === comment.author.id ? "organizer" : undefined}
+          size={40}
+        />
         <strong>
           <Link className="person-link" to={`/users/${comment.author.id}`}>
             {comment.author.displayName}

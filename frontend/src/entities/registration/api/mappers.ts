@@ -53,7 +53,11 @@ export function toRegistration(value: unknown): Registration {
   return {
     id: dto.id,
     eventId: dto.eventId,
-    participant: { id: dto.user.id, displayName: dto.user.displayName },
+    participant: {
+      id: dto.user.id,
+      displayName: dto.user.displayName,
+      avatarUrl: dto.user.avatarUrl,
+    },
     status: dto.status,
     registeredAt: dto.createdAt,
     decisionReason: dto.decisionReason,
@@ -84,6 +88,7 @@ export function toParticipantPage(value: unknown): ParticipantPage {
     participants: dto.items.map((user) => ({
       id: user.id,
       displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
     })),
     pageIndex: dto.page,
     pageSize: dto.size,

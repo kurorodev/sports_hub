@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { participantsQuery } from "../api/queries";
 import { ErrorState } from "../../../shared/ui/Feedback";
+import { Avatar } from "../../../shared/ui/Avatar";
 
 export function Participants({ eventId }: { eventId: string }) {
   const repository = useRegistrationRepository();
@@ -44,9 +45,11 @@ export function Participants({ eventId }: { eventId: string }) {
           >
             {query.data.participants.map((participant) => (
               <li key={participant.id}>
-                <span className="participant-avatar" aria-hidden="true">
-                  {participant.displayName.slice(0, 1)}
-                </span>
+                <Avatar
+                  id={participant.id}
+                  name={participant.displayName}
+                  url={participant.avatarUrl}
+                />
                 <Link className="person-link" to={`/users/${participant.id}`}>
                   {participant.displayName}
                 </Link>

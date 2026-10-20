@@ -6,7 +6,7 @@ import {
   mockOwner,
 } from "./notifications";
 import { profilePatchSchema } from "../entities/profile/api/mappers";
-import { saveProfile } from "./profiles";
+import { saveProfile, mockAvatar } from "./profiles";
 import type { EventPreview, Session } from "../shared/api/types";
 import { saveModeration } from "./moderation";
 import {
@@ -651,7 +651,15 @@ export const handlers = [
   }),
   http.get(`${api}/users/:userId`, ({ params }) => {
     const profile = mockProfiles().find((item) => item.id === params.userId);
-    return profile ? json(profile) : notFound();
+    const organizer = getOrganizations().some(
+      (org) => org.createdBy.id === profile?.id && org.status === "APPROVED",
+    );
+    return profile
+      ? json({
+          ...profile,
+          avatarUrl: mockAvatar(profile, organizer ? "organizer" : "user"),
+        })
+      : notFound();
   }),
   http.patch(`${api}/me/profile`, async ({ request }) => {
     const session = makeSession(savedAccount() ?? "");
@@ -698,7 +706,14 @@ export const handlers = [
         typeof value === "string" ? value.trim() : value,
       ]),
     );
-    return json(saveProfile({ ...session.user, ...normalized }));
+    const result = saveProfile({ ...session.user, ...normalized });
+    return json({
+      ...result,
+      avatarUrl: mockAvatar(
+        result,
+        session.systemRoles.includes("ORGANIZATION") ? "organizer" : "user",
+      ),
+    });
   }),
   http.get(`${api}/users`, ({ request }) => {
     const prefix = (

@@ -2,6 +2,7 @@
 export interface Participant {
   id: string;
   displayName: string;
+  avatarUrl?: string | null;
 }
 
 export interface Registration {

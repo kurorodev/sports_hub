@@ -88,7 +88,7 @@ public class RegistrationService {
     public PageResult<Api.PublicUser> participants(UUID eventId,int page,int size) {
         var e=db.get(EventEntity.class,eventId);access.eventVisible(e);
         var p=Map.of("event",eventId,"status",Api.RegistrationStatus.CONFIRMED);String condition="e.eventId=:event and e.status=:status";
-        return PageResult.of(db.list(RegistrationEntity.class,condition,p,"e.createdAt asc,e.id asc",PageResult.offset(page,size),size).stream().map(r -> view.user(r.userId)).toList(),page,size,db.count(RegistrationEntity.class,condition,p));
+        return PageResult.of(db.list(RegistrationEntity.class,condition,p,"e.createdAt asc,e.id asc",PageResult.offset(page,size),size).stream().map(r -> view.eventUser(r.userId,e)).toList(),page,size,db.count(RegistrationEntity.class,condition,p));
     }
     public Api.TeamStatus team(UUID eventId) {
         var e=db.get(EventEntity.class,eventId);access.eventVisible(e);boolean available=e.status==Api.EventStatus.PUBLISHED && e.startsAt.isAfter(clock.instant());

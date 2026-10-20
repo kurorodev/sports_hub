@@ -3607,7 +3607,7 @@ components:
           type: string
         avatarUrl: &id011
           type: string
-          format: uri
+          format: uri-reference
           nullable: true
         sportsRoles: &id012
           type: array
@@ -3711,7 +3711,7 @@ components:
           nullable: true
         avatarUrl:
           type: string
-          format: uri
+          format: uri-reference
           nullable: true
         city:
           type: string
@@ -3900,7 +3900,7 @@ components:
           type: string
         avatarUrl:
           type: string
-          format: uri
+          format: uri-reference
           nullable: true
       required:
       - type

@@ -20,6 +20,7 @@ const commentSchema = z.object({
     id: z.string().min(1),
     displayName: z.string().min(1),
     nickname: z.string(),
+    avatarUrl: z.string().nullable().optional(),
     sportsRoles: z.array(
       z.enum(["ATHLETE", "COACH", "REFEREE", "SPORTS_ORGANIZER"]),
     ),
@@ -56,6 +57,7 @@ function toComment(dto: z.infer<typeof commentSchema>): DiscussionComment {
       id: dto.author.id,
       displayName: dto.author.displayName,
       nickname: dto.author.nickname,
+      avatarUrl: dto.author.avatarUrl,
     },
     mentions: dto.status === "HIDDEN" ? [] : (dto.mentions ?? []),
     text: dto.status === "HIDDEN" ? "" : dto.text,

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Check, Copy, MapPin } from "lucide-react";
 import { HoverCard } from "../../../shared/ui/HoverCard";
+import { Avatar } from "../../../shared/ui/Avatar";
 import { copyText } from "../../../shared/lib/clipboard";
 import {
   organizerPreviewQuery,
@@ -20,6 +21,13 @@ export function OrganizerPreview({ organizer }: { organizer: Organizer }) {
       triggerLabel={`Краткая информация: ${organizer.name}`}
       trigger={
         <Link className="person-link" to={href}>
+          <Avatar
+            id={organizer.id}
+            name={organizer.name}
+            url={organizer.avatarUrl}
+            tone="organizer"
+            size={28}
+          />
           {organizer.name}
         </Link>
       }
@@ -72,6 +80,13 @@ function OrganizerDetails({
         {organizer.type === "USER" ? "Организатор встречи" : "Организация"}
       </span>
       <h3 className="organizer-preview-name">{name}</h3>
+      <Avatar
+        id={organizer.id}
+        name={name}
+        url={organizer.avatarUrl}
+        tone="organizer"
+        size={72}
+      />
       {city && (
         <p className="organizer-preview-city">
           <MapPin size={15} aria-hidden="true" />

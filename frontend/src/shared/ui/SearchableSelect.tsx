@@ -10,7 +10,7 @@ export function SearchableSelect({
 }: {
   id: string;
   value: string;
-  options: { id: string; name: string }[];
+  options: { id: string; name: string; imageUrl?: string }[];
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
@@ -111,6 +111,15 @@ export function SearchableSelect({
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : show())}
       >
+        {selected?.imageUrl && (
+          <img
+            className="sport-option-icon"
+            src={selected.imageUrl}
+            alt=""
+            width="28"
+            height="28"
+          />
+        )}
         <span>{selected?.name ?? "Выберите вид спорта"}</span>
         <ChevronDown size={17} aria-hidden="true" />
       </button>
@@ -155,6 +164,16 @@ export function SearchableSelect({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => choose(option.id)}
               >
+                {option.imageUrl && (
+                  <img
+                    className="sport-option-icon"
+                    src={option.imageUrl}
+                    alt=""
+                    width="28"
+                    height="28"
+                    loading="lazy"
+                  />
+                )}
                 <span>{option.name}</span>
                 {option.id === value && <Check size={17} aria-hidden="true" />}
               </button>

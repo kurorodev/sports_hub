@@ -94,12 +94,20 @@ describe("comment HTTP boundary", () => {
       comments: [
         {
           ...model,
-          author: { ...model.author, nickname: dto.author.nickname },
+          author: {
+            ...model.author,
+            nickname: dto.author.nickname,
+            avatarUrl: dto.author.avatarUrl,
+          },
           mentions: [],
         },
         {
           ...model,
-          author: { ...model.author, nickname: dto.author.nickname },
+          author: {
+            ...model.author,
+            nickname: dto.author.nickname,
+            avatarUrl: dto.author.avatarUrl,
+          },
           mentions: [],
           id: "hidden",
           text: "",

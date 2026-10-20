@@ -24,12 +24,39 @@ const repository = (result: Profile = profile()): ProfileRepository => ({
 });
 
 describe("profile use case and API boundary", () => {
+  it("accepts the server uniform and reset default while rejecting a different chosen character", async () => {
+    const base = profile();
+    const draft = {
+      ...profileDraft(base),
+      avatarUrl: "/avatars/user/female-02.svg",
+    };
+    const result = { ...base, avatarUrl: "/avatars/admin/female-02.svg" };
+    expect(
+      (await updateProfile(repository(result), base.id, draft)).avatarUrl,
+    ).toBe(result.avatarUrl);
+    await expect(
+      updateProfile(
+        repository({ ...result, avatarUrl: "/avatars/user/female-03.svg" }),
+        base.id,
+        draft,
+      ),
+    ).rejects.toMatchObject({ code: "invalid-response" });
+    expect(
+      (
+        await updateProfile(repository(result), base.id, {
+          ...draft,
+          avatarUrl: "",
+        })
+      ).avatarUrl,
+    ).toBe(result.avatarUrl);
+  });
   it("normalizes nullable fields and sends only editable wire fields", async () => {
     const draft = {
       ...profileDraft(profile()),
       name: "  Новое имя  ",
       handle: " new-handle ",
       about: "  Люблю бег  ",
+      avatarUrl: "   ",
     };
     const changes = normalizeProfile(draft);
     const repo = repository({

@@ -48,6 +48,43 @@ const ownPage = () => (
 );
 
 describe("profile HTTP and UI", () => {
+  it("lets a user choose a character and persists it in their public profile", async () => {
+    const session = await login();
+    mount(ownPage(), "/profile?edit=1", session);
+    const choice = await screen.findByRole("button", {
+      name: "Женский аватар 4",
+    });
+    await userEvent.click(choice);
+    expect(choice).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Сохранить профиль" }),
+    );
+    await screen.findByText("Профиль сохранён");
+    const profile = await request<UserProfileDto>(`/users/${session.user.id}`);
+    expect(profile.avatarUrl).toBe("/avatars/user/female-04.svg");
+    await waitFor(() =>
+      expect(document.querySelector(".profile-avatar img")).toHaveAttribute(
+        "src",
+        profile.avatarUrl,
+      ),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Редактировать профиль" }),
+    );
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Сбросить аватар" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Сохранить профиль" }),
+    );
+    await screen.findByText("Профиль сохранён");
+    await waitFor(() =>
+      expect(document.querySelector(".profile-avatar img")).toHaveAttribute(
+        "src",
+        session.user.avatarUrl,
+      ),
+    );
+  });
   it("persists a validated own patch, public data and dynamic comment/participant names without granting rights", async () => {
     const session = await login();
     const comment = await request<CommentDto>(

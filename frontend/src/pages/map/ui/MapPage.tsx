@@ -12,7 +12,11 @@ import {
   writeMapView,
   type MapView,
 } from "../../../shared/lib/activity-navigation";
-import { mapEventsQuery, sportsQuery } from "../../../entities/event";
+import {
+  mapEventsQuery,
+  sportsQuery,
+  sportIcon,
+} from "../../../entities/event";
 import {
   venuesQuery,
   occupancyPresentation,
@@ -194,7 +198,10 @@ export function MapPage() {
             value={sportId}
             options={[
               { id: "", name: "Все виды спорта" },
-              ...(sports.data ?? []),
+              ...(sports.data ?? []).map((sport) => ({
+                ...sport,
+                imageUrl: sportIcon(sport.name),
+              })),
             ]}
             onChange={(value) => setParam("sportId", value)}
             disabled={sports.isPending}

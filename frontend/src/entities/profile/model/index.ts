@@ -78,20 +78,7 @@ export class ProfileFailure extends Error {
     this.name = "ProfileFailure";
   }
 }
-export function safeAvatarUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return (
-      value.length <= 2048 &&
-      ["http:", "https:"].includes(url.protocol) &&
-      Boolean(url.hostname) &&
-      !url.username &&
-      !url.password
-    );
-  } catch {
-    return false;
-  }
-}
+export { safeAvatarUrl } from "../../../shared/model/avatars";
 export function profileDraft(profile: Profile): ProfileDraft {
   return {
     handle: profile.handle,

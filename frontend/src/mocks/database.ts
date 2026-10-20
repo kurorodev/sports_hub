@@ -1,5 +1,6 @@
 import registry from "./generated/sports-registry.json";
-import { savedProfile, refreshMockUser } from "./profiles";
+import { savedProfile, refreshMockUser, mockAvatar } from "./profiles";
+import { avatarSource } from "../shared/model/avatars";
 import { profileSchema } from "../entities/profile/api/mappers";
 import { getModerationRecords } from "./moderation";
 import { getOrganizations } from "./organizations";
@@ -31,6 +32,11 @@ export function mockUser(accountId: string, displayName: string): PublicUser {
     id: mockId(accountId),
     nickname: accountId,
     displayName,
+    avatarUrl: avatarSource(
+      mockId(accountId),
+      undefined,
+      accountId === "admin" ? "admin" : "user",
+    ),
     sportsRoles: ["ATHLETE"],
     rank: "ROOKIE",
     ratingPoints: 0,
@@ -150,14 +156,18 @@ export function makeSession(accountId: string): Session | undefined {
         item.createdBy.id === mockId(accountId) && item.status === "APPROVED",
     )
     .map((item) => item.id);
+  const profile = savedProfile(mockId(account.id)) ??
+    signups().find((item) => item.account.id === account.id)?.profile ?? {
+      ...mockUser(account.id, account.label),
+      sportsRoles: account.sportsRoles,
+      sportsPreferences: [],
+      createdAt: "2026-10-01T12:00:00Z",
+    };
   return {
-    user: savedProfile(mockId(account.id)) ??
-      signups().find((item) => item.account.id === account.id)?.profile ?? {
-        ...mockUser(account.id, account.label),
-        sportsRoles: account.sportsRoles,
-        sportsPreferences: [],
-        createdAt: "2026-10-01T12:00:00Z",
-      },
+    user: {
+      ...profile,
+      avatarUrl: mockAvatar(profile, manageable.length ? "organizer" : "user"),
+    },
     systemRoles: [
       ...account.systemRoles.filter((role) => role !== "ORGANIZATION"),
       ...(manageable.length ? ["ORGANIZATION" as const] : []),
@@ -422,6 +432,7 @@ export function saveRegistration(
   message?: string | null,
 ): Registration {
   const publicUser: PublicUser = {
+    avatarUrl: user.avatarUrl,
     id: user.id,
     nickname: user.nickname,
     displayName: user.displayName,
@@ -519,6 +530,19 @@ export function getEvents(viewerId?: string): EventPreview[] {
               name:
                 savedProfile(event.organizer.id)?.displayName ??
                 event.organizer.name,
+              avatarUrl: mockAvatar(
+                {
+                  id: event.organizer.id,
+                  nickname:
+                    allAccounts().find(
+                      (u) => mockId(u.id) === event.organizer.id,
+                    )?.id ?? "",
+                  avatarUrl:
+                    savedProfile(event.organizer.id)?.avatarUrl ??
+                    event.organizer.avatarUrl,
+                },
+                "organizer",
+              ),
             }
           : event.organizer,
       ...(moderation

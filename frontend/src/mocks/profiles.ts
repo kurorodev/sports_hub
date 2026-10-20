@@ -1,6 +1,21 @@
 import { z } from "zod";
 import type { UserProfileDto, PublicUser } from "../shared/api/types";
 import { profileSchema } from "../entities/profile/api/mappers";
+import {
+  avatarCharacter,
+  avatarPath,
+  avatarSource,
+  type AvatarTone,
+} from "../shared/model/avatars";
+
+export function mockAvatar(
+  user: { id: string; nickname: string; avatarUrl?: string | null },
+  tone: AvatarTone = "user",
+) {
+  const character = avatarCharacter(user.avatarUrl);
+  const url = character ? avatarPath(character) : user.avatarUrl;
+  return avatarSource(user.id, url, user.nickname === "admin" ? "admin" : tone);
+}
 const key = "dvizh.mock.profiles.v1";
 let memory: UserProfileDto[] = [];
 function read(): UserProfileDto[] {
@@ -29,12 +44,12 @@ export function refreshMockUser(user: PublicUser): PublicUser {
         id: user.id,
         nickname: profile.nickname,
         displayName: profile.displayName,
-        avatarUrl: profile.avatarUrl,
+        avatarUrl: mockAvatar({ ...user, avatarUrl: profile.avatarUrl }),
         sportsRoles: [...profile.sportsRoles],
         rank: profile.rank,
         ratingPoints: profile.ratingPoints,
       }
-    : user;
+    : { ...user, avatarUrl: mockAvatar(user) };
 }
 export function resetMockProfiles() {
   memory = [];

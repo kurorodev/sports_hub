@@ -1341,7 +1341,7 @@ export interface components {
             id: string;
             nickname: string;
             displayName: string;
-            /** Format: uri */
+            /** Format: uri-reference */
             avatarUrl?: string | null;
             sportsRoles: components["schemas"]["SportsRole"][];
             rank: components["schemas"]["Rank"];
@@ -1357,7 +1357,7 @@ export interface components {
             id: string;
             nickname: string;
             displayName: string;
-            /** Format: uri */
+            /** Format: uri-reference */
             avatarUrl?: string | null;
             sportsRoles: components["schemas"]["SportsRole"][];
             rank: components["schemas"]["Rank"];
@@ -1378,7 +1378,7 @@ export interface components {
             firstName?: string | null;
             lastName?: string | null;
             bio?: string | null;
-            /** Format: uri */
+            /** Format: uri-reference */
             avatarUrl?: string | null;
             city?: string | null;
             sportsRoles?: components["schemas"]["SportsRole"][];
@@ -1451,7 +1451,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
-            /** Format: uri */
+            /** Format: uri-reference */
             avatarUrl?: string | null;
         };
         OrganizationCreate: {

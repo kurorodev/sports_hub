@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Avatar } from "../../../shared/ui/Avatar";
 import { MapPin, Clock3, Trophy, CalendarDays } from "lucide-react";
 import type { Profile } from "../model";
 import {
@@ -16,21 +16,16 @@ export function ProfileSummary({
   sports: { id: string; name: string }[];
   sportsLoading?: boolean;
 }) {
-  const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
   return (
     <div className="profile-summary">
       <div className="profile-identity">
         <div className="profile-avatar" aria-hidden="true">
-          {profile.avatarUrl && failedAvatar !== profile.avatarUrl ? (
-            <img
-              src={profile.avatarUrl}
-              alt=""
-              referrerPolicy="no-referrer"
-              onError={() => setFailedAvatar(profile.avatarUrl)}
-            />
-          ) : (
-            profile.name.slice(0, 1).toLocaleUpperCase("ru")
-          )}
+          <Avatar
+            id={profile.id}
+            name={profile.name}
+            url={profile.avatarUrl}
+            size="100%"
+          />
         </div>
         <div>
           <span className="eyebrow muted">Участник ДВИЖ</span>
