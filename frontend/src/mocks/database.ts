@@ -1,3 +1,7 @@
+import {
+  eventCancelledAt,
+  resetEventCancellations,
+} from "./event-cancellations";
 import { activeSportsRoles } from "../shared/model/sports-roles";
 import { sportOverrides, resetMockSports } from "./sports";
 import registry from "./generated/sports-registry.json";
@@ -571,6 +575,12 @@ export function getEvents(viewerId?: string): EventPreview[] {
             updatedAt: moderation.at,
           }
         : {}),
+      ...(eventCancelledAt(event.id)
+        ? {
+            status: "UNPUBLISHED" as const,
+            cancelledAt: eventCancelledAt(event.id),
+          }
+        : {}),
       confirmedCount,
       pendingCount: records.filter((item) => item.status === "PENDING").length,
       spotsLeft:
@@ -642,6 +652,7 @@ export function saveEvent(
   return getEvents(ownerId).find((event) => event.id === id);
 }
 export function resetMockDatabase() {
+  resetEventCancellations();
   resetMockSports();
   memoryStore = { version: 2, events: [] };
   memoryRegistrations = [];
@@ -701,10 +712,14 @@ export function mockProfiles(): UserProfileDto[] {
   ];
 }
 
-export function cancelRegistration(registration: Registration): Registration {
+export function cancelRegistration(
+  registration: Registration,
+  reason?: string,
+): Registration {
   const updated: Registration = {
     ...registration,
     status: "CANCELLED",
+    ...(reason ? { decisionReason: reason } : {}),
     updatedAt: new Date().toISOString(),
   };
   const seedIds = new Set(seedRegistrations.map((item) => item.id));

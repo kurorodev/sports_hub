@@ -549,6 +549,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/events/{eventId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Отменить собственное мероприятие
+         * @description Только создатель личного мероприятия или представитель одобренной организации. До начала отменяет черновик или опубликованную встречу, активные участия и заявки; уведомляет участников. Статус UNPUBLISHED, cancelledAt содержит время отмены. Повторная отмена возвращает тот же результат без повторных уведомлений.
+         */
+        post: operations["postEventsEventidCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events/{eventId}/my-registration": {
         parameters: {
             query?: never;
@@ -1681,6 +1701,11 @@ export interface components {
         Event: {
             /** @description Название активности внутри категории Другое, не отдельный вид спорта. */
             customSportName?: string | null;
+            /**
+             * Format: date-time
+             * @description Время отмены организатором; у такого мероприятия status равен UNPUBLISHED.
+             */
+            readonly cancelledAt?: string | null;
             /** Format: uuid */
             id: string;
             title: string;
@@ -3662,6 +3687,37 @@ export interface operations {
         };
     };
     postEventsEventidPublish: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Токен из Session.csrfToken */
+                "X-CSRF-Token": string;
+            };
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успешный ответ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+            409: components["responses"]["409"];
+            422: components["responses"]["422"];
+            500: components["responses"]["500"];
+        };
+    };
+    postEventsEventidCancel: {
         parameters: {
             query?: never;
             header: {

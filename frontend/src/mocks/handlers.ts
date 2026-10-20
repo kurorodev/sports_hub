@@ -1,3 +1,4 @@
+import { cancelMockEvent } from "./event-cancellations";
 import { sportHandlers } from "./sports";
 import { withinDistance, distanceParamError } from "../shared/lib/distance";
 import {
@@ -1037,6 +1038,105 @@ export const handlers = [
         `published:${event.id}`,
       );
     return json(event, { status: 201 });
+  }),
+  http.get(`${api}/me/events`, ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    const params = new URL(request.url).searchParams;
+    const items = getEvents(session.user.id)
+      .filter(
+        (event) =>
+          mockOwner(event) === session.user.id &&
+          (!params.get("status") || event.status === params.get("status")),
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+          a.id.localeCompare(b.id),
+      );
+    const page = Math.max(0, Math.floor(Number(params.get("page")) || 0));
+    const size = Math.min(
+      50,
+      Math.max(1, Math.floor(Number(params.get("size")) || 12)),
+    );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.post(`${api}/events/:eventId/cancel`, ({ params, request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+      return json(
+        { code: "FORBIDDEN", message: "Обновите сессию" },
+        { status: 403 },
+      );
+    const event = getEvents(session.user.id).find(
+      (item) => item.id === params.eventId,
+    );
+    if (!event) return notFound();
+    if (
+      session.systemRoles.includes("ADMIN") ||
+      !event.viewerIsOrganizer ||
+      (event.organizer.type === "ORGANIZATION" &&
+        !getOrganizations().some(
+          (org) =>
+            org.id === event.organizer.id &&
+            org.createdBy.id === session.user.id &&
+            org.status === "APPROVED",
+        ))
+    )
+      return json(
+        {
+          code: "NOT_EVENT_ORGANIZER",
+          message: "Управлять может только организатор события",
+        },
+        { status: 403 },
+      );
+    if (event.cancelledAt) return json(event);
+    if (
+      !["PUBLISHED", "DRAFT"].includes(event.status) ||
+      Date.parse(event.startsAt) <= Date.now()
+    )
+      return json(
+        { code: "INVALID_STATUS_TRANSITION", message: "Отмена уже недоступна" },
+        { status: 409 },
+      );
+    const registrations = getRegistrations(event.id).filter((item) =>
+      ["CONFIRMED", "PENDING", "WAITLISTED"].includes(item.status),
+    );
+    cancelMockEvent(event.id);
+    for (const registration of registrations)
+      cancelRegistration(registration, "Мероприятие отменено организатором");
+    const recipients = new Set([
+      session.user.id,
+      ...registrations.map((item) => item.user.id),
+    ]);
+    for (const userId of recipients)
+      notify(
+        userId,
+        "EVENT_STATUS",
+        "Мероприятие отменено организатором",
+        event.title + ". Запись и обсуждение закрыты.",
+        null,
+        `/events/${event.id}`,
+        `cancelled:${event.id}`,
+      );
+    return json(
+      getEvents(session.user.id).find((item) => item.id === event.id),
+    );
   }),
   http.get(`${api}/events`, ({ request }) => {
     const p = new URL(request.url).searchParams;

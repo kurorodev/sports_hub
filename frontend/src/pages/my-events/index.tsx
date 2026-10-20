@@ -1,3 +1,6 @@
+import type { EventPreview, Page } from "../../shared/api/types";
+import { request } from "../../shared/api/client";
+import { CancelEvent } from "../../features/cancel-event";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -44,10 +47,12 @@ function MyEvents({ viewerId }: { viewerId: string }) {
   const now = useNow();
   const [params, setParams] = useSearchParams();
   const history = params.get("view") === "history";
+  const created = params.get("view") === "created";
   const page = Math.max(0, Math.floor(Number(params.get("page")) || 0));
-  const query = useQuery(
-    myEventsQuery(viewerId, history ? "HISTORY" : "UPCOMING", page),
-  );
+  const query = useQuery({
+    ...myEventsQuery(viewerId, history ? "HISTORY" : "UPCOMING", page),
+    enabled: !created,
+  });
   function destination(p: number) {
     return {
       ...(history ? { view: "history" } : {}),
@@ -65,7 +70,10 @@ function MyEvents({ viewerId }: { viewerId: string }) {
         className="organization-hub-nav"
         aria-label={tr("Разделы моих мероприятий")}
       >
-        <Link to="/my-events" aria-current={!history ? "page" : undefined}>
+        <Link
+          to="/my-events"
+          aria-current={!history && !created ? "page" : undefined}
+        >
           {tr("Предстоящие")}
         </Link>
         <Link
@@ -74,8 +82,16 @@ function MyEvents({ viewerId }: { viewerId: string }) {
         >
           {tr("История")}
         </Link>
+        <Link
+          to="/my-events?view=created"
+          aria-current={created ? "page" : undefined}
+        >
+          {tr("Я организатор")}
+        </Link>
       </nav>
-      {query.isPending ? (
+      {created ? (
+        <CreatedEvents viewerId={viewerId} page={page} />
+      ) : query.isPending ? (
         <Skeletons />
       ) : query.isError ? (
         <ErrorState error={query.error} retry={() => void query.refetch()} />
@@ -124,7 +140,9 @@ function MyEvents({ viewerId }: { viewerId: string }) {
                 const canCancel =
                   ["PENDING", "CONFIRMED", "WAITLISTED"].includes(
                     registration.status,
-                  ) && Date.parse(event.startsAt) > now;
+                  ) &&
+                  event.status === "PUBLISHED" &&
+                  Date.parse(event.startsAt) > now;
                 return (
                   <article className="my-event" key={registration.id}>
                     <img
@@ -141,7 +159,11 @@ function MyEvents({ viewerId }: { viewerId: string }) {
                         >
                           {tr(presentation.label)}
                         </span>
-                        {event.status !== "PUBLISHED" ? (
+                        {event.cancelledAt ? (
+                          <span>
+                            {tr("Мероприятие отменено организатором")}
+                          </span>
+                        ) : event.status !== "PUBLISHED" ? (
                           <span>{tr("Снято с публикации")}</span>
                         ) : finished ? (
                           <span>{tr("Мероприятие завершено")}</span>
@@ -162,7 +184,7 @@ function MyEvents({ viewerId }: { viewerId: string }) {
                           {event.location.city}, {event.location.address}
                         </span>
                       </p>
-                      {registration.decisionReason && (
+                      {registration.decisionReason && !event.cancelledAt && (
                         <p className="field-hint">
                           {registration.decisionReason}
                         </p>
@@ -211,5 +233,112 @@ function MyEvents({ viewerId }: { viewerId: string }) {
         </>
       )}
     </section>
+  );
+}
+
+function CreatedEvents({ viewerId, page }: { viewerId: string; page: number }) {
+  const [, setParams] = useSearchParams();
+  const query = useQuery({
+    queryKey: ["events", "mine", viewerId, page],
+    queryFn: ({ signal }) =>
+      request<Page<EventPreview>>(`/me/events?page=${page}&size=12`, {
+        signal,
+      }),
+    retry: false,
+    refetchInterval: 15000,
+  });
+  if (query.isPending) return <Skeletons />;
+  if (query.isError)
+    return (
+      <ErrorState error={query.error} retry={() => void query.refetch()} />
+    );
+  return (
+    <>
+      <p className="field-hint">
+        {tr("Ваши личные мероприятия и встречи от ваших организаций.")}
+      </p>
+      {!query.data.items.length ? (
+        <div className="my-events-empty">
+          <h2>{tr("Вы пока не создали мероприятий")}</h2>
+          <Link className="button primary" to="/events/new">
+            {tr("Создать мероприятие")}
+          </Link>
+        </div>
+      ) : (
+        <div className="my-events-list">
+          {query.data.items.map((event) => (
+            <article className="my-event" key={event.id}>
+              <img
+                src={event.sport.imageUrl || sportImage(event.sport.name)}
+                alt=""
+                width={104}
+                height={104}
+                loading="lazy"
+              />
+              <div className="my-event-content">
+                <div className="my-event-labels">
+                  <span>
+                    {event.cancelledAt
+                      ? tr("Мероприятие отменено организатором")
+                      : event.status === "DRAFT"
+                        ? tr("Черновик")
+                        : event.status === "PUBLISHED"
+                          ? tr("Опубликовано")
+                          : tr("Снято с публикации")}
+                  </span>
+                  <span>{event.organizer.name}</span>
+                </div>
+                <h2>
+                  <Link to={`/events/${event.id}`}>{event.title}</Link>
+                </h2>
+                <p>
+                  <CalendarDays size={16} aria-hidden="true" />
+                  <time dateTime={event.startsAt}>
+                    {eventDate(event.startsAt)}
+                  </time>
+                </p>
+                <p>
+                  <MapPin size={16} aria-hidden="true" />
+                  <span>
+                    {event.location.city}, {event.location.address}
+                  </span>
+                </p>
+              </div>
+              <div className="my-event-actions">
+                <Link className="button secondary" to={`/events/${event.id}`}>
+                  {tr("Подробнее")}
+                </Link>
+                <CancelEvent event={event} viewerId={viewerId} />
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      {query.data.totalPages > 1 && (
+        <nav className="pagination" aria-label={tr("Страницы мероприятий")}>
+          <button
+            className="button secondary"
+            disabled={page === 0}
+            onClick={() =>
+              setParams({ view: "created", page: String(page - 1) })
+            }
+          >
+            {tr("Назад")}
+          </button>
+          <span>
+            {page + 1} / {query.data.totalPages}
+          </span>
+          <button
+            className="button secondary"
+            disabled={page + 1 >= query.data.totalPages}
+            onClick={() =>
+              setParams({ view: "created", page: String(page + 1) })
+            }
+          >
+            {tr("Далее")}
+          </button>
+        </nav>
+      )}
+    </>
   );
 }

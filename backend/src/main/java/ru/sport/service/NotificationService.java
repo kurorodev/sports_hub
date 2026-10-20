@@ -63,6 +63,10 @@ public class NotificationService {
         UUID owner=owner(e);
         if(newlyJoined && !owner.equals(r.userId))send(owner,Api.NotificationType.NEW_REGISTRATION,r.status==Api.RegistrationStatus.PENDING?"Новая заявка на участие":r.status==Api.RegistrationStatus.WAITLISTED?"Новая запись в лист ожидания":"Новый участник",e.title,null,"/events/"+e.id,key);
     }
+    @Transactional public void cancelled(EventEntity e) {
+        var recipients=attendees(e);recipients.add(owner(e));
+        for(UUID user:recipients)send(user,Api.NotificationType.EVENT_STATUS,"Мероприятие отменено организатором",e.title+". Запись и обсуждение закрыты.",null,"/events/"+e.id,"cancelled:"+e.id);
+    }
     @Transactional public void unpublished(EventEntity e,String reason) {
         UUID owner=owner(e);
         send(owner,Api.NotificationType.EVENT_UNPUBLISHED,"Мероприятие снято с публикации",e.title,reason,"/events/"+e.id,"unpublished:"+e.id);

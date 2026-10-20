@@ -1587,6 +1587,41 @@ paths:
         schema:
           type: string
       x-phase: P1
+  /events/{eventId}/cancel:
+    post:
+      tags:
+      - Events
+      summary: Отменить собственное мероприятие
+      operationId: postEventsEventidCancel
+      description: Только создатель личного мероприятия или представитель одобренной организации. До начала отменяет черновик или опубликованную встречу, активные участия и заявки; уведомляет участников. Статус UNPUBLISHED, cancelledAt содержит время отмены. Повторная отмена возвращает тот же результат без повторных уведомлений.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '422':
+          $ref: '#/components/responses/422'
+        '500':
+          $ref: '#/components/responses/500'
+      parameters:
+      - *id004
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        description: Токен из Session.csrfToken
+        schema:
+          type: string
+      x-phase: P1
   /events/{eventId}/my-registration:
     get:
       tags:
@@ -4389,6 +4424,12 @@ components:
           nullable: true
           maxLength: 80
           description: Название активности внутри категории Другое, не отдельный вид спорта.
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+          description: Время отмены организатором; у такого мероприятия status равен UNPUBLISHED.
         id:
           type: string
           format: uuid

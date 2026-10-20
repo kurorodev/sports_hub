@@ -4015,3 +4015,8 @@ select:focus:not([aria-invalid="true"]),
   .my-event-actions { display: flex; flex-wrap: wrap; width: 100%; }
   .my-event-actions .button { flex: 1 1 140px; }
 }
+
+.event-owner-actions { margin-top: 12px; }
+.event-owner-actions > .button { width: 100%; }
+.cancel-event-title { font-weight: 700; overflow-wrap: anywhere; }
+.my-events-page .organization-hub-nav { flex-wrap: wrap; }

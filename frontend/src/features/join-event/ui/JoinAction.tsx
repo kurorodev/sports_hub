@@ -130,7 +130,7 @@ export function JoinAction({
             <p>
               {publicationClosed
                 ? tr(
-                    "Существующая запись сохранена. Мероприятие больше не опубликовано, новая запись закрыта.",
+                    "Мероприятие недоступно для записи. Статус вашего участия показан выше.",
                   )
                 : own.data.status === "CONFIRMED"
                   ? event.joinMode === "APPROVAL"
@@ -145,7 +145,8 @@ export function JoinAction({
             </p>
           </div>
         </div>
-        {event.startsAt &&
+        {!publicationClosed &&
+          event.startsAt &&
           Date.parse(event.startsAt) > now &&
           ["CONFIRMED", "PENDING", "WAITLISTED"].includes(own.data.status) && (
             <CancelParticipation eventId={event.eventId} viewerId={viewerId} />

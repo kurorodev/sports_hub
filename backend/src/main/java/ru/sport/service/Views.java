@@ -67,7 +67,7 @@ public class Views {
             org=new Api.OrganizerSummary(Api.OrganizerType.ORGANIZATION,o.id,o.name,o.avatarUrl!=null?o.avatarUrl:AvatarImages.forUser(db.get(UserEntity.class,o.createdBy),o.status==Api.OrganizationStatus.APPROVED));
         }
         return dto(Api.Event.class,fields("id",e.id,"title",e.title,"description",e.description,"eventKind",e.eventKind,
-            "customSportName",e.customSportName,"sport",sport(db.get(SportEntity.class,e.sportId)),"startsAt",e.startsAt,"endsAt",e.endsAt,
+            "cancelledAt",e.cancelledAt,"customSportName",e.customSportName,"sport",sport(db.get(SportEntity.class,e.sportId)),"startsAt",e.startsAt,"endsAt",e.endsAt,
             "location",new Api.Location(e.city,e.address,e.latitude,e.longitude),"skillLevel",e.skillLevel,"requirements",e.requirements,
             "joinMode",e.joinMode,"maxParticipants",e.maxParticipants,"confirmedCount",registrations(e.id,Api.RegistrationStatus.CONFIRMED),
             "pendingCount",registrations(e.id,Api.RegistrationStatus.PENDING),"spotsLeft",spots(e),"organizer",org,"status",e.status,
