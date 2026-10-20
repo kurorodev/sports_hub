@@ -1143,6 +1143,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/sports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Создать категорию вида спорта (только ADMIN). */
+        post: operations["createSportCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sports/{sportId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Загрузить, заменить или убрать фото категории (только ADMIN). */
+        put: operations["setSportCategoryImage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sports/{sportId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Публичное изображение категории. */
+        get: operations["getSportCategoryImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1418,6 +1469,8 @@ export interface components {
             demo: boolean;
         };
         Sport: {
+            /** @description Относительный URL фото категории; null использует стандартную иллюстрацию. */
+            imageUrl?: string | null;
             /** Format: uuid */
             id: string;
             name: string;
@@ -1425,6 +1478,15 @@ export interface components {
             isCustom: boolean;
             /** @description Код ВРВС; null для категории Другое. */
             registryCode?: string | null;
+        };
+        SportCategoryCreate: {
+            name: string;
+            /** @description Data URL PNG/JPEG до 2 МБ и 4096×4096 пикселей. */
+            imageData?: string | null;
+        };
+        SportCategoryImage: {
+            /** @description Data URL PNG/JPEG; null удаляет фото. */
+            imageData: string | null;
         };
         /** @description Ровно один вариант: sportId из справочника ИЛИ customName активности категории Другое. customName не создаёт общую категорию. */
         SportInput: {
@@ -4644,6 +4706,128 @@ export interface operations {
             409: components["responses"]["409"];
             429: components["responses"]["429"];
             503: components["responses"]["503"];
+        };
+    };
+    createSportCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SportCategoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Категория создана. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sport"];
+                };
+            };
+            /** @description Некорректное название или изображение. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется ADMIN. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Название уже существует. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setSportCategoryImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SportCategoryImage"];
+            };
+        };
+        responses: {
+            /** @description Категория обновлена. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sport"];
+                };
+            };
+            /** @description Некорректное изображение. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется ADMIN. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Категория не найдена. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSportCategoryImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Проверенное изображение PNG или JPEG, до 2 МБ. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                };
+            };
+            /** @description Фото не задано. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
 }

@@ -17,7 +17,7 @@ public class EventService {
         return db.list(SportEntity.class,"e.canonicalId is null and lower(e.name) like :q",Map.of("q",like(q)),"e.isCustom asc,e.name asc,e.id asc",0,Integer.MAX_VALUE).stream().map(view::sport).toList();
     }
     @Transactional public Api.Event create(Api.EventCreate r) {
-        var actor=access.user();
+        var actor=access.participant();
         var e=new EventEntity();
         if(r.organizer().type()==Api.OrganizerType.USER) {
             if(!actor.id.equals(r.organizer().id()))throw Problem.forbidden();

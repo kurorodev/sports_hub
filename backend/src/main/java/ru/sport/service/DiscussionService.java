@@ -34,7 +34,7 @@ public class DiscussionService {
         return PageResult.of(items,page,size,total);
     }
     @Transactional public Api.Comment create(UUID eventId,Api.CommentCreate request) {
-        var u=access.user();var e=db.lock(EventEntity.class,eventId);access.eventVisible(e);
+        var u=access.participant();var e=db.lock(EventEntity.class,eventId);access.eventVisible(e);
         if(e.status!=Api.EventStatus.PUBLISHED)throw Problem.conflict(Api.ErrorCode.EVENT_NOT_AVAILABLE,"Обсуждение доступно только у опубликованного события");
         var c=new CommentEntity();c.eventId=eventId;c.authorId=u.id;c.text=request.text().strip();c.mentions=mentions.resolve(c.text);c.createdAt=clock.instant();c.updatedAt=c.createdAt;db.add(c);
         c.mentions.stream().map(m -> m.userId).distinct().filter(id -> !id.equals(u.id)).forEach(id -> notifications.send(id,Api.NotificationType.MENTION,"Вас упомянули в обсуждении",e.title,null,"/events/"+e.id,"mention:"+c.id));

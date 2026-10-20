@@ -1,4 +1,4 @@
-import { Select } from "../../../shared/ui/Select";
+import { AdminListFilters } from "../../../shared/ui/AdminListFilters";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -11,7 +11,6 @@ import { ErrorState } from "../../../shared/ui/Feedback";
 import { ModerationEventCard } from "./ModerationEventCard";
 export function AdminEvents({ viewerId }: { viewerId: string }) {
   const repo = useModerationRepository();
-  const [draft, setDraft] = useState("");
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<EventStatus | undefined>("PUBLISHED");
   const [page, setPage] = useState(0);
@@ -22,64 +21,28 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
   return (
     <section aria-labelledby="moderation-events-heading">
       <h2 id="moderation-events-heading">Модерация мероприятий</h2>
-      <div className="organization-toolbar">
-        <form
-          className="organization-search"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setQ(draft.trim());
-            setPage(0);
-          }}
-        >
-          <label htmlFor="moderation-search">
-            Название или описание мероприятия
-          </label>
-          <div>
-            <input
-              id="moderation-search"
-              placeholder="Название встречи или ключевое слово"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-            />
-            <button className="button secondary" type="submit">
-              Найти мероприятия
-            </button>
-          </div>
-        </form>
-        <div className="form-field">
-          <label htmlFor="moderation-status">Статус мероприятий</label>
-          <Select
-            id="moderation-status"
-            value={status ?? ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (
-                value === "" ||
-                value === "DRAFT" ||
-                value === "PUBLISHED" ||
-                value === "UNPUBLISHED" ||
-                value === "DELETED"
-              ) {
-                setStatus(value || undefined);
-                setPage(0);
-              }
-            }}
-          >
-            <option value="PUBLISHED">Опубликованные</option>
-            <option value="UNPUBLISHED">Снятые с публикации</option>
-            <option value="DRAFT">Черновики</option>
-            <option value="DELETED">Удалённые</option>
-            <option value="">Все статусы</option>
-          </Select>
-        </div>
-        <button
-          className="button secondary"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          Обновить мероприятия
-        </button>
-      </div>
+      <AdminListFilters
+        statusLabel="Статус мероприятий"
+        title="Фильтры мероприятий"
+        label="Название или описание мероприятия"
+        placeholder="Поиск по названию или описанию"
+        query={q}
+        status={status ?? ""}
+        options={[
+          { value: "", label: "Все статусы" },
+          { value: "PUBLISHED", label: "Опубликованные" },
+          { value: "UNPUBLISHED", label: "Снятые с публикации" },
+          { value: "DRAFT", label: "Черновики" },
+          { value: "DELETED", label: "Удалённые" },
+        ]}
+        refreshing={query.isFetching}
+        onApply={(text, nextStatus) => {
+          setQ(text);
+          setStatus((nextStatus || undefined) as EventStatus | undefined);
+          setPage(0);
+        }}
+        onRefresh={() => void query.refetch()}
+      />
       {notice && (
         <p className="notice success" role="status">
           {notice}

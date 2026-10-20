@@ -15,7 +15,8 @@ export async function setupModerationEvent(page: Page, title: string) {
     const sports: Sport[] = await (
       await fetch("/api/v1/sports", { credentials: "include" })
     ).json();
-    const sport = sports.find((item) => item.name === "Легкая атлетика") ?? sports[0];
+    const sport =
+      sports.find((item) => item.name === "Легкая атлетика") ?? sports[0];
     const body: EventCreate = {
       title: name,
       description:
@@ -62,7 +63,7 @@ export async function findModerationEvent(page: Page, title: string) {
     .getByLabel("Название или описание мероприятия", { exact: true })
     .fill(title);
   await page
-    .getByRole("button", { name: "Найти мероприятия", exact: true })
+    .getByRole("button", { name: "Применить фильтры", exact: true })
     .click();
   return page.getByRole("article", {
     name: `Мероприятие: ${title}`,

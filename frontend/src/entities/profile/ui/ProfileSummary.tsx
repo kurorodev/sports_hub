@@ -11,7 +11,9 @@ export function ProfileSummary({
   profile,
   sports,
   sportsLoading = false,
+  administrative = false,
 }: {
+  administrative?: boolean;
   profile: Profile;
   sports: { id: string; name: string }[];
   sportsLoading?: boolean;
@@ -28,7 +30,9 @@ export function ProfileSummary({
           />
         </div>
         <div>
-          <span className="eyebrow muted">Участник сообщества</span>
+          <span className="eyebrow muted">
+            {administrative ? "Администратор" : "Участник сообщества"}
+          </span>
           <h1>{profile.name}</h1>
           <p className="profile-handle">@{profile.handle}</p>
           {(profile.firstName || profile.lastName) && (
@@ -36,17 +40,21 @@ export function ProfileSummary({
               {[profile.firstName, profile.lastName].filter(Boolean).join(" ")}
             </p>
           )}
-          <div className="profile-role-list">
-            {profile.roles.length ? (
-              profile.roles.map((role) => (
-                <span className="profile-chip" key={role}>
-                  {sportRoleLabels[role]}
-                </span>
-              ))
-            ) : (
-              <span className="muted">Спортивные роли не указаны</span>
-            )}
-          </div>
+          {!administrative && (
+            <>
+              <div className="profile-role-list">
+                {profile.roles.length ? (
+                  profile.roles.map((role) => (
+                    <span className="profile-chip" key={role}>
+                      {sportRoleLabels[role]}
+                    </span>
+                  ))
+                ) : (
+                  <span className="muted">Спортивные роли не указаны</span>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
       <div className="profile-facts">
@@ -54,14 +62,19 @@ export function ProfileSummary({
           <MapPin size={18} />
           {profile.city || "Город не указан"}
         </p>
+        {!administrative && (
+          <>
+            <p>
+              <Clock3 size={18} />
+              {profile.preferredTime
+                ? timeLabels[profile.preferredTime]
+                : "Удобное время не указано"}
+            </p>
+          </>
+        )}
         <p>
-          <Clock3 size={18} />
-          {profile.preferredTime
-            ? timeLabels[profile.preferredTime]
-            : "Удобное время не указано"}
-        </p>
-        <p>
-          <CalendarDays size={18} />На платформе с{" "}
+          <CalendarDays size={18} />
+          На платформе с{" "}
           {new Intl.DateTimeFormat("ru-RU", {
             month: "long",
             year: "numeric",
@@ -76,38 +89,44 @@ export function ProfileSummary({
         <h2 id="profile-about-heading">О себе</h2>
         <p>
           {profile.about ||
-            "Пока без описания. Познакомиться можно в обсуждении встречи."}
+            (administrative
+              ? "Информация пока не указана."
+              : "Пока без описания. Познакомиться можно в обсуждении встречи.")}
         </p>
       </section>
-      <section aria-labelledby="profile-interests-heading">
-        <h2 id="profile-interests-heading">Спортивные интересы</h2>
-        {sportsLoading && profile.preferences.length ? (
-          <p role="status">Загружаем названия видов спорта…</p>
-        ) : profile.preferences.length ? (
-          <ul className="profile-preferences">
-            {profile.preferences.map((item) => (
-              <li key={item.sportId}>
-                <strong>
-                  {sports.find((sport) => sport.id === item.sportId)?.name ??
-                    "Вид спорта недоступен"}
-                </strong>
-                <span>{levelLabels[item.level]}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="muted">Любимые виды спорта пока не выбраны.</p>
-        )}
-      </section>
-      <div className="profile-rating">
-        <Trophy size={24} />
-        <div>
-          <strong>
-            {rankLabels[profile.rank]} · {profile.points} очков
-          </strong>
-          <p>Ранг и очки рассчитывает сервер по подтверждённому участию.</p>
-        </div>
-      </div>
+      {!administrative && (
+        <>
+          <section aria-labelledby="profile-interests-heading">
+            <h2 id="profile-interests-heading">Спортивные интересы</h2>
+            {sportsLoading && profile.preferences.length ? (
+              <p role="status">Загружаем названия видов спорта…</p>
+            ) : profile.preferences.length ? (
+              <ul className="profile-preferences">
+                {profile.preferences.map((item) => (
+                  <li key={item.sportId}>
+                    <strong>
+                      {sports.find((sport) => sport.id === item.sportId)
+                        ?.name ?? "Вид спорта недоступен"}
+                    </strong>
+                    <span>{levelLabels[item.level]}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">Любимые виды спорта пока не выбраны.</p>
+            )}
+          </section>
+          <div className="profile-rating">
+            <Trophy size={24} />
+            <div>
+              <strong>
+                {rankLabels[profile.rank]} · {profile.points} очков
+              </strong>
+              <p>Ранг и очки рассчитывает сервер по подтверждённому участию.</p>
+            </div>
+          </div>{" "}
+        </>
+      )}
     </div>
   );
 }

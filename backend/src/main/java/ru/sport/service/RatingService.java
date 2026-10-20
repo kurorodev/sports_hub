@@ -17,14 +17,14 @@ public class RatingService {
         var e=db.lock(EventEntity.class,eventId);access.requireOwner(e);
         if(e.eventKind!=Api.EventKind.COMPETITION || e.status!=Api.EventStatus.PUBLISHED)throw Problem.transition();
         var referee=db.get(UserEntity.class,request.userId());
-        if(!referee.sportsRoles.contains(Api.SportsRole.REFEREE))throw new Problem(422,Api.ErrorCode.NOT_A_REFEREE,"У пользователя нет спортивной роли REFEREE");
+        if(referee.admin || !referee.sportsRoles.contains(Api.SportsRole.REFEREE))throw new Problem(422,Api.ErrorCode.NOT_A_REFEREE,"У пользователя нет спортивной роли REFEREE");
         if(db.count(EventStaffEntity.class,"e.eventId=:event and e.userId=:user",Map.of("event",eventId,"user",referee.id))==0) {
             var staff=new EventStaffEntity();staff.eventId=eventId;staff.userId=referee.id;staff.assignedBy=access.user().id;db.add(staff);
         }
         return Views.fields("eventId",eventId,"referee",view.user(referee));
     }
     @Transactional public Api.RatingLedgerEntry verify(UUID eventId,UUID registrationId,Api.VerifyParticipationRequest request) {
-        var actor=access.user();var e=db.lock(EventEntity.class,eventId);
+        var actor=access.participant();var e=db.lock(EventEntity.class,eventId);
         boolean appointed=db.count(EventStaffEntity.class,"e.eventId=:event and e.userId=:user",Map.of("event",eventId,"user",actor.id))>0;
         if(!access.owns(e) && !appointed)throw Problem.forbidden();
         if(e.eventKind!=Api.EventKind.COMPETITION || e.status!=Api.EventStatus.PUBLISHED || e.endsAt==null || e.endsAt.isAfter(clock.instant()))throw Problem.transition();

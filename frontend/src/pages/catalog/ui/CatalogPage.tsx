@@ -1,3 +1,4 @@
+import { sessionQuery } from "../../../entities/session";
 import { useCurrentLocation } from "../../../shared/lib/current-location-context";
 import { DistanceFilter } from "../../../shared/ui/DistanceFilter";
 import { registrationPresentation } from "../../../entities/registration";
@@ -25,6 +26,8 @@ import { useEffect } from "react";
 import { canonicalCityName, russianCities } from "../../../shared/lib/cities";
 
 export function CatalogPage() {
+  const session = useQuery(sessionQuery);
+  const isAdmin = session.data?.systemRoles.includes("ADMIN");
   const [params, setParams] = useSearchParams();
   const { position } = useCurrentLocation();
   const needsLocation = params.has("radiusMeters") && !position;
@@ -52,16 +55,18 @@ export function CatalogPage() {
     );
   }, [requestedCity, city, setParams]);
   const sportOptions = [
-    { id: "", name: "Все виды спорта" },
-    ...(sports.data ?? []).filter((sport) =>
-      [
-        "Легкая атлетика",
-        "Баскетбол",
-        "Футбол",
-        "Теннис",
-        "Шахматы",
-        "Другое",
-      ].includes(sport.name),
+    { id: "", name: "Все виды спорта", imageUrl: undefined },
+    ...(sports.data ?? []).filter(
+      (sport) =>
+        [
+          "Легкая атлетика",
+          "Баскетбол",
+          "Футбол",
+          "Теннис",
+          "Шахматы",
+          "Другое",
+        ].includes(sport.name) ||
+        (!sport.registryCode && !sport.isCustom),
     ),
   ];
   const setFilter = (key: string, value: string) => {
@@ -131,10 +136,12 @@ export function CatalogPage() {
               Найди свою компанию<span className="brand-dot">.</span>
             </h2>
           </div>
-          <Link className="button primary catalog-create" to="/events/new">
-            <Plus size={18} aria-hidden="true" />
-            Создать встречу
-          </Link>
+          {!isAdmin && (
+            <Link className="button primary catalog-create" to="/events/new">
+              <Plus size={18} aria-hidden="true" />
+              Создать встречу
+            </Link>
+          )}
         </div>
         <ActivityViewSwitch view="list" params={params} />
         <form
@@ -188,9 +195,9 @@ export function CatalogPage() {
               aria-pressed={(params.get("sportId") ?? "") === sport.id}
               onClick={() => setFilter("sportId", sport.id)}
             >
-              {sportIcon(sport.name) && (
+              {(sport.imageUrl || sportIcon(sport.name)) && (
                 <img
-                  src={sportIcon(sport.name)}
+                  src={sport.imageUrl || sportIcon(sport.name)}
                   alt=""
                   width="28"
                   height="28"
@@ -238,10 +245,10 @@ export function CatalogPage() {
                     id="catalog-sport"
                     value={params.get("sportId") ?? ""}
                     options={[
-                      { id: "", name: "Все виды спорта" },
+                      { id: "", name: "Все виды спорта", imageUrl: undefined },
                       ...(sports.data ?? []).map((sport) => ({
                         ...sport,
-                        imageUrl: sportIcon(sport.name),
+                        imageUrl: sport.imageUrl || sportIcon(sport.name),
                       })),
                     ]}
                     onChange={(value) => setFilter("sportId", value)}
@@ -371,7 +378,7 @@ export function CatalogPage() {
                 retry={() => void query.refetch()}
               />
             ) : query.data.items.length === 0 ? (
-              <EmptyState reset={() => setParams({})} />
+              <EmptyState canCreate={!isAdmin} reset={() => setParams({})} />
             ) : (
               <>
                 <div className="event-grid">

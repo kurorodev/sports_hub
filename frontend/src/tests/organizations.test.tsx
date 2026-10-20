@@ -401,10 +401,9 @@ describe("organization UI", () => {
     expect(
       screen.queryByRole("article", { name: `Организация: ${input.name}` }),
     ).not.toBeInTheDocument();
-    await user.selectOptions(
-      screen.getByLabelText("Статус организаций"),
-      "REJECTED",
-    );
+    await user.click(screen.getByLabelText("Статус организаций"));
+    await user.click(screen.getByRole("option", { name: "Отклонённые" }));
+    await user.click(screen.getByRole("button", { name: "Применить фильтры" }));
     expect(
       await screen.findByRole("article", {
         name: `Организация: ${input.name}`,

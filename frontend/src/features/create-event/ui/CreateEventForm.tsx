@@ -166,7 +166,10 @@ export function CreateEventForm({
                 name="sportChoice"
                 render={({ field }) => (
                   <SearchableSelect
-                    {...accessibility("event-sport", errors.sportChoice?.message)}
+                    {...accessibility(
+                      "event-sport",
+                      errors.sportChoice?.message,
+                    )}
                     ref={field.ref}
                     value={field.value}
                     onChange={field.onChange}
@@ -180,7 +183,7 @@ export function CreateEventForm({
                         .map((sport) => ({
                           id: sport.id,
                           name: sport.name,
-                          imageUrl: sportIcon(sport.name),
+                          imageUrl: sport.imageUrl || sportIcon(sport.name),
                         })),
                       {
                         id: customSportValue,

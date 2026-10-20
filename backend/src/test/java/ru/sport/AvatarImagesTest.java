@@ -23,8 +23,8 @@ class AvatarImagesTest extends ApiTestSupport {
         call(owner,"POST","/events/"+other+"/registrations",Map.of(),201);
         assertThat(getJson(null,"/events/"+other+"/participants").toString()).contains("/avatars/user/female-03.svg");
         assertThat(json(call(admin,"PATCH","/me/profile",Map.of("avatarUrl","/avatars/user/male-04.svg"),200)).path("avatarUrl").asText()).isEqualTo("/avatars/admin/male-04.svg");
-        var adminComment=json(call(admin,"POST","/events/"+event+"/comments",Map.of("text","Ответ администратора"),201));
-        assertThat(adminComment.path("author").path("avatarUrl").asText()).isEqualTo("/avatars/admin/male-04.svg");
+        call(admin,"POST","/events/"+event+"/comments",Map.of("text","Ответ администратора"),403);
+        assertThat(getJson(admin,"/me/profile").path("avatarUrl").asText()).isEqualTo("/avatars/admin/male-04.svg");
         assertThat(getJson(login("org-approved"),"/me/profile").path("avatarUrl").asText()).startsWith("/avatars/organizer/");
         assertThat(getJson(login("org-pending"),"/me/profile").path("avatarUrl").asText()).startsWith("/avatars/user/");
     }

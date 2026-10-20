@@ -46,6 +46,16 @@ export function CreateEventPage() {
         </Link>
       </section>
     );
+  if (session.data.systemRoles.includes("ADMIN"))
+    return (
+      <section className="feedback page-state">
+        <h1>Кабинет администратора</h1>
+        <p>Создание мероприятий доступно пользовательским аккаунтам.</p>
+        <Link className="button primary" to="/admin">
+          К инструментам администратора
+        </Link>
+      </section>
+    );
   if (sports.isPending)
     return (
       <p className="page-state" role="status">

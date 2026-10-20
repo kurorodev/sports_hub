@@ -20,6 +20,7 @@ public class Access {
         if(id==null) throw new Problem(401,Api.ErrorCode.UNAUTHENTICATED,"Войдите в аккаунт");
         return db.get(UserEntity.class,id);
     }
+    public UserEntity participant() { var u=user(); if(u.admin)throw Problem.forbidden(); return u; }
     public boolean admin() { UUID id=viewerId(); return id != null && db.get(UserEntity.class,id).admin; }
     public void requireAdmin() { if(!user().admin) throw Problem.forbidden(); }
     public boolean represents(OrganizationEntity org) { return org.createdBy.equals(viewerId()); }
@@ -28,13 +29,13 @@ public class Access {
     }
     public boolean owns(EventEntity e) {
         UUID viewer=viewerId();
-        if(viewer==null) return false;
+        if(viewer==null || admin()) return false;
         if(e.organizerUserId!=null) return e.organizerUserId.equals(viewer);
         var org=db.get(OrganizationEntity.class,e.organizerOrganizationId);
         return represents(org) && org.status==Api.OrganizationStatus.APPROVED;
     }
     public void requireOwner(EventEntity e) {
-        user(); if(!owns(e)) throw new Problem(403,Api.ErrorCode.NOT_EVENT_ORGANIZER,"Управлять может только организатор события");
+        participant(); if(!owns(e)) throw new Problem(403,Api.ErrorCode.NOT_EVENT_ORGANIZER,"Управлять может только организатор события");
     }
     public void eventVisible(EventEntity e) {
         if(e.status==Api.EventStatus.PUBLISHED || owns(e) || admin()) return;

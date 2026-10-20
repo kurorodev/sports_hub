@@ -13,4 +13,7 @@ public class SportEntity extends BaseEntity {
     @Column(nullable=false) public boolean isCustom;
     @Column(length=11) public String registryCode;
     public UUID canonicalId;
+    @Column(nullable=false) public boolean adminCreated;
+    @Column(columnDefinition="bytea") public byte[] imageData;
+    @Column(length=20) public String imageContentType;
 }
