@@ -35,8 +35,7 @@ public class SessionController {
         var context=SecurityContextHolder.createEmptyContext();
         context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(id,null,List.of()));
         SecurityContextHolder.setContext(context);
-        // Persist authentication at login, before issuing CSRF, so subsequent requests
-        // do not look like a new authentication and invalidate the returned token.
+        // Сохраняем вход до выдачи CSRF-токена, иначе следующий запрос сочтёт авторизацию новой и сбросит токен.
         contexts.saveContext(context,request,response);
         var token=csrf.generateToken(request);csrf.saveToken(token,request,response);
         return sessions.session(id,token.getToken());

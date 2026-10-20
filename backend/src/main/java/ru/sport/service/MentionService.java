@@ -8,7 +8,7 @@ import ru.sport.persistence.Store;
 
 @Service
 public class MentionService {
-    // UTF-16 offsets match JavaScript string slicing. Emails and longer handles are not partial matches.
+    // Смещения считаем в UTF-16, как slice в JavaScript; фрагменты email и длинных ников не считаем упоминаниями.
     private static final Pattern TOKEN=Pattern.compile("(?<![\\p{L}\\p{N}_@.-])@([A-Za-z0-9_-]{3,40})(?![\\p{L}\\p{N}_-])");
     private final Store db;
     public MentionService(Store db){this.db=db;}

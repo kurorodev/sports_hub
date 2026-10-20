@@ -1,4 +1,4 @@
-/** Server-supplied facts for the participation scenario, not client-assigned permissions. */
+/** Статусы и разрешения участия приходят с сервера. */
 export interface EventParticipation {
   eventId: string;
   startsAt?: string;

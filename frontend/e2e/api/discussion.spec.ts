@@ -7,7 +7,7 @@ for (const width of [375, 768, 1440]) {
     page,
     browser,
   }) => {
-    test.setTimeout(60000); // Two independent clients observe server changes through 10-second polling.
+    test.setTimeout(60000); // Два клиента ждут серверных изменений с интервалом поллинга 10 секунд.
     await page.setViewportSize({ width, height: 1000 });
     await signInAs(page, "athlete-a");
     const url = await createApproval(

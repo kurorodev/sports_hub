@@ -35,7 +35,7 @@ export function Textarea({
       : "";
   useImperativeHandle(ref, () => input.current!, []);
 
-  // Read the actual field after register/reset, including uncontrolled forms.
+  // После register/reset читаем значение из поля: форма может управлять им без React-состояния.
   useLayoutEffect(() => {
     const element = input.current;
     if (!element) return;

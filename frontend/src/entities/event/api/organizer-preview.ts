@@ -45,7 +45,7 @@ export const organizerPreviewQuery = (organizer: Organizer) =>
       );
       if (organization.id !== organizer.id)
         throw new Error("Unexpected organizer");
-      // Organizations have no handle: mentions address their representative, a real user.
+      // У организации нет ника; упоминание адресуем её представителю.
       return {
         name: organization.name,
         about: organization.description,

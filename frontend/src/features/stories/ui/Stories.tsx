@@ -46,7 +46,7 @@ function StoriesFeed({
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(interval);
   }, []);
-  // Use the server clock plus elapsed client time, not the device's calendar clock.
+  // Срок считаем от серверного времени и прошедшего интервала: часы устройства могут быть неверными.
   const serverNow = query.data
     ? Date.parse(query.data.asOf) + Math.max(0, now - query.dataUpdatedAt)
     : now;
@@ -80,7 +80,7 @@ function StoriesFeed({
       try {
         await deleteStory(id);
       } catch (error) {
-        // Another admin may have already removed this story.
+        // Другой администратор мог удалить сторис, пока окно подтверждения было открыто.
         if (!(error instanceof ApiError && error.status === 404)) throw error;
       }
     },
@@ -89,7 +89,7 @@ function StoriesFeed({
   });
   const onViewed = (story: Story) => {
     const key = storiesQuery(viewerId).queryKey;
-    // Updating readAt must not reset the server-clock reference used for expiration.
+    // Отметка о просмотре не должна заново запускать отсчёт срока жизни сторис.
     const updatedAt = client.getQueryState(key)?.dataUpdatedAt;
     client.setQueryData<StoryFeed>(
       key,

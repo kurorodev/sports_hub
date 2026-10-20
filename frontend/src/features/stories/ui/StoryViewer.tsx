@@ -37,7 +37,7 @@ export function StoryViewer(props: StoryViewerProps) {
   const confirmationId = useId();
   const [confirming, setConfirming] = useState(false);
   const [closeBlocked, setCloseBlocked] = useState(false);
-  // Keep the modal and its backdrop mounted; reset only the slide between stories.
+  // При перелистывании меняем только слайд: закрытие и повторное открытие модального окна вызывает мигание.
   return (
     <Dialog
       labelledBy={confirming ? confirmationId : titleId}

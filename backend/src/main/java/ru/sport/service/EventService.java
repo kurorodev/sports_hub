@@ -54,6 +54,7 @@ public class EventService {
         if(e.cancelledAt!=null)return view.event(e);
         if((e.status!=Api.EventStatus.PUBLISHED && e.status!=Api.EventStatus.DRAFT) || !e.startsAt.isAfter(clock.instant()))throw Problem.transition();
         e.status=Api.EventStatus.UNPUBLISHED;e.cancelledAt=clock.instant();e.updatedAt=e.cancelledAt;
+        // Получателей уведомления определяем до отмены записей, пока их статусы ещё активны.
         notifications.cancelled(e);
         for(var r:db.list(RegistrationEntity.class,"e.eventId=:event and e.status in :active",Map.of("event",id,"active",List.of(Api.RegistrationStatus.CONFIRMED,Api.RegistrationStatus.PENDING,Api.RegistrationStatus.WAITLISTED)))) {
             r.status=Api.RegistrationStatus.CANCELLED;r.updatedAt=e.cancelledAt;r.decisionReason="Мероприятие отменено организатором";

@@ -1,4 +1,4 @@
-/** Wire types generated from the shared Java API contract. Do not duplicate DTOs here. */
+/** Сетевые DTO берём из общего OpenAPI-контракта. */
 import type { components } from "./generated/schema";
 type Schemas = components["schemas"];
 export type Location = Schemas["Location"];

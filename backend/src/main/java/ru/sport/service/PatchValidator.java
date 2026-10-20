@@ -9,7 +9,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ru.sport.api.Problem;
 
-/** Validates partial updates against the original OpenAPI properties, including explicit null. */
+/** В частичном обновлении различаем отсутствие поля и явный null по правилам OpenAPI. */
 @Component
 public class PatchValidator {
     private final JsonNode schemas;

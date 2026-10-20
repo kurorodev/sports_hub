@@ -13,10 +13,9 @@ export function useMapParams() {
       change: (value: URLSearchParams) => URLSearchParams,
       options?: { replace?: boolean },
     ) => {
-      // Browser history can change before React has unmounted this page.
-      // A late viewport callback must never add map parameters to the destination.
+      // URL меняется раньше размонтирования страницы; позднее событие карты не должно менять новый маршрут.
       if (window.location.pathname !== pathname) return;
-      // Delayed map movement must merge into the newest filters, including changes in the same tick.
+      // Берём последние фильтры, иначе отложенное движение карты затрёт недавний выбор.
       const previous = current.current.toString();
       const next = change(new URLSearchParams(current.current));
       if (next.toString() === previous) return;

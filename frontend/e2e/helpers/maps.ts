@@ -6,7 +6,7 @@ import type {
   EventPreview,
 } from "../../src/shared/api/types";
 
-// Form creation is covered by S1/maps.spec; these fixtures isolate map navigation and moderation.
+// Создаём события через API, чтобы здесь проверять карту и модерацию, а не форму создания.
 export function setupMapEvent(page: Page, title: string, startsAt: string) {
   return page.evaluate(
     async (input) => {

@@ -75,7 +75,7 @@ for (const width of [375, 768, 1440]) {
           exact: true,
         })
         .click();
-      // No reload in the representative's browser: polling must bring both decisions.
+      // Представитель должен увидеть оба решения через поллинг, без перезагрузки страницы.
       const approvedCard = page.getByRole("article", {
         name: `Организация: ${approved.name}`,
         exact: true,

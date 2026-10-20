@@ -14,7 +14,6 @@ export type RegistrationFailureCode =
   | "invalid-response"
   | "unknown";
 
-/** Transport-independent failures consumed by the application and presentation layers. */
 export class RegistrationFailure extends Error {
   constructor(
     public readonly code: RegistrationFailureCode,

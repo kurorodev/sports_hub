@@ -169,7 +169,7 @@ for (const width of [375, 768, 1440]) {
       const unpublished = await response;
       expect(unpublished.status()).toBe(200);
       expect(unpublished.fromServiceWorker()).toBe(false);
-      // Independent organizer/participant pages observe server changes by polling, without reload.
+      // Обе сессии должны получить изменения через поллинг, без ручной перезагрузки.
       await expect(
         participant.getByText("Запись закрыта · Снято с публикации", {
           exact: true,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static API coverage and source synchronization, not a replacement for integration tests."""
+"""Проверка покрытия API и совпадения копий контракта; не проверяет работу запросов к серверу."""
 from pathlib import Path
 import json
 import re

@@ -42,7 +42,7 @@ public class SupportService {
     @Transactional public SupportApi.Ticket publishVenue(UUID id,Api.VenueCreate input) {
         access.requireAdmin();var t=accessible(id,true);var user=access.user();
         if(t.category!=SupportApi.Category.VENUE_SUGGESTION)throw Problem.invalid("Добавить площадку можно только из её предложения");
-        // The ticket lock makes retries and simultaneous reviews of this proposal idempotent.
+        // Блокировка обращения не даёт повторному или одновременному одобрению создать вторую площадку.
         if(t.publishedVenueId!=null)return dto(t);
         var venue=maps.createReviewed(input);
         String previous=t.venueCity+", "+t.venueAddress+" ("+t.venueLatitude+", "+t.venueLongitude+")";

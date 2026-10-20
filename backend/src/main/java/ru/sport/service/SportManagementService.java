@@ -19,7 +19,7 @@ public class SportManagementService {
         access.requireAdmin();name=name.strip().replaceAll("\\s+"," ");
         if(name.length()<2 || name.length()>80)throw Problem.invalid("Название: от 2 до 80 символов");
         String normalized=name.toLowerCase(Locale.ROOT).replace('ё','е');
-        // Serialize category creation, including case-insensitive duplicate checks.
+        // Создание категорий блокируем вместе с проверкой имени, чтобы параллельные запросы не создали дубль.
         db.first(SportEntity.class,"e.isCustom=true",Map.of()).ifPresent(other -> db.lock(SportEntity.class,other.id));
         if(db.count(SportEntity.class,"e.normalizedName=:name",Map.of("name",normalized))>0)
             throw Problem.conflict(Api.ErrorCode.CONFLICT,"Такой вид спорта уже существует");
@@ -45,7 +45,7 @@ public class SportManagementService {
         access.requireAdmin();lockCatalog();var sport=db.lock(SportEntity.class,id);
         if(sport.canonicalId!=null)throw Problem.notFound();
         if(sport.isCustom)throw Problem.invalid("Общую категорию Другое нельзя удалить");
-        // Preserve references from events, venues, organizations and profiles.
+        // Категорию архивируем: ссылки на неё в событиях, площадках и профилях должны сохраниться.
         sport.archived=true;sport.updatedAt=java.time.Instant.now();
     }
     private void lockCatalog() {

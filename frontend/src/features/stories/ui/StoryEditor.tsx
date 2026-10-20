@@ -71,7 +71,7 @@ export function StoryEditor({
         onSubmit={(event) => {
           event.preventDefault();
           if (!image || busy || uploadError) return;
-          // The existing API requires a title and text even for photo stories.
+          // Заголовок и текст обязательны по контракту, в том числе у сторис с фотографией.
           mutation.mutate({ title: appName, text: "", imageData: image });
         }}
       >

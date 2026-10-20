@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { Mention } from "../api/types";
 
-/** Render only server-resolved, non-overlapping text ranges. Never interpret HTML. */
+/** Упоминания размечены сервером; остальной текст выводим без интерпретации HTML. */
 export function MentionText({
   text,
   mentions = [],

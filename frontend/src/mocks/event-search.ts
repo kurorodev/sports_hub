@@ -1,7 +1,7 @@
 const normalize = (value: string) =>
   value.trim().toLocaleLowerCase("ru").replaceAll("ё", "е");
 
-/** Mirrors the bounded one-edit rules of Java EventTextSearch for mock mode. */
+/** Мок повторяет ограничения EventTextSearch: одна опечатка и ограниченный размер запроса. */
 export function matchesEventSearch(
   query: string,
   fields: (string | null | undefined)[],

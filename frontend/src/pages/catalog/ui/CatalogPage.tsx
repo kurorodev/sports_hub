@@ -38,7 +38,7 @@ export function CatalogPage() {
     value: searchTerm,
   });
   const [isComposing, setIsComposing] = useState(false);
-  // Restore URL navigation without replacing the input or moving its caret while typing.
+  // Синхронизация с URL не должна затирать текущий ввод и сдвигать курсор.
   if (search.applied !== searchTerm) {
     setSearch({
       applied: searchTerm,

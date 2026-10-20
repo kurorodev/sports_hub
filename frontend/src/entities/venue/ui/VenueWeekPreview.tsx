@@ -3,7 +3,7 @@ import { tr } from "../../../shared/i18n/translate";
 import { useLocale } from "../../../shared/i18n/use-preferences";
 import { occupancyPresentation } from "./presentation";
 
-// Fixed illustration of the proposed weekly forecast, independent of venue reports.
+// Демонстрационный график: столбцы не рассчитаны по сообщениям о загруженности площадки.
 const days = [
   { short: "Пн", name: "Понедельник", level: "LOW", height: 16 },
   { short: "Вт", name: "Вторник", level: "LOW", height: 22 },

@@ -48,8 +48,7 @@ public class DiscussionService {
     @Transactional public Api.Event unpublish(UUID id,Api.ModerationRequest request) {
         access.requireAdmin();var e=db.lock(EventEntity.class,id);if(e.status!=Api.EventStatus.PUBLISHED)throw Problem.transition();
         e.status=Api.EventStatus.UNPUBLISHED;e.moderationReason=request.reason();e.updatedAt=clock.instant();
-        // Registrations remain as an audit trail. Previously granted points are retained;
-        // new verification is forbidden. This policy is documented in decisions.md.
+        // Модерация сохраняет записи участников: они должны видеть, почему событие стало недоступно.
         organizations.audit(e.id,"EVENT_UNPUBLISHED",request.reason());notifications.unpublished(e,request.reason());return view.event(e);
     }
 }

@@ -16,7 +16,7 @@ export function useJoinEvent(eventId: string, joinMode: "OPEN" | "APPROVAL") {
   const ownStatus = own.data?.status;
   useEffect(() => {
     if (!ownStatus) return;
-    // A polled decision changes public participants and the event's server counts too.
+    // Решение по заявке меняет и список участников, и счётчики события; обновляем связанные запросы.
     void client.invalidateQueries({ queryKey: ["events"] });
     void client.invalidateQueries({ queryKey: ["map", "events"] });
     void client.invalidateQueries({

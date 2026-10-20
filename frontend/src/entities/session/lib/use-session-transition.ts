@@ -10,8 +10,7 @@ export async function replaceSession(
   session: Session | null,
 ) {
   await client.cancelQueries();
-  // Preserve the observed session query so the shell receives the new identity.
-  // Removing it would leave mounted observers attached to a discarded query.
+  // Сохраняем запрос сессии: после его удаления подписки оболочки остались бы на старом аккаунте.
   client.removeQueries({
     predicate: (query) => query.queryKey[0] !== "session",
   });

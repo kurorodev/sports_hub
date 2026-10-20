@@ -19,6 +19,7 @@ public class MessagingService {
             if(request.peerUserId()==null || request.organizationId()!=null || request.title()!=null || request.peerUserId().equals(actor.id))throw Problem.invalid("Укажите другого peerUserId для DIRECT");
             UUID low=actor.id.toString().compareTo(request.peerUserId().toString())<0?actor.id:request.peerUserId();
             UUID high=low.equals(actor.id)?request.peerUserId():actor.id;
+            // Один порядок UUID предотвращает взаимную блокировку при одновременном создании диалога обоими пользователями.
             db.lock(UserEntity.class,low);db.lock(UserEntity.class,high);
             c.userLowId=low;c.userHighId=high;c.directKey=low+":"+high;
             var existing=db.first(ConversationEntity.class,"e.directKey=:key",Map.of("key",c.directKey));
@@ -45,7 +46,7 @@ public class MessagingService {
     }
     @Transactional public Api.Message send(UUID id,Api.MessageCreate request) {
         var c=db.lock(ConversationEntity.class,id);
-        // Serialize community sends with leave/rejoin so membership cannot be bypassed by a race.
+        // Отправка и выход из сообщества используют одну блокировку, чтобы ушедший участник не успел отправить сообщение.
         if(c.organizationId!=null)db.lock(OrganizationEntity.class,c.organizationId);
         requireMember(c);var m=new MessageEntity();m.conversationId=id;m.authorId=access.user().id;m.text=request.text().strip();m.mentions=mentions.resolve(m.text);
         m.createdAt=clock.instant();m.updatedAt=m.createdAt;c.lastMessageAt=m.createdAt;c.updatedAt=m.createdAt;db.add(m);return view.message(m);

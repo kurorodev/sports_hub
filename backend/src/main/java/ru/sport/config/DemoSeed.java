@@ -12,7 +12,7 @@ import ru.sport.api.Api;
 import ru.sport.domain.*;
 import ru.sport.persistence.Store;
 
-/** Only fictional accounts, enabled explicitly with the demo profile. Never resets user data. */
+/** Демопрофиль добавляет только вымышленные данные и не сбрасывает существующие записи. */
 @Component @ConditionalOnProperty(name="app.demo-enabled",havingValue="true")
 public class DemoSeed implements ApplicationRunner {
     private final Store db;private final Clock clock;
@@ -72,14 +72,14 @@ public class DemoSeed implements ApplicationRunner {
         seedMap();db.flush();
     }
     private void seedMap() {
-        // Reference point: https://www.wikidata.org/wiki/Q4365616 (53°11'44.02 N, 50°6'3.68 E).
-        // These are explicitly fictional sports objects around a real square, not a directory of real venues.
+        // Опорная точка демоданных: https://www.wikidata.org/wiki/Q4365616 (53°11'44.02 N, 50°6'3.68 E).
+        // Площадь реальная, спортивные объекты рядом с ней вымышлены для демонстрации.
         var owner=db.first(UserEntity.class,"e.demoAccount=:account",Map.of("account","coach"));
         if(owner.isEmpty())return;
         for(int i=0;i<4;i++) {
             String key="map-venue-"+i;
             String name="Демо-площадка № "+(i+1)+" (условный объект)";
-            // Existing demo fixtures keep their IDs when the seed namespace changes.
+            // При смене пространства имён начальных данных сохраняем id ранее созданных демозаписей.
             if(db.count(VenueEntity.class,"e.id=:id or (e.name=:name and e.createdBy=:owner)",Map.of("id",id(key),"name",name,"owner",owner.get().id))>0)continue;
             var v=new VenueEntity();v.name=name;v.normalizedName=v.name.toLowerCase(Locale.ROOT);
             v.city="Самара";v.address="площадь Куйбышева · демонстрационная точка";v.latitude=53.195561+(i%2)*0.001;v.longitude=50.101022+(i/2)*0.001;v.createdBy=owner.get().id;

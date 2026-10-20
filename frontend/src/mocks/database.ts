@@ -25,7 +25,7 @@ import {
   type CreateEventInput,
 } from "../shared/api/event-schema";
 
-// Deterministic UUIDs keep mock requests valid under the same contract as Java.
+// Фиксированные UUID делают демоданные воспроизводимыми и совместимыми с Java API.
 export function mockId(key: string) {
   let hash = 2166136261;
   for (const char of key)

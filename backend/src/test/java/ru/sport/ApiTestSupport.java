@@ -36,6 +36,5 @@ abstract class ApiTestSupport {
         body.put("organizer",Map.of("type","USER","id",actor.id));body.put("maxParticipants",capacity);
         return json(call(actor,"POST","/events",body,201)).path("id").asText();
     }
-    // All application paths are under /api/v1; tests can use concise resource paths.
     String api(String path){return path.startsWith("/api/")?path:"/api/v1"+path;}
 }

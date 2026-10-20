@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
-/** Signup fields must follow the contract's JSON string type instead of Jackson scalar coercion. */
+/** Числа и логические значения не превращаем в строки регистрации: типы заданы контрактом. */
 public class StrictStringDeserializer extends JsonDeserializer<String> {
     @Override public String deserialize(JsonParser parser,DeserializationContext context) throws IOException {
         if(!parser.hasToken(JsonToken.VALUE_STRING))return context.reportInputMismatch(String.class,"Ожидается строка");

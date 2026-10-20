@@ -87,7 +87,7 @@ export function DiscussionServices({
 
 const registrationRepository = createHttpRegistrationRepository(request);
 
-/** Composition root: only this layer chooses a concrete repository for the React tree. */
+/** HTTP-реализации выбираются здесь; сценарии получают репозитории через контекст. */
 export function RegistrationServices({
   children,
   repository = registrationRepository,

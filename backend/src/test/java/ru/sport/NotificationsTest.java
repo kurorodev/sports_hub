@@ -69,7 +69,7 @@ class NotificationsTest extends ApiTestSupport {
     @Test void hiddenCommentNotificationKeepsTheFullOriginalTextOnlyForItsAuthor() throws Exception {
         var owner=login("coach");var author=login("athlete-a");var other=login("athlete-b");var admin=login("admin");
         String event=createEvent(owner,"OPEN",2);
-        String original="<script>не HTML</script>\n"+"я".repeat(1975); // Full 2000-character comment, including the newline.
+        String original="<script>не HTML</script>\n"+"я".repeat(1975); // Ровно 2000 символов с учётом переноса строки.
         assertThat(original).hasSize(2000);
         String comment=json(call(author,"POST","/events/"+event+"/comments",Map.of("text",original),201)).path("id").asText();
         String second=json(call(author,"POST","/events/"+event+"/comments",Map.of("text","Другой мой вопрос"),201)).path("id").asText();
@@ -102,7 +102,7 @@ class NotificationsTest extends ApiTestSupport {
         assertThat(json(call(a,"POST","/me/notifications/"+id+"/read",null,200)).path("readAt")).isEqualTo(read.path("readAt"));
         var snapshot=page.path("asOf").asText();notifications.send(user,Api.NotificationType.EVENT_STATUS,"Позднее","Новое",null,null,"late");
         var late=db.first(NotificationEntity.class,"e.dedupeKey=:key",Map.of("key","late")).orElseThrow();late.createdAt=Instant.parse(snapshot).plusMillis(1);
-        // Read-all must leave the newly arrived notification unread, regardless of page size.
+        // Уведомление после границы просмотренной выдачи должно остаться непрочитанным при любом размере страницы.
         call(a,"POST","/me/notifications/read-all",Map.of("through",snapshot),204);
         assertThat(db.get(NotificationEntity.class,late.id).readAt).isNull();
         assertThat(getJson(b,"/me/notifications").path("total").asInt()).isZero();

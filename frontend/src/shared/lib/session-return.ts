@@ -1,6 +1,6 @@
 import { safeMapReturn } from "./activity-navigation";
 
-/** Only known internal destinations survive login or signup. */
+/** После входа возвращаем только на разрешённые внутренние страницы, чтобы исключить внешний редирект. */
 export function sessionReturn(
   params: URLSearchParams,
   state: unknown,
