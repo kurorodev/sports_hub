@@ -97,7 +97,7 @@ export function Layout() {
           <Brand />
           <p>Спорт начинается с компании.</p>
           <Link to="/support">Техническая поддержка</Link>
-          <span>ДВИЖ · прототип 2026</span>
+          <span>Спортивные встречи · 2026</span>
         </div>
       </footer>
     </>

@@ -1,4 +1,4 @@
-# ДВИЖ · frontend
+# Sports Hub · frontend
 
 Иллюстрации и выбор персонажа в профиле: [изображения, аватары и цвет формы по роли](docs/IMAGES.md).
 
@@ -16,7 +16,7 @@ Node.js 22.12+ или совместимая современная версия
 
 ```sh
 # Из корня репозитория; требуется запущенный Docker / OrbStack
-docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up --build -d
+docker compose --env-file backend/.env -p sport -f backend/compose.yaml up --build -d
 
 cd frontend
 npm ci

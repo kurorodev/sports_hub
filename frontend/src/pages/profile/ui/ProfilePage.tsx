@@ -70,7 +70,7 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
     return (
       <section className="feedback page-state">
         <UserRound size={36} />
-        <h1>Твой профиль в ДВИЖ</h1>
+        <h1>Твой спортивный профиль</h1>
         <p>Войди, чтобы рассказать о себе и выбрать спортивные интересы.</p>
         <Link className="button primary" to="/login?next=profile">
           Войти в профиль

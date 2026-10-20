@@ -137,7 +137,7 @@ export function CreateEventForm({
         >
           <fieldset disabled={mutation.isPending}>
             <legend>
-              <span>01</span>Что за движ?
+              <span>01</span>Что за встреча?
             </legend>
             <FormField
               id="event-title"

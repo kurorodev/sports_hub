@@ -38,7 +38,7 @@ const choices = [
     category: "IDEA",
     icon: Lightbulb,
     title: "Поделиться идеей",
-    text: "Вместе сделаем ДВИЖ удобнее",
+    text: "Помогите сделать сервис удобнее",
   },
 ] as const;
 export function SupportDesk({
@@ -81,7 +81,7 @@ export function SupportDesk({
   return (
     <>
       <header className="support-hero">
-        <span className="eyebrow muted">ДВИЖ рядом</span>
+        <span className="eyebrow muted">Поддержка рядом</span>
         <h1>Центр поддержки</h1>
         <p>
           {admin

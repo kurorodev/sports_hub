@@ -68,7 +68,7 @@ export const accounts: DemoAccount[] = [
     sportsRoles: [],
   },
 ];
-const signupKey = "dvizh.mock.accounts.v1";
+const signupKey = "sport.mock.accounts.v1";
 const signupRecordSchema = z.object({
   account: z.object({
     id: z.string(),
@@ -195,7 +195,7 @@ const seedData = [
     title: "Утро. Парк. Лёгкий бег.",
     sport: { id: "running", name: "Бег" },
     description:
-      "Начинаем день с движения. Бежим в разговорном темпе, знакомимся и пьём кофе после. Дистанция 5 км, можно перейти на шаг. Возьмите воду и удобные кроссовки.",
+      "Начинаем день с пробежки. Бежим в разговорном темпе, знакомимся и пьём кофе после. Дистанция 5 км, можно перейти на шаг. Возьмите воду и удобные кроссовки.",
     startsAt: "2026-10-24T09:00:00+03:00",
     location: { city: "Москва", address: "Парк Горького, главный вход" },
     skillLevel: "ANY",
@@ -332,8 +332,8 @@ const seedEvents: EventPreview[] = seedData.map((event) => ({
   createdAt: "2026-10-01T12:00:00Z",
   updatedAt: "2026-10-01T12:00:00Z",
 }));
-const eventKey = "dvizh.mock.events.v2";
-const registrationKey = "dvizh.mock.registrations.v2";
+const eventKey = "sport.mock.events.v2";
+const registrationKey = "sport.mock.registrations.v2";
 const recordSchema = z.object({
   id: z.string(),
   ownerId: z.string(),

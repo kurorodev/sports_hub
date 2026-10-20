@@ -242,8 +242,8 @@ button:disabled {
   gap: 7px;
   align-items: center;
   font-weight: 850;
-  font-size: 35px;
-  letter-spacing: -0.075em;
+  font-size: 24px;
+  letter-spacing: -0.045em;
   line-height: 1;
   white-space: nowrap;
 }
@@ -255,6 +255,13 @@ button:disabled {
   width: 35px;
   height: 35px;
   color: var(--color-ink);
+  flex-shrink: 0;
+}
+.brand-name {
+  white-space: normal;
+  max-width: 9ch;
+  line-height: 1.05;
+  text-wrap: balance;
 }
 .brand-dot {
   color: var(--color-brand);
@@ -1174,7 +1181,7 @@ input[type="radio"] {
     padding-inline: 16px;
   }
   .brand {
-    font-size: 31px;
+    font-size: 21px;
   }
   .header-account {
     max-width: 190px;

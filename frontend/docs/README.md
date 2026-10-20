@@ -1,4 +1,4 @@
-# Документация frontend «ДВИЖ»
+# Документация frontend «Sports Hub»
 
 [Быстрый запуск](../README.md)
 

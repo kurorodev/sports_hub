@@ -146,7 +146,7 @@ def main():
     assert c.call('POST', f'/events/{opened}/waitlist', {}, 201)['status'] == 'WAITLISTED'
     b.call('DELETE', f'/events/{opened}/registrations/me')
     assert c.call('GET', f'/events/{opened}/my-registration')['status'] == 'CONFIRMED'
-    print('Очередь OK: автоматическое продвижение, лимит сохранён')
+    print('Очередь OK: автоматический перевод участников, лимит сохранён')
 
     direct = a.call('POST', '/conversations', {'type': 'DIRECT', 'peerUserId': c.user}, (200, 201))['id']
     assert c.call('POST', '/conversations', {'type': 'DIRECT', 'peerUserId': a.user})['id'] == direct

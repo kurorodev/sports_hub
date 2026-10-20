@@ -21,7 +21,7 @@ const schema = z.object({
   createdAt: z.string(),
   readAt: z.string().nullable(),
 });
-const key = "dvizh.mock.notifications.v1";
+const key = "sport.mock.notifications.v1";
 const month = 30 * 86400_000;
 let memory: z.infer<typeof schema>[] = [];
 function records() {

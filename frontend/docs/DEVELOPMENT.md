@@ -7,11 +7,11 @@
 Нужны Docker / OrbStack, Node.js 22.12+ и npm. Если `backend/.env` ещё нет, скопируйте `backend/.env.example` в этот файл. Существующий `.env` не перезаписывайте. Из корня репозитория:
 
 ```sh
-docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up --build -d
+docker compose --env-file backend/.env -p sport -f backend/compose.yaml up --build -d
 curl http://localhost:8080/api/v1/health
 ```
 
-Ожидается `status: UP`. Первый запуск скачивает образы и Maven-зависимости. Данные хранятся в volume `dvizh_postgres_data`; повторный запуск не сбрасывает seed. Детали сервера — в [backend/README.md](../../backend/README.md).
+Ожидается `status: UP`. Первый запуск скачивает образы и Maven-зависимости. Данные хранятся в volume `sport_postgres_data`; повторный запуск не сбрасывает seed. Детали сервера — в [backend/README.md](../../backend/README.md).
 
 ```sh
 cd frontend
@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-`npm run dev` и `npm run dev:real` выбирают `.env.real`. Открывайте `http://localhost:5173`: этот origin разрешён стандартной настройкой CORS backend. Vite проксирует `/api/v1` на `http://localhost:8080`. Порты 8080 и 5432 должны быть свободны; чужие сервисы автоматически не останавливаются. Остановка только этого проекта из корня: `docker compose -p dvizh -f backend/compose.yaml stop`.
+`npm run dev` и `npm run dev:real` выбирают `.env.real`. Открывайте `http://localhost:5173`: этот origin разрешён стандартной настройкой CORS backend. Vite проксирует `/api/v1` на `http://localhost:8080`. Порты 8080 и 5432 должны быть свободны; чужие сервисы автоматически не останавливаются. Остановка только этого проекта из корня: `docker compose -p sport -f backend/compose.yaml stop`.
 
 `GET /demo/accounts` даёт актуальные имена и accountId. Основной QA-путь: `athlete-a` создаёт → `athlete-b` записывается → `athlete-a` видит участника. Cookie `SPORT_SESSION` устанавливает Java; фронт использует `credentials: include`, CSRF из `/session`, приватный кэш очищается при смене аккаунта.
 
@@ -35,7 +35,7 @@ npm run dev:mock
 
 Вся графика и Manrope поставляются локально. SVG-иллюстрации созданы для проекта, не являются фотографиями событий.
 
-Mock-регистрация также создаёт отдельного пользователя с хешем пароля; он не предлагается в списке демо-входа. Новые аккаунты хранятся в `dvizh.mock.accounts.v1`, изменения профилей — в `dvizh.mock.profiles.v1`, текущий аккаунт — в `dvizh.mock.account`. Для полного сброса используйте список ключей в [QA.md](QA.md); удаление localStorage не меняет Java/PostgreSQL.
+Mock-регистрация также создаёт отдельного пользователя с хешем пароля; он не предлагается в списке демо-входа. Новые аккаунты хранятся в `sport.mock.accounts.v1`, изменения профилей — в `sport.mock.profiles.v1`, текущий аккаунт — в `sport.mock.account`. Для полного сброса используйте список ключей в [QA.md](QA.md); удаление localStorage не меняет Java/PostgreSQL.
 
 ## Окружение и сборки
 
@@ -66,7 +66,7 @@ npm run test:e2e
 
 ```sh
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5174 \
-  docker compose --env-file backend/.env -p dvizh -f backend/compose.yaml up -d backend
+  docker compose --env-file backend/.env -p sport -f backend/compose.yaml up -d backend
 
 cd frontend
 npm run test:e2e:api

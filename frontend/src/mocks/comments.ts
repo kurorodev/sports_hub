@@ -3,7 +3,7 @@ import { refreshMockUser } from "./profiles";
 import { z } from "zod";
 import type { CommentDto, PublicUser } from "../shared/api/types";
 
-const key = "dvizh.mock.comments.v1";
+const key = "sport.mock.comments.v1";
 const schema = z.array(
   z.object({
     id: z.string().uuid(),

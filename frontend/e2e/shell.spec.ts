@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import branding from "../../branding.json" with { type: "json" };
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-19T00:00:00Z"));
@@ -90,6 +91,12 @@ for (const width of [320, 375, 768, 1024, 1440]) {
   test(`responsive layout at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/?includePast=true");
+    await expect(page).toHaveTitle(`${branding.name} — спорт начинается с компании`);
+    await expect(
+      page.getByRole("banner").getByRole("link", {
+        name: `${branding.name} — на главную`,
+      }),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: /Утро. Парк. Лёгкий бег/ }),
     ).toBeVisible();

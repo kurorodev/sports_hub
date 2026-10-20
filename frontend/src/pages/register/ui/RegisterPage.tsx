@@ -55,7 +55,7 @@ export function RegisterPage() {
   return (
     <section className="login-page register-page">
       <div className="login-intro">
-        <span className="eyebrow muted">Начни свой движ</span>
+        <span className="eyebrow muted">Присоединяйся к сообществу</span>
         <h1>
           Твоя встреча
           <br />

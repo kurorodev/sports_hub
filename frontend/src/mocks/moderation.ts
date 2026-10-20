@@ -1,5 +1,5 @@
 import { z } from "zod";
-const key = "dvizh.mock.moderation.v1";
+const key = "sport.mock.moderation.v1";
 const record = z.object({
   kind: z.enum(["EVENT", "COMMENT"]),
   targetId: z.string().uuid(),

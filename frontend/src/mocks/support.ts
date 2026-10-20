@@ -20,7 +20,7 @@ import { getComments } from "./comments";
 import { notify } from "./notifications";
 import { createMockVenue } from "./maps";
 
-const key = "dvizh.mock.support.v1";
+const key = "sport.mock.support.v1";
 let memory: { tickets: SupportTicket[]; messages: SupportMessage[] } = {
   tickets: [],
   messages: [],

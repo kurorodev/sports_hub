@@ -20,7 +20,7 @@ export const demoSuggestion: GeoSuggestion = {
   latitude: 53.195561,
   longitude: 50.101022,
 };
-const storageKey = "dvizh.mock.map.v1";
+const storageKey = "sport.mock.map.v1";
 type Report = {
   venueId: string;
   userId: string;

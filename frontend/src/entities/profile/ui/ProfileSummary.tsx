@@ -28,7 +28,7 @@ export function ProfileSummary({
           />
         </div>
         <div>
-          <span className="eyebrow muted">Участник ДВИЖ</span>
+          <span className="eyebrow muted">Участник сообщества</span>
           <h1>{profile.name}</h1>
           <p className="profile-handle">@{profile.handle}</p>
           {(profile.firstName || profile.lastName) && (
@@ -61,7 +61,7 @@ export function ProfileSummary({
             : "Удобное время не указано"}
         </p>
         <p>
-          <CalendarDays size={18} />В ДВИЖ с{" "}
+          <CalendarDays size={18} />На платформе с{" "}
           {new Intl.DateTimeFormat("ru-RU", {
             month: "long",
             year: "numeric",

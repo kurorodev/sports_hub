@@ -16,7 +16,7 @@ export function mockAvatar(
   const url = character ? avatarPath(character) : user.avatarUrl;
   return avatarSource(user.id, url, user.nickname === "admin" ? "admin" : tone);
 }
-const key = "dvizh.mock.profiles.v1";
+const key = "sport.mock.profiles.v1";
 let memory: UserProfileDto[] = [];
 function read(): UserProfileDto[] {
   const saved =

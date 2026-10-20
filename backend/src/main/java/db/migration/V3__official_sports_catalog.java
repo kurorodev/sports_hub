@@ -73,7 +73,7 @@ public class V3__official_sports_catalog extends BaseJavaMigration {
         }
     }
     private static UUID stableId(String key) {
-        return UUID.nameUUIDFromBytes(("dvizh:vrvs:" + key).getBytes(StandardCharsets.UTF_8));
+        return UUID.nameUUIDFromBytes(("sport:vrvs:" + key).getBytes(StandardCharsets.UTF_8));
     }
     private static void save(Connection c, List<Legacy> legacy, UUID id, String name, String code, boolean other) throws SQLException {
         if (legacy.stream().anyMatch(s -> s.id.equals(id))) {

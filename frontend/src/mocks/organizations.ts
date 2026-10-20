@@ -7,7 +7,7 @@ import type {
 } from "../shared/api/types";
 import { organizationSchema } from "../entities/organization/api/http-organization-repository";
 import { mockId, mockUser, getSports } from "./database";
-const key = "dvizh.mock.organizations.v1";
+const key = "sport.mock.organizations.v1";
 let memory: OrganizationDto[] = [];
 function seed(): OrganizationDto {
   return {

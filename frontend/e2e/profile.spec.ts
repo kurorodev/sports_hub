@@ -111,7 +111,7 @@ test("guest returns to own profile after login and participant links open public
 }) => {
   await page.goto("/profile");
   await expect(
-    page.getByRole("heading", { name: "Твой профиль в ДВИЖ" }),
+    page.getByRole("heading", { name: "Твой спортивный профиль" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Войти в профиль" }).click();
   await page.locator('input[value="user-maria"]').check();

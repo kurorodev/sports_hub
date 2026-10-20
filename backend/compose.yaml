@@ -2,24 +2,24 @@ services:
   db:
     image: postgres:17.6-alpine
     environment:
-      POSTGRES_DB: dvizh
-      POSTGRES_USER: ${DB_USER:-dvizh}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-dvizh_local}
+      POSTGRES_DB: ${DB_NAME:-sport}
+      POSTGRES_USER: ${DB_USER:-sport}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sport_local}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d dvizh"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 20
   backend:
     build: .
     environment:
-      DB_URL: jdbc:postgresql://db:5432/dvizh
-      DB_USER: ${DB_USER:-dvizh}
-      DB_PASSWORD: ${DB_PASSWORD:-dvizh_local}
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-sport}
+      DB_USER: ${DB_USER:-sport}
+      DB_PASSWORD: ${DB_PASSWORD:-sport_local}
       DEMO_ENABLED: ${DEMO_ENABLED:-true}
       GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
@@ -32,3 +32,4 @@ services:
     restart: unless-stopped
 volumes:
   postgres_data:
+    name: ${POSTGRES_VOLUME:-sport_postgres_data}

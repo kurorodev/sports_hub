@@ -46,7 +46,7 @@ export function NotFound() {
     <section className="feedback page-state">
       <span className="eyebrow">404 · Здесь пока тихо</span>
       <h1>Кажется, мы сбились с маршрута</h1>
-      <p>Такой страницы нет. Вернёмся туда, где начинается движение?</p>
+      <p>Такой страницы нет. Вернёмся к спортивным встречам?</p>
       <Link className="button primary" to="/">
         <ArrowLeft size={18} />К активностям
       </Link>

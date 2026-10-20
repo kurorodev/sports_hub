@@ -51,7 +51,7 @@ function json(body: unknown, init?: ResponseInit) {
   });
 }
 const api = apiConfig.baseUrl;
-const sessionKey = "dvizh.mock.account";
+const sessionKey = "sport.mock.account";
 let memoryAccount: string | null = null;
 
 function savedAccount() {

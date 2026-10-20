@@ -67,7 +67,7 @@ export function CatalogPage() {
           </span>
           <h1>
             Вместе —<br />
-            больше <span>движа.</span>
+            больше <span>спорта.</span>
           </h1>
           <p>
             Найди компанию для спорта.
@@ -100,7 +100,7 @@ export function CatalogPage() {
       <section id="activities" className="catalog-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow muted">Встречаемся в движении</span>
+            <span className="eyebrow muted">Занимайтесь вместе</span>
             <h2>
               Найди свою компанию<span className="brand-dot">.</span>
             </h2>
