@@ -2,7 +2,7 @@ import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
-import { LifeBuoy, Lightbulb, MapPin, Bug, MessagesSquare } from "lucide-react";
+import { Headset, Lightbulb, MapPin, Bug, MessagesSquare } from "lucide-react";
 import { useSupportRepository } from "../../../entities/support";
 import {
   categories,
@@ -19,7 +19,7 @@ import { useNow } from "../../../shared/lib/use-now";
 const choices = [
   {
     category: "HELP",
-    icon: LifeBuoy,
+    icon: Headset,
     title: "Помочь разобраться",
     text: "Аккаунт, запись на встречу и другие вопросы",
   },
@@ -180,7 +180,7 @@ export function SupportDesk({
             <p className="join-note">Найдено: {query.data.total}</p>
             {query.data.items.length === 0 ? (
               <div className="support-empty">
-                <LifeBuoy size={32} />
+                <Headset size={32} />
                 <h3>Здесь пока нет обращений</h3>
                 <p>
                   {admin

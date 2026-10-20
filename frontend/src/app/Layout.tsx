@@ -1,6 +1,6 @@
 import { NotificationBell } from "../features/notifications";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, UserRound, LifeBuoy } from "lucide-react";
+import { ArrowUpRight, UserRound, Headset } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "../shared/ui/Brand";
 import { Avatar } from "../shared/ui/Avatar";
@@ -41,8 +41,9 @@ export function Layout() {
               className="support-header-link"
               to="/support"
               aria-label="Техническая поддержка"
+              title="Техническая поддержка"
             >
-              <LifeBuoy size={21} aria-hidden="true" />
+              <Headset size={23} aria-hidden="true" />
             </Link>
             {session.data && !session.isError && (
               <NotificationBell
