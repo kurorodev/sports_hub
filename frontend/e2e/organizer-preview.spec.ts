@@ -1,3 +1,4 @@
+import { familiarVisitorState } from "./helpers/site-onboarding";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "./helpers/approval";
 
@@ -71,6 +72,7 @@ test("touch info button opens organization preview and copies representative via
 }) => {
   const context = await browser.newContext({
     baseURL: "http://127.0.0.1:5175",
+    storageState: familiarVisitorState,
     viewport: { width: 375, height: 850 },
     isMobile: true,
     hasTouch: true,

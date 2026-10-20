@@ -1,5 +1,6 @@
 import { tr } from "../shared/i18n/translate";
 import { useLocale } from "../shared/i18n/use-preferences";
+import { SiteOnboarding, useSiteOnboarding } from "../features/site-onboarding";
 import { NotificationBell } from "../features/notifications";
 import { QuestionnaireOnboarding } from "../features/user-questionnaire";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ export function Layout() {
   useLocale();
   const session = useQuery(sessionQuery);
   const location = useLocation();
+  const guide = useSiteOnboarding();
   return (
     <>
       <a href="#main-content" className="skip-link">
@@ -111,10 +113,25 @@ export function Layout() {
           <Brand />
           <p>{tr("Спорт начинается с компании.")}</p>
           <Link to="/support">{tr("Техническая поддержка")}</Link>
+          <button
+            type="button"
+            className="site-guide-replay"
+            onClick={guide.start}
+          >
+            {tr("Как пользоваться сайтом")}
+          </button>
           <span>{tr("Спортивные встречи · 2026")}</span>
         </div>
       </footer>
-      {session.data &&
+      {guide.open && !session.isPending && (
+        <SiteOnboarding
+          key={session.data?.systemRoles.includes("ADMIN") ? "admin" : "user"}
+          admin={Boolean(session.data?.systemRoles.includes("ADMIN"))}
+          onClose={guide.close}
+        />
+      )}
+      {!guide.open &&
+        session.data &&
         !session.isError &&
         !session.data.systemRoles.includes("ADMIN") && (
           <QuestionnaireOnboarding

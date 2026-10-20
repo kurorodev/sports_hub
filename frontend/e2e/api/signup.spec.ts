@@ -1,4 +1,5 @@
 import { selectCity } from "../helpers/cities";
+import { familiarVisitorState } from "../helpers/site-onboarding";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
 import { findModerationEvent } from "../helpers/moderation";
@@ -171,11 +172,13 @@ for (const width of [375, 768, 1440]) {
     });
     const guestContext = await browser.newContext({
       baseURL: "http://127.0.0.1:5174",
+      storageState: familiarVisitorState,
       viewport: { width, height: 1000 },
       serviceWorkers: "block",
     });
     const adminContext = await browser.newContext({
       baseURL: "http://127.0.0.1:5174",
+      storageState: familiarVisitorState,
       viewport: { width, height: 1000 },
       serviceWorkers: "block",
     });

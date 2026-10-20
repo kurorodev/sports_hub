@@ -1,4 +1,5 @@
 import { selectCity } from "../helpers/cities";
+import { familiarVisitorState } from "../helpers/site-onboarding";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
 import type {
@@ -21,11 +22,13 @@ for (const width of [375, 768, 1440]) {
       viewport: { width, height: 1000 },
       serviceWorkers: "block",
       baseURL: "http://127.0.0.1:5174",
+      storageState: familiarVisitorState,
     });
     const guestContext = await browser.newContext({
       viewport: { width, height: 1000 },
       serviceWorkers: "block",
       baseURL: "http://127.0.0.1:5174",
+      storageState: familiarVisitorState,
     });
     try {
       const other = await otherContext.newPage(),

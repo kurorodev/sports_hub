@@ -1,4 +1,5 @@
 import { selectCity } from "../helpers/cities";
+import { familiarVisitorState } from "../helpers/site-onboarding";
 import { test, expect, type Page } from "@playwright/test";
 import { setupMapEvent } from "../helpers/maps";
 import { signInAs } from "../helpers/approval";
@@ -136,6 +137,7 @@ test("Java map: returning after join refreshes counts and moderation removes the
     viewport: { width: 375, height: 1000 },
     serviceWorkers: "block",
     baseURL: "http://127.0.0.1:5174",
+    storageState: familiarVisitorState,
   });
   try {
     const viewer = await context.newPage();

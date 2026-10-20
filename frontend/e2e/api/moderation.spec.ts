@@ -1,3 +1,4 @@
+import { familiarVisitorState } from "../helpers/site-onboarding";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
 import {
@@ -22,6 +23,7 @@ for (const width of [375, 768, 1440]) {
       viewport: { width, height: 1000 },
       serviceWorkers: "block" as const,
       baseURL: "http://127.0.0.1:5174",
+      storageState: familiarVisitorState,
     };
     const participantContext = await browser.newContext(options),
       adminContext = await browser.newContext(options),

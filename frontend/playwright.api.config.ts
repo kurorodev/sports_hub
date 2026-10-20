@@ -1,3 +1,4 @@
+import { familiarVisitorState } from "./e2e/helpers/site-onboarding";
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -5,6 +6,7 @@ export default defineConfig({
   testDir: "./e2e/api",
   workers: 1,
   use: {
+    storageState: familiarVisitorState,
     baseURL: "http://127.0.0.1:5174",
     serviceWorkers: "block",
     trace: "retain-on-failure",

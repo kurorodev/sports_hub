@@ -1,3 +1,4 @@
+import { familiarVisitorState } from "../helpers/site-onboarding";
 import { test, expect } from "@playwright/test";
 import { signInAs, createApproval } from "../helpers/approval";
 
@@ -19,11 +20,13 @@ for (const width of [375, 768, 1440]) {
       viewport: { width, height: 1000 },
       serviceWorkers: "block",
       baseURL: "http://127.0.0.1:5174",
+      storageState: familiarVisitorState,
     });
     const guestContext = await browser.newContext({
       viewport: { width, height: 1000 },
       serviceWorkers: "block",
       baseURL: "http://127.0.0.1:5174",
+      storageState: familiarVisitorState,
     });
     const participant = await context.newPage();
     try {
