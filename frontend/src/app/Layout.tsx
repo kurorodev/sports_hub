@@ -38,6 +38,9 @@ export function Layout() {
             {!session.data?.systemRoles.includes("ADMIN") && (
               <NavLink to="/events/new">{tr("Создать")}</NavLink>
             )}
+            {session.data && !session.data.systemRoles.includes("ADMIN") && (
+              <NavLink to="/my-events">{tr("Мои мероприятия")}</NavLink>
+            )}
             <NavLink to="/map">{tr("Карта")}</NavLink>
             <NavLink to="/organizations">{tr("Организации")}</NavLink>
             {session.data?.systemRoles.includes("ADMIN") && (

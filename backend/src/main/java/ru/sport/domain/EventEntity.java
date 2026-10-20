@@ -15,6 +15,7 @@ public class EventEntity extends BaseEntity {
     @Column(nullable=false,length=30) @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR) @Enumerated(EnumType.STRING) public Api.EventKind eventKind = Api.EventKind.ACTIVITY;
     @Column(nullable=false) public Instant startsAt;
     public Instant endsAt;
+    public Instant cancelledAt;
     @Column(nullable=false,length=120) public String city;
     @Column(nullable=false,length=300) public String address;
     public Double latitude;

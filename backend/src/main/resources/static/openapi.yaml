@@ -1588,6 +1588,41 @@ paths:
         schema:
           type: string
       x-phase: P1
+  /events/{eventId}/cancel:
+    post:
+      tags:
+      - Events
+      summary: Отменить собственное мероприятие
+      operationId: postEventsEventidCancel
+      description: Только создатель личного мероприятия или представитель одобренной организации. До начала отменяет черновик или опубликованную встречу, активные участия и заявки; уведомляет участников. Статус UNPUBLISHED, cancelledAt содержит время отмены. Повторная отмена возвращает тот же результат без повторных уведомлений.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '422':
+          $ref: '#/components/responses/422'
+        '500':
+          $ref: '#/components/responses/500'
+      parameters:
+      - *id004
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        description: Токен из Session.csrfToken
+        schema:
+          type: string
+      x-phase: P1
   /events/{eventId}/my-registration:
     get:
       tags:
@@ -1619,7 +1654,7 @@ paths:
       - Registrations
       summary: Мои заявки и участия
       operationId: getMeRegistrations
-      description: ''
+      description: Личные участия с данными мероприятия. UPCOMING — активные записи на опубликованные незавершённые мероприятия; HISTORY — остальные записи, включая отменённые и отклонённые. Без view возвращаются все записи.
       responses:
         '200':
           description: Успешный ответ
@@ -1634,6 +1669,12 @@ paths:
         '500':
           $ref: '#/components/responses/500'
       parameters:
+      - name: view
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [UPCOMING, HISTORY]
       - name: status
         in: query
         required: false
@@ -3805,7 +3846,7 @@ components:
       - COACH
       - REFEREE
       - SPORTS_ORGANIZER
-      description: COACH и REFEREE оставлены только для чтения старых данных; выбрать их нельзя. Спортивные роли профиля не предоставляют системных привилегий.
+      description: Спортивные роли не предоставляют системных привилегий. Выбор доступен представителю одобренной организации. COACH и REFEREE сохранены только для чтения старых данных.
     ExperienceLevel:
       type: string
       enum:
@@ -4083,6 +4124,7 @@ components:
       - createdAt
     ProfilePatch:
       type: object
+      description: Изменение sportsRoles доступно только представителю одобренной организации. Неизменённый набор ролей разрешено передавать при сохранении остальных полей.
       properties:
         nickname:
           type: string
@@ -4510,6 +4552,12 @@ components:
           nullable: true
           maxLength: 80
           description: Название активности внутри категории Другое, не отдельный вид спорта.
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+          description: Время отмены организатором; у такого мероприятия status равен UNPUBLISHED.
         id:
           type: string
           format: uuid
@@ -4661,6 +4709,12 @@ components:
     Registration:
       type: object
       properties:
+        event:
+          allOf:
+          - $ref: '#/components/schemas/Event'
+          nullable: true
+          readOnly: true
+          description: Данные мероприятия включены в личный список GET /me/registrations.
         id:
           type: string
           format: uuid

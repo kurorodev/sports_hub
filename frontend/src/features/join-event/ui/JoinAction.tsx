@@ -7,6 +7,8 @@ import {
   registrationErrorMessage,
   registrationPresentation,
 } from "../../../entities/registration";
+import { CancelParticipation } from "./CancelParticipation";
+import { useNow } from "../../../shared/lib/use-now";
 import { useJoinEvent } from "./use-join-event";
 
 export function JoinAction({
@@ -17,6 +19,7 @@ export function JoinAction({
   publicationClosed?: boolean;
 }) {
   useLocale();
+  const now = useNow();
   const location = useLocation();
   const { session, viewerId, own, mutation, join } = useJoinEvent(
     event.eventId,
@@ -116,30 +119,38 @@ export function JoinAction({
         </button>
       </div>
     );
-  if (own.data) {
+  if (own.data && own.data.status !== "CANCELLED") {
     const { label, tone, Icon } = registrationPresentation[own.data.status];
     return (
-      <div className={`registration-status ${tone}`} role="status">
-        <Icon size={20} />
-        <div>
-          <strong>{label}</strong>
-          <p>
-            {publicationClosed
-              ? tr(
-                  "Существующая запись сохранена. Мероприятие больше не опубликовано, новая запись закрыта.",
-                )
-              : own.data.status === "CONFIRMED"
-                ? event.joinMode === "APPROVAL"
-                  ? tr("Заявка одобрена. До встречи!")
-                  : tr("Участие подтверждено. До встречи!")
-                : own.data.status === "PENDING"
-                  ? tr(
-                      "Организатор рассмотрит заявку. До одобрения место не занято.",
-                    )
-                  : (own.data.decisionReason ??
-                    tr("Текущий статус получен от организатора."))}
-          </p>
+      <div className="join-feedback">
+        <div className={`registration-status ${tone}`} role="status">
+          <Icon size={20} />
+          <div>
+            <strong>{tr(label)}</strong>
+            <p>
+              {publicationClosed
+                ? tr(
+                    "Мероприятие недоступно для записи. Статус вашего участия показан выше.",
+                  )
+                : own.data.status === "CONFIRMED"
+                  ? event.joinMode === "APPROVAL"
+                    ? tr("Заявка одобрена. До встречи!")
+                    : tr("Участие подтверждено. До встречи!")
+                  : own.data.status === "PENDING"
+                    ? tr(
+                        "Организатор рассмотрит заявку. До одобрения место не занято.",
+                      )
+                    : (own.data.decisionReason ??
+                      tr("Текущий статус получен от организатора."))}
+            </p>
+          </div>
         </div>
+        {!publicationClosed &&
+          event.startsAt &&
+          Date.parse(event.startsAt) > now &&
+          ["CONFIRMED", "PENDING", "WAITLISTED"].includes(own.data.status) && (
+            <CancelParticipation eventId={event.eventId} viewerId={viewerId} />
+          )}
       </div>
     );
   }
@@ -157,6 +168,11 @@ export function JoinAction({
     );
   return (
     <div className="join-feedback">
+      {own.data?.status === "CANCELLED" && (
+        <p className="join-note" role="status">
+          {tr("Участие отменено. Вы можете записаться снова.")}
+        </p>
+      )}
       <button
         className="button primary full-width"
         disabled={mutation.isPending}

@@ -2848,12 +2848,13 @@ input[type="radio"] {
   width: 112px;
   height: 112px;
   border-radius: var(--radius-card);
-  background: var(--color-brand);
-  color: var(--color-on-brand);
+  background: var(--color-surface-alt);
+  color: var(--color-ink);
   font-size: 48px;
   font-weight: 800;
   overflow: hidden;
 }
+.profile-avatar > .user-avatar { display: flex; border-radius: inherit; background: transparent; }
 .profile-avatar img {
   width: 100%;
   height: 100%;
@@ -3854,8 +3855,8 @@ select:focus:not([aria-invalid="true"]),
 .questionnaire-footnote { font-size: 13px; text-align: center; margin-top: var(--space-4); }
 .questionnaire-confirm { width: min(480px, calc(100vw - 24px)); }
 .questionnaire-confirm > svg { margin-bottom: var(--space-4); }
-.profile-recommendations { margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-outline); }
-.recommendations-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); }
+.profile-recommendations { display: grid; gap: 24px; margin-top: var(--space-8); padding: clamp(20px, 4vw, 40px); border: 1px solid var(--color-outline); border-radius: var(--radius-card); background: var(--color-surface); min-width: 0; }
+.recommendations-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 0; }
 .recommendations-heading > div { flex: 1 1 320px; }
 .recommendations-heading .eyebrow { display: inline-flex; align-items: center; gap: var(--space-2); }
 .recommendations-heading h2 { font-size: clamp(24px, 4vw, 34px); margin-block: var(--space-2); }
@@ -3864,7 +3865,7 @@ select:focus:not([aria-invalid="true"]),
 .recommended-event .event-card { flex: 1; }
 .recommendation-reasons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-3); }
 .recommendation-reasons span { font-size: 12px; padding: 5px 9px; border-radius: 20px; background: color-mix(in srgb, var(--color-brand) 20%, var(--color-surface)); }
-.recommendations-empty { padding: var(--space-5); border: 1px solid var(--color-outline); border-radius: var(--radius-panel); }
+.recommendations-empty { display: grid; justify-items: start; gap: 12px; padding: clamp(16px, 3vw, 24px); border: 1px solid var(--color-outline); border-radius: 16px; background: var(--color-surface-alt); min-width: 0; }
 @media (max-width: 480px) {
   .questionnaire-dialog, .questionnaire-confirm { padding: var(--space-4); }
   .questionnaire-heading { gap: var(--space-2); }
@@ -3962,12 +3963,12 @@ select:focus:not([aria-invalid="true"]),
 
 .support-choice svg, .support-tabs [aria-current="page"], .support-status-open, .support-status-waiting_user, .questionnaire-symbol, .questionnaire-chips button { color: var(--color-on-brand); }
 
-.venue-week-preview { min-width: 0; margin: 16px 0 0; padding: 14px; border: 1px solid var(--color-outline); border-radius: 14px; background: var(--color-surface-alt); }
+.venue-week-preview { min-width: 0; margin: 12px 0 0; padding: 12px; border: 1px solid var(--color-outline); border-radius: 14px; background: var(--color-surface-alt); }
 .venue-week-preview figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
 .venue-week-preview figcaption strong { font-size: 13px; line-height: 1.4; }
 .venue-week-badge { padding: 2px 8px; border: 1px solid var(--color-outline); border-radius: var(--radius-pill); color: var(--color-ink-muted); background: var(--color-surface); font-size: 10px; font-weight: 700; }
 .venue-week-preview .venue-week-note { margin: 6px 0 0; color: var(--color-ink-muted); font-size: 11px; line-height: 1.5; }
-.venue-week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; list-style: none; margin: 14px 0 12px; padding: 0; }
+.venue-week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; list-style: none; margin: 10px 0 0; padding: 0; }
 .venue-week-days > li { min-width: 0; display: grid; justify-items: center; gap: 6px; }
 .venue-week-track { display: flex; align-items: flex-end; justify-content: center; width: 100%; height: 44px; }
 .venue-week-bar { width: min(20px, 100%); border-radius: 5px 5px 2px 2px; background: var(--occupancy-color); }
@@ -4060,3 +4061,54 @@ select:focus:not([aria-invalid="true"]),
   .home-banner { grid-template-columns: minmax(0, 1fr); }
   .home-banner-visual { display: none; }
 }
+
+/* Fit the venue summary and demo chart in the map overlay without clipping content. */
+.map-selection-venue { padding: 16px; }
+.map-selection-venue .map-selection-heading { margin-bottom: 8px; }
+.map-selection-venue h3 { font-size: 18px; line-height: 1.3; }
+.map-selection-venue > p { margin-top: 6px; font-size: 13px; line-height: 1.45; }
+.map-selection-venue > .button { width: 100%; margin-top: 12px; }
+.map-selection-venue .venue-week-preview { margin-top: 10px; }
+.map-selection-venue .venue-week-track { height: 40px; }
+.map-selection-venue .venue-week-bar { max-height: 40px; }
+@media (min-width:1024px) { .map-selection-venue { width: 360px; } }
+
+/* Personal participation and its confirmation dialog. */
+.my-events-page > header { margin-bottom: 24px; }
+.my-events-page > header h1 { margin: 8px 0 12px; }
+.my-events-page > header p { color: var(--color-ink-muted); }
+.my-events-list { display: grid; gap: 16px; }
+.my-event { display: flex; align-items: center; gap: 24px; padding: 24px; border: 1px solid var(--color-outline); border-radius: var(--radius-card); background: var(--color-surface); min-width: 0; }
+.my-event > img { flex-shrink: 0; width: 104px; height: 104px; object-fit: cover; border-radius: 16px; }
+.my-event-content { flex: 1; min-width: 0; }
+.my-event-content h2 { margin: 10px 0; font-size: 20px; overflow-wrap: anywhere; }
+.my-event-content p { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0 0; color: var(--color-ink-muted); font-size: 13px; overflow-wrap: anywhere; }
+.my-event-content p svg { flex-shrink: 0; margin-top: 2px; }
+.my-event-labels { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--color-ink-muted); }
+.my-event-status { padding: 4px 10px; border-radius: var(--radius-pill); background: var(--color-surface-alt); }
+.my-event-status.success { color: var(--color-success); }
+.my-event-status.danger { color: var(--color-danger); }
+.my-event-status.warning { color: var(--color-ink); }
+.my-event-actions { display: grid; gap: 10px; flex-shrink: 0; }
+.my-event-actions .button { width: 100%; }
+.my-events-empty { display: grid; justify-items: start; gap: 16px; padding: clamp(24px, 5vw, 48px); border: 1px solid var(--color-outline); border-radius: var(--radius-card); }
+.my-events-empty h2, .my-events-empty p { margin: 0; }
+.my-events-empty p { color: var(--color-ink-muted); }
+.cancel-participation-dialog { width: min(480px, calc(100vw - 24px)); margin: auto; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.cancel-participation-dialog h2 { margin-top: 0; }
+.cancel-participation-dialog > p { margin: 16px 0 24px; line-height: 1.6; }
+.participation-dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+@media (min-width: 1024px) { .main-nav { gap: clamp(12px, 2vw, 28px); } .header-inner { gap: 24px; } }
+@media (max-width: 767px) {
+  .my-event { flex-wrap: wrap; align-items: flex-start; gap: 16px; padding: 20px; }
+  .my-event > img { width: 64px; height: 64px; border-radius: 12px; }
+  .my-event-content { flex-basis: calc(100% - 80px); }
+  .my-event-content h2 { font-size: 18px; }
+  .my-event-actions { display: flex; flex-wrap: wrap; width: 100%; }
+  .my-event-actions .button { flex: 1 1 140px; }
+}
+
+.event-owner-actions { margin-top: 12px; }
+.event-owner-actions > .button { width: 100%; }
+.cancel-event-title { font-weight: 700; overflow-wrap: anywhere; }
+.my-events-page .organization-hub-nav { flex-wrap: wrap; }

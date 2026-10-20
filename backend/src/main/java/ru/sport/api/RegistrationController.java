@@ -11,7 +11,7 @@ public class RegistrationController {
     private final RegistrationService registrations;
     public RegistrationController(RegistrationService registrations){this.registrations=registrations;}
     @GetMapping("/events/{eventId}/my-registration") public Api.Registration mine(@PathVariable UUID eventId){return registrations.mine(eventId);}
-    @GetMapping("/me/registrations") public PageResult<Api.Registration> myRegistrations(@RequestParam(required=false) Api.RegistrationStatus status,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return registrations.myRegistrations(status,page,size);}
+    @GetMapping("/me/registrations") public PageResult<Api.Registration> myRegistrations(@RequestParam(required=false) Api.RegistrationView view,@RequestParam(required=false) Api.RegistrationStatus status,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return registrations.myRegistrations(view,status,page,size);}
     @PostMapping("/events/{eventId}/registrations") @ResponseStatus(HttpStatus.CREATED)
     public Api.Registration join(@PathVariable UUID eventId,@Valid @RequestBody Api.RegistrationCreate request){return registrations.join(eventId,request,false);}
     @GetMapping("/events/{eventId}/registrations") public PageResult<Api.Registration> list(@PathVariable UUID eventId,@RequestParam(required=false) Api.RegistrationStatus status,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return registrations.registrations(eventId,status,page,size);}

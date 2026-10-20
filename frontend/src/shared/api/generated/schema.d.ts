@@ -549,6 +549,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/events/{eventId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Отменить собственное мероприятие
+         * @description Только создатель личного мероприятия или представитель одобренной организации. До начала отменяет черновик или опубликованную встречу, активные участия и заявки; уведомляет участников. Статус UNPUBLISHED, cancelledAt содержит время отмены. Повторная отмена возвращает тот же результат без повторных уведомлений.
+         */
+        post: operations["postEventsEventidCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events/{eventId}/my-registration": {
         parameters: {
             query?: never;
@@ -576,7 +596,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Мои заявки и участия */
+        /**
+         * Мои заявки и участия
+         * @description Личные участия с данными мероприятия. UPCOMING — активные записи на опубликованные незавершённые мероприятия; HISTORY — остальные записи, включая отменённые и отклонённые. Без view возвращаются все записи.
+         */
         get: operations["getMeRegistrations"];
         put?: never;
         post?: never;
@@ -1498,7 +1521,7 @@ export interface components {
          */
         SystemRole: "USER" | "ORGANIZATION" | "ADMIN";
         /**
-         * @description COACH и REFEREE оставлены только для чтения старых данных; выбрать их нельзя. Спортивные роли профиля не предоставляют системных привилегий.
+         * @description Спортивные роли не предоставляют системных привилегий. Выбор доступен представителю одобренной организации. COACH и REFEREE сохранены только для чтения старых данных.
          * @enum {string}
          */
         SportsRole: "ATHLETE" | "COACH" | "REFEREE" | "SPORTS_ORGANIZER";
@@ -1608,6 +1631,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        /** @description Изменение sportsRoles доступно только представителю одобренной организации. Неизменённый набор ролей разрешено передавать при сохранении остальных полей. */
         ProfilePatch: {
             nickname?: string;
             displayName?: string;
@@ -1768,6 +1792,11 @@ export interface components {
         Event: {
             /** @description Название активности внутри категории Другое, не отдельный вид спорта. */
             customSportName?: string | null;
+            /**
+             * Format: date-time
+             * @description Время отмены организатором; у такого мероприятия status равен UNPUBLISHED.
+             */
+            readonly cancelledAt?: string | null;
             /** Format: uuid */
             id: string;
             title: string;
@@ -1826,6 +1855,8 @@ export interface components {
             message?: string | null;
         };
         Registration: {
+            /** @description Данные мероприятия включены в личный список GET /me/registrations. */
+            readonly event?: components["schemas"]["Event"] | null;
             /** Format: uuid */
             id: string;
             /** Format: uuid */
@@ -3804,6 +3835,37 @@ export interface operations {
             500: components["responses"]["500"];
         };
     };
+    postEventsEventidCancel: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Токен из Session.csrfToken */
+                "X-CSRF-Token": string;
+            };
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успешный ответ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+            409: components["responses"]["409"];
+            422: components["responses"]["422"];
+            500: components["responses"]["500"];
+        };
+    };
     getEventsEventidMyRegistration: {
         parameters: {
             query?: never;
@@ -3833,6 +3895,7 @@ export interface operations {
     getMeRegistrations: {
         parameters: {
             query?: {
+                view?: "UPCOMING" | "HISTORY";
                 status?: components["schemas"]["RegistrationStatus"];
                 page?: number;
                 size?: number;

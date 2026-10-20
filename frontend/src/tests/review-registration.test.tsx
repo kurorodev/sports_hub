@@ -33,6 +33,7 @@ function repository(result = confirmed): RegistrationRepository {
     join: vi.fn(),
     findMine: vi.fn(),
     listParticipants: vi.fn(),
+    cancel: vi.fn(),
     listRequests: vi.fn(),
     decide: vi.fn(async () => result),
   };

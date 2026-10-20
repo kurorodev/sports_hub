@@ -7,6 +7,7 @@ export function toEventParticipation(
 ): EventParticipation {
   return {
     eventId: dto.id,
+    startsAt: dto.startsAt,
     organizer: dto.viewerIsOrganizer,
     openForRegistration: team.joinAvailable || team.waitlistAvailable,
     participantLimit: dto.maxParticipants ?? null,

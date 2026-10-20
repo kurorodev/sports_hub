@@ -23,6 +23,12 @@ export const router = createBrowserRouter([
           Component: (await import("../pages/map")).MapPage,
         }),
       },
+      {
+        path: "/my-events",
+        lazy: async () => ({
+          Component: (await import("../pages/my-events")).MyEventsPage,
+        }),
+      },
       { path: "/events/new", element: <CreateEventPage /> },
       { path: "/events/:eventId", element: <EventPage /> },
       { path: "/login", element: <LoginPage /> },

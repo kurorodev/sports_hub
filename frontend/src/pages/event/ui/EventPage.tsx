@@ -27,6 +27,7 @@ import {
   eventTimezone,
   OrganizerPreview,
 } from "../../../entities/event";
+import { CancelEvent } from "../../../features/cancel-event";
 import { JoinAction } from "../../../features/join-event";
 import { Participants } from "../../../entities/registration";
 import { useCallback, useState } from "react";
@@ -127,9 +128,11 @@ export function EventPage() {
         <div className="notice" role="status">
           <strong>
             {tr("Запись закрыта ·")}{" "}
-            {event.status === "DRAFT"
-              ? tr("Черновик")
-              : tr("Снято с публикации")}
+            {event.cancelledAt
+              ? tr("Мероприятие отменено организатором")
+              : event.status === "DRAFT"
+                ? tr("Черновик")
+                : tr("Снято с публикации")}
           </strong>
         </div>
       )}
@@ -198,6 +201,11 @@ export function EventPage() {
             event={toEventParticipation(event, event.team)}
             publicationClosed={event.status !== "PUBLISHED"}
           />
+          {event.viewerIsOrganizer && session.data && (
+            <div className="event-owner-actions">
+              <CancelEvent event={event} viewerId={session.data.user.id} />
+            </div>
+          )}
           <p>
             <CalendarDays size={20} />
             <time dateTime={event.startsAt}>

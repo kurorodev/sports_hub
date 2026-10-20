@@ -17,6 +17,7 @@ public class EventController {
     @GetMapping("/events/{eventId}") public Api.Event get(@PathVariable UUID eventId){return events.get(eventId);}
     @PatchMapping("/events/{eventId}") public Api.Event patch(@PathVariable UUID eventId,@RequestBody JsonNode request){return events.patch(eventId,request);}
     @PostMapping("/events/{eventId}/publish") public Api.Event publish(@PathVariable UUID eventId){return events.publish(eventId);}
+    @PostMapping("/events/{eventId}/cancel") public Api.Event cancel(@PathVariable UUID eventId){return events.cancel(eventId);}
     @GetMapping("/me/events") public PageResult<Api.Event> mine(@RequestParam(required=false) Api.EventStatus status,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return events.mine(status,page,size);}
     @GetMapping("/events/recommended") public PageResult<Api.RecommendedEvent> recommended(@RequestParam(required=false) String city,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return events.recommendations(city,page,size);}
 }

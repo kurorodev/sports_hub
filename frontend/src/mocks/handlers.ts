@@ -1,3 +1,4 @@
+import { cancelMockEvent } from "./event-cancellations";
 import { sportHandlers } from "./sports";
 import { withinDistance, distanceParamError } from "../shared/lib/distance";
 import {
@@ -19,6 +20,7 @@ import {
 import { z } from "zod";
 import { http, HttpResponse } from "msw";
 import {
+  cancelRegistration,
   getAccounts,
   passwordAccount,
   createMockAccount,
@@ -722,6 +724,20 @@ export const handlers = [
       );
     const patch = parsed.data;
     if (
+      patch.sportsRoles &&
+      !session.systemRoles.includes("ORGANIZATION") &&
+      [...patch.sportsRoles].sort().join(",") !==
+        [...session.user.sportsRoles].sort().join(",")
+    )
+      return json(
+        {
+          code: "FORBIDDEN",
+          message:
+            "Выбор роли доступен только представителю одобренной организации",
+        },
+        { status: 403 },
+      );
+    if (
       patch.nickname &&
       mockProfiles().some(
         (item) =>
@@ -1025,6 +1041,105 @@ export const handlers = [
       );
     return json(event, { status: 201 });
   }),
+  http.get(`${api}/me/events`, ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    const params = new URL(request.url).searchParams;
+    const items = getEvents(session.user.id)
+      .filter(
+        (event) =>
+          mockOwner(event) === session.user.id &&
+          (!params.get("status") || event.status === params.get("status")),
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+          a.id.localeCompare(b.id),
+      );
+    const page = Math.max(0, Math.floor(Number(params.get("page")) || 0));
+    const size = Math.min(
+      50,
+      Math.max(1, Math.floor(Number(params.get("size")) || 12)),
+    );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.post(`${api}/events/:eventId/cancel`, ({ params, request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+      return json(
+        { code: "FORBIDDEN", message: "Обновите сессию" },
+        { status: 403 },
+      );
+    const event = getEvents(session.user.id).find(
+      (item) => item.id === params.eventId,
+    );
+    if (!event) return notFound();
+    if (
+      session.systemRoles.includes("ADMIN") ||
+      !event.viewerIsOrganizer ||
+      (event.organizer.type === "ORGANIZATION" &&
+        !getOrganizations().some(
+          (org) =>
+            org.id === event.organizer.id &&
+            org.createdBy.id === session.user.id &&
+            org.status === "APPROVED",
+        ))
+    )
+      return json(
+        {
+          code: "NOT_EVENT_ORGANIZER",
+          message: "Управлять может только организатор события",
+        },
+        { status: 403 },
+      );
+    if (event.cancelledAt) return json(event);
+    if (
+      !["PUBLISHED", "DRAFT"].includes(event.status) ||
+      Date.parse(event.startsAt) <= Date.now()
+    )
+      return json(
+        { code: "INVALID_STATUS_TRANSITION", message: "Отмена уже недоступна" },
+        { status: 409 },
+      );
+    const registrations = getRegistrations(event.id).filter((item) =>
+      ["CONFIRMED", "PENDING", "WAITLISTED"].includes(item.status),
+    );
+    cancelMockEvent(event.id);
+    for (const registration of registrations)
+      cancelRegistration(registration, "Мероприятие отменено организатором");
+    const recipients = new Set([
+      session.user.id,
+      ...registrations.map((item) => item.user.id),
+    ]);
+    for (const userId of recipients)
+      notify(
+        userId,
+        "EVENT_STATUS",
+        "Мероприятие отменено организатором",
+        event.title + ". Запись и обсуждение закрыты.",
+        null,
+        `/events/${event.id}`,
+        `cancelled:${event.id}`,
+      );
+    return json(
+      getEvents(session.user.id).find((item) => item.id === event.id),
+    );
+  }),
   http.get(`${api}/events`, ({ request }) => {
     const p = new URL(request.url).searchParams;
     if (distanceParamError(p))
@@ -1116,6 +1231,92 @@ export const handlers = [
         available && canJoin && event.joinMode === "OPEN" && full,
     });
   }),
+  http.get(`${api}/me/registrations`, ({ request }) => {
+    const session = makeSession(savedAccount() ?? "");
+    if (!session)
+      return json(
+        { code: "UNAUTHENTICATED", message: "Войдите" },
+        { status: 401 },
+      );
+    const params = new URL(request.url).searchParams;
+    const view = params.get("view");
+    if (view && !["UPCOMING", "HISTORY"].includes(view))
+      return json(
+        { code: "VALIDATION_ERROR", message: "Неизвестный раздел" },
+        { status: 400 },
+      );
+    const events = getEvents(session.user.id);
+    const items = getRegistrations()
+      .filter((item) => item.user.id === session.user.id)
+      .map((item) => ({
+        ...item,
+        event: events.find((event) => event.id === item.eventId),
+      }))
+      .filter((item) => {
+        if (params.get("status") && item.status !== params.get("status"))
+          return false;
+        if (!view) return true;
+        const upcoming =
+          ["CONFIRMED", "PENDING", "WAITLISTED"].includes(item.status) &&
+          item.event?.status === "PUBLISHED" &&
+          Date.parse(item.event.endsAt || item.event.startsAt) > Date.now();
+        return view === "UPCOMING" ? upcoming : !upcoming;
+      })
+      .sort(
+        (a, b) =>
+          Date.parse(b.updatedAt) - Date.parse(a.updatedAt) ||
+          a.id.localeCompare(b.id),
+      );
+    const page = Math.max(0, Math.floor(Number(params.get("page")) || 0));
+    const size = Math.min(
+      50,
+      Math.max(1, Math.floor(Number(params.get("size")) || 12)),
+    );
+    return json({
+      items: items.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: items.length,
+      totalPages: Math.ceil(items.length / size),
+    });
+  }),
+  http.delete(
+    `${api}/events/:eventId/registrations/me`,
+    ({ params, request }) => {
+      const session = makeSession(savedAccount() ?? "");
+      if (!session)
+        return json(
+          { code: "UNAUTHENTICATED", message: "Войдите" },
+          { status: 401 },
+        );
+      if (request.headers.get("X-CSRF-Token") !== session.csrfToken)
+        return json(
+          { code: "FORBIDDEN", message: "Обновите сессию" },
+          { status: 403 },
+        );
+      const event = getEvents(session.user.id).find(
+        (item) => item.id === params.eventId,
+      );
+      const registration = getRegistrations(String(params.eventId)).find(
+        (item) => item.user.id === session.user.id,
+      );
+      if (!event || !registration) return notFound();
+      if (
+        !["CONFIRMED", "PENDING", "WAITLISTED"].includes(registration.status) ||
+        Date.parse(event.startsAt) <= Date.now()
+      )
+        return json(
+          {
+            code: "INVALID_STATUS_TRANSITION",
+            message: "Отмена уже недоступна",
+          },
+          { status: 409 },
+        );
+      const updated = cancelRegistration(registration);
+      notifyRegistration(event, updated, false);
+      return json(updated);
+    },
+  ),
   http.get(`${api}/events/:eventId/my-registration`, ({ params }) => {
     const session = makeSession(savedAccount() ?? "");
     if (!session)
@@ -1197,7 +1398,8 @@ export const handlers = [
         );
       if (
         getRegistrations(event.id).some(
-          (item) => item.user.id === session.user.id,
+          (item) =>
+            item.user.id === session.user.id && item.status !== "CANCELLED",
         )
       )
         return json(

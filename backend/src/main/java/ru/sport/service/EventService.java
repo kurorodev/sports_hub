@@ -47,6 +47,18 @@ public class EventService {
         if(e.endsAt!=null && !e.endsAt.isAfter(e.startsAt))throw Problem.invalid("Дата окончания должна быть позже начала");
         if(e.eventKind==Api.EventKind.COMPETITION && e.endsAt==null)throw Problem.invalid("Для соревнования укажите endsAt");
     }
+    @Transactional public Api.Event cancel(UUID id) {
+        var e=db.lock(EventEntity.class,id);access.requireOwner(e);
+        if(e.cancelledAt!=null)return view.event(e);
+        if((e.status!=Api.EventStatus.PUBLISHED && e.status!=Api.EventStatus.DRAFT) || !e.startsAt.isAfter(clock.instant()))throw Problem.transition();
+        e.status=Api.EventStatus.UNPUBLISHED;e.cancelledAt=clock.instant();e.updatedAt=e.cancelledAt;
+        notifications.cancelled(e);
+        for(var r:db.list(RegistrationEntity.class,"e.eventId=:event and e.status in :active",Map.of("event",id,"active",List.of(Api.RegistrationStatus.CONFIRMED,Api.RegistrationStatus.PENDING,Api.RegistrationStatus.WAITLISTED)))) {
+            r.status=Api.RegistrationStatus.CANCELLED;r.updatedAt=e.cancelledAt;r.decisionReason="Мероприятие отменено организатором";
+            db.first(ParticipationEntity.class,"e.registrationId=:registration",Map.of("registration",r.id)).ifPresent(p -> p.status="CANCELLED");
+        }
+        db.flush();return view.event(e);
+    }
     public Api.Event get(UUID id) { var e=db.get(EventEntity.class,id);access.eventVisible(e);return view.event(e); }
     @Transactional public Api.Event patch(UUID id,JsonNode patch) {
         validator.validate("EventPatch",patch);

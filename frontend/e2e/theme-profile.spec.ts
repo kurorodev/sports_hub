@@ -13,17 +13,9 @@ for (const width of [375, 1440]) {
     await page
       .getByRole("button", { name: "Редактировать профиль", exact: true })
       .click();
-    const roles = page.getByRole("group", {
-      name: "Спортивные роли",
-      exact: true,
-    });
-    await expect(roles.getByRole("checkbox")).toHaveCount(2);
-    await expect(roles.getByLabel("Спортсмен", { exact: true })).toBeVisible();
     await expect(
-      roles.getByLabel("Организатор спорта", { exact: true }),
-    ).toBeVisible();
-    await expect(roles.getByLabel("Тренер", { exact: true })).toHaveCount(0);
-    await expect(roles.getByLabel("Судья", { exact: true })).toHaveCount(0);
+      page.getByRole("group", { name: "Спортивные роли", exact: true }),
+    ).toHaveCount(0);
     await page
       .getByRole("button", { name: "Отменить изменения", exact: true })
       .click();

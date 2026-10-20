@@ -14,17 +14,19 @@ export function sessionReturn(
   const to =
     next === "support"
       ? "/support"
-      : next === "profile"
-        ? "/profile"
-        : next === "map"
-          ? (mapReturn ?? "/map")
-          : next === "organization"
-            ? "/organizations?view=mine"
-            : next === "create-event"
-              ? "/events/new"
-              : ["join-event", "event-discussion"].includes(next ?? "") &&
-                  /^[\w-]{1,100}$/.test(eventId)
-                ? `/events/${encodeURIComponent(eventId)}${next === "event-discussion" ? "#event-discussion" : ""}`
-                : fallback;
+      : next === "my-events"
+        ? "/my-events"
+        : next === "profile"
+          ? "/profile"
+          : next === "map"
+            ? (mapReturn ?? "/map")
+            : next === "organization"
+              ? "/organizations?view=mine"
+              : next === "create-event"
+                ? "/events/new"
+                : ["join-event", "event-discussion"].includes(next ?? "") &&
+                    /^[\w-]{1,100}$/.test(eventId)
+                  ? `/events/${encodeURIComponent(eventId)}${next === "event-discussion" ? "#event-discussion" : ""}`
+                  : fallback;
   return { to, state: mapReturn ? { mapReturn } : undefined };
 }

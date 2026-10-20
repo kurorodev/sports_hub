@@ -74,6 +74,8 @@ export function ProfileForm({
   });
   const session = useQuery(sessionQuery);
   const isAdmin = session.data?.systemRoles.includes("ADMIN");
+  const canChooseRoles =
+    !isAdmin && session.data?.systemRoles.includes("ORGANIZATION");
   const sports = useQuery({ ...sportsQuery, enabled: !isAdmin });
   const avatarUrl = useWatch({ control: form.control, name: "avatarUrl" });
   const avatarTone = session.data?.systemRoles.includes("ADMIN")
@@ -221,26 +223,28 @@ export function ProfileForm({
       </fieldset>
       {!isAdmin && (
         <>
-          <fieldset disabled={mutation.isPending}>
-            <legend>{tr("Спортивные роли")}</legend>
-            <p className="field-hint">
-              {tr(
-                "Роли описывают ваш опыт. Они не дают административных прав или доступа к чужим соревнованиям.",
-              )}
-            </p>
-            <div className="profile-role-options">
-              {sportRoles.map((role) => (
-                <label key={role}>
-                  <input
-                    type="checkbox"
-                    value={role}
-                    {...form.register("roles")}
-                  />
-                  {tr(sportRoleLabels[role])}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {canChooseRoles && (
+            <fieldset disabled={mutation.isPending}>
+              <legend>{tr("Спортивные роли")}</legend>
+              <p className="field-hint">
+                {tr(
+                  "Выбор роли доступен представителю одобренной организации.",
+                )}
+              </p>
+              <div className="profile-role-options">
+                {sportRoles.map((role) => (
+                  <label key={role}>
+                    <input
+                      type="checkbox"
+                      value={role}
+                      {...form.register("roles")}
+                    />
+                    {tr(sportRoleLabels[role])}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <fieldset disabled={mutation.isPending}>
             <legend>{tr("Любимые виды спорта")}</legend>
             <p className="field-hint">
