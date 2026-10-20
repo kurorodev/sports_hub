@@ -15,9 +15,7 @@ async function fillEvent(page: Page, title: string, sport: string) {
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
   await page.getByLabel("Вид спорта", { exact: true }).click();
   await page.getByRole("option", { name: "Другое", exact: true }).click();
-  await page
-    .getByLabel("Название активности", { exact: true })
-    .fill(sport);
+  await page.getByLabel("Название активности", { exact: true }).fill(sport);
   await page
     .getByLabel("О встрече", { exact: true })
     .fill(
@@ -27,11 +25,18 @@ async function fillEvent(page: Page, title: string, sport: string) {
   await page
     .getByLabel("Место встречи", { exact: true })
     .fill("Остров Татышев, главный вход");
-  await page.getByLabel("Дата", { exact: true }).fill("2026-11-07");
+  await page.getByLabel("Дата", { exact: true }).press("Enter");
+  const calendar = page.getByRole("dialog", {
+    name: "Выбор даты",
+    exact: true,
+  });
+  await calendar.getByRole("button", { name: "Следующий месяц" }).click();
+  await calendar.locator('[data-date="2026-11-07"]').click();
   await page.getByLabel("Время", { exact: true }).fill("18:30");
+  await page.getByLabel("Часовой пояс места встречи", { exact: true }).click();
   await page
-    .getByLabel("Часовой пояс места встречи", { exact: true })
-    .selectOption("+07:00");
+    .getByRole("option", { name: "UTC+07:00 · Красноярск", exact: true })
+    .click();
 }
 
 for (const width of [375, 768, 1440]) {
@@ -58,6 +63,18 @@ for (const width of [375, 768, 1440]) {
     ).toBeVisible();
     await expect(page.locator("time")).toContainText("18:30");
     const detailUrl = page.url();
+    const publishedLink = page.getByRole("link", {
+      name: "Открыть мероприятие",
+      exact: true,
+    });
+    await expect(publishedLink).toHaveAttribute(
+      "href",
+      new URL(detailUrl).pathname,
+    );
+    await publishedLink.click();
+    await expect(page).toHaveURL(detailUrl);
+    await expect(page.getByText("Встреча опубликована")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     await signIn(page, "Мария");
@@ -88,7 +105,7 @@ for (const width of [375, 768, 1440]) {
   });
 }
 
-test("guest returns to creation after demo login and invalid date stays in form", async ({
+test("guest returns to creation after demo login and past dates cannot be selected", async ({
   page,
 }) => {
   await page.goto("/events/new");
@@ -97,13 +114,14 @@ test("guest returns to creation after demo login and invalid date stays in form"
   await page.getByRole("button", { name: "Войти в аккаунт" }).click();
   await expect(page).toHaveURL("/events/new");
   await fillEvent(page, "Встреча в прошлом", "Петанк");
-  await expect(page.getByLabel("Дата", { exact: true })).toHaveAttribute(
-    "min",
-    "2026-10-19",
-  );
-  await page.getByLabel("Дата", { exact: true }).fill("2026-10-18");
-  await page.getByRole("button", { name: "Опубликовать встречу" }).click();
-  await expect(page.getByText("Выберите будущую дату и время")).toBeVisible();
+  await page.getByLabel("Дата", { exact: true }).click();
+  const calendar = page.getByRole("dialog", {
+    name: "Выбор даты",
+    exact: true,
+  });
+  await calendar.getByRole("button", { name: "Предыдущий месяц" }).click();
+  await expect(calendar.locator('[data-date="2026-10-18"]')).toBeDisabled();
+  await expect(calendar.locator('[data-date="2026-10-19"]')).toBeEnabled();
   await expect(page).toHaveURL("/events/new");
   await expect(page.getByLabel("Название встречи")).toHaveValue(
     "Встреча в прошлом",
@@ -120,11 +138,18 @@ test("creation calendar follows the event timezone across midnight", async ({
   const timezone = page.getByLabel("Часовой пояс места встречи", {
     exact: true,
   });
-  await expect(date).toHaveAttribute("min", "2026-10-19");
-  await timezone.selectOption("+02:00");
-  await expect(date).toHaveAttribute("min", "2026-10-18");
-  await timezone.selectOption("+07:00");
-  await expect(date).toHaveAttribute("min", "2026-10-19");
+  await date.click();
+  await expect(page.locator('[data-date="2026-10-18"]')).toBeDisabled();
+  await timezone.click();
+  await page.getByRole("option", { name: "UTC+02:00", exact: true }).click();
+  await date.click();
+  await expect(page.locator('[data-date="2026-10-18"]')).toBeEnabled();
+  await timezone.click();
+  await page
+    .getByRole("option", { name: "UTC+07:00 · Красноярск", exact: true })
+    .click();
+  await date.click();
+  await expect(page.locator('[data-date="2026-10-18"]')).toBeDisabled();
 });
 
 for (const width of [320, 375, 768, 1024, 1440]) {

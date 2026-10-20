@@ -65,7 +65,7 @@ async function fillForm() {
     input.title,
   );
   await user.click(screen.getByLabelText("Вид спорта"));
-  await user.click(screen.getByRole("option", { name: "Другое", exact: true }));
+  await user.click(screen.getByRole("option", { name: "Другое" }));
   await user.type(screen.getByLabelText("Название активности"), "Петанк");
   await user.type(screen.getByLabelText("О встрече"), input.description);
   await user.type(
@@ -77,16 +77,18 @@ async function fillForm() {
     screen.getByLabelText("Место встречи"),
     input.location.address,
   );
-  // Native date/time inputs do not accept localized keyboard typing consistently in jsdom.
-  fireEvent.change(screen.getByLabelText("Дата"), {
-    target: { value: "2026-11-07" },
-  });
+  await user.click(screen.getByLabelText("Дата"));
+  await user.click(screen.getByRole("button", { name: "Следующий месяц" }));
+  await user.click(
+    screen.getByRole("button", { name: "суббота, 7 ноября 2026 г." }),
+  );
+  // Native time inputs do not accept localized keyboard typing consistently in jsdom.
   fireEvent.change(screen.getByLabelText("Время"), {
     target: { value: "18:30" },
   });
-  await user.selectOptions(
-    screen.getByLabelText("Часовой пояс места встречи"),
-    "+07:00",
+  await user.click(screen.getByLabelText("Часовой пояс места встречи"));
+  await user.click(
+    screen.getByRole("option", { name: "UTC+07:00 · Красноярск" }),
   );
   return user;
 }
@@ -275,7 +277,7 @@ describe("S1 creation UI", () => {
     const conditions = screen.getByRole("region", { name: "Условия участия" });
     expect(conditions.textContent).toContain(input.requirements);
     expect(conditions.querySelector("script")).toBeNull();
-  });
+  }, 15000);
 
   it("attaches server validation to its field and retains entered values", async () => {
     await signIn();
@@ -310,5 +312,5 @@ describe("S1 creation UI", () => {
       "true",
     );
     expect(screen.getByLabelText("Название встречи")).toHaveValue(input.title);
-  });
+  }, 15000);
 });

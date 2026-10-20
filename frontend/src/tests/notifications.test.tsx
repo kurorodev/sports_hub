@@ -14,7 +14,7 @@ import { server } from "./setup";
 import { NotificationBell } from "../features/notifications";
 import { NotificationRepositoryProvider } from "../entities/notification";
 import { createHttpNotificationRepository } from "../entities/notification/api/http-notification-repository";
-import { request, setCsrfToken } from "../shared/api/client";
+import { ApiError, request, setCsrfToken } from "../shared/api/client";
 import { sessionQuery } from "../entities/session";
 import { makeSession, mockId } from "../mocks/database";
 import { notify } from "../mocks/notifications";
@@ -39,7 +39,10 @@ async function login(account = "user-alex") {
   setCsrfToken(session.csrfToken);
   return session;
 }
-function mount(session: Session) {
+function mount(
+  session: Session,
+  repository = createHttpNotificationRepository(request),
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -47,9 +50,7 @@ function mount(session: Session) {
   const view = render(
     <MemoryRouter>
       <QueryClientProvider client={client}>
-        <NotificationRepositoryProvider
-          repository={createHttpNotificationRepository(request)}
-        >
+        <NotificationRepositoryProvider repository={repository}>
           <NotificationBell viewerId={session.user.id} />
         </NotificationRepositoryProvider>
       </QueryClientProvider>
@@ -177,7 +178,7 @@ describe("personal notifications", () => {
       vi.useRealTimers();
     }
   });
-  it("shows private reasons only inside the dialog, loads pages, reads and closes", async () => {
+  it("automatically reads the opening snapshot including unloaded pages, keeps reasons private and closes", async () => {
     const a = await login();
     for (let i = 0; i < 22; i++)
       notify(
@@ -197,26 +198,19 @@ describe("personal notifications", () => {
     await user.click(bell);
     const dialog = screen.getByRole("dialog", { name: "Уведомления" });
     expect(within(dialog).getAllByText(/Приватная причина/)).toHaveLength(20);
+    await waitFor(() =>
+      expect(within(dialog).getByText("Всё прочитано")).toBeVisible(),
+    );
+    expect((await request<Page>("/me/notifications")).unreadCount).toBe(0);
     await user.click(
       within(dialog).getByRole("button", { name: "Показать ещё" }),
     );
     await waitFor(() =>
       expect(within(dialog).getAllByRole("listitem")).toHaveLength(22),
     );
-    await user.click(
-      within(dialog).getAllByRole("button", {
-        name: "Прочитано",
-      })[0],
-    );
-    await screen.findByRole("button", {
-      name: "Уведомления: 21 непрочитанных",
-    });
-    await user.click(
-      within(dialog).getByRole("button", { name: "Прочитать все" }),
-    );
-    await waitFor(() =>
-      expect(within(dialog).getByText("Всё прочитано")).toBeVisible(),
-    );
+    expect(
+      within(dialog).queryByRole("button", { name: "Прочитано" }),
+    ).not.toBeInTheDocument();
     fireEvent(
       dialog,
       new Event("cancel", { bubbles: false, cancelable: true }),
@@ -224,6 +218,96 @@ describe("personal notifications", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.queryByText(/Приватная причина/)).not.toBeInTheDocument();
   });
+  it("keeps unread state on a failed automatic read and allows a manual retry", async () => {
+    const a = await login();
+    notify(a.user.id, "EVENT_STATUS", "Обновление", "Встреча", null, null);
+    let unavailable = true;
+    const repository = createHttpNotificationRepository(request);
+    const readAll = vi.fn(async (through: string) => {
+      if (unavailable) throw new ApiError(503);
+      await repository.readAll(through);
+    });
+    mount(a, { ...repository, readAll });
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Уведомления: 1 непрочитанных",
+      }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Сервис временно недоступен",
+    );
+    expect(readAll).toHaveBeenCalledTimes(1);
+    expect((await request<Page>("/me/notifications")).unreadCount).toBe(1);
+    unavailable = false;
+    await user.click(screen.getByRole("button", { name: "Прочитать все" }));
+    await waitFor(() => expect(readAll).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText("Всё прочитано")).toBeVisible();
+    expect((await request<Page>("/me/notifications")).unreadCount).toBe(0);
+  });
+  it("does not mark cached notifications as read when the fresh opening request fails", async () => {
+    const a = await login();
+    notify(a.user.id, "EVENT_STATUS", "Обновление", "Встреча", null, null);
+    const repository = createHttpNotificationRepository(request);
+    const snapshot = await repository.list(0);
+    const readAll = vi.fn();
+    mount(a, {
+      ...repository,
+      list: vi
+        .fn()
+        .mockResolvedValueOnce(snapshot)
+        .mockRejectedValue(new ApiError(401)),
+      readAll,
+    });
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Уведомления: 1 непрочитанных",
+      }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Войдите в аккаунт",
+    );
+    expect(readAll).not.toHaveBeenCalled();
+    expect((await repository.list(0)).unreadCount).toBe(1);
+  });
+  it.each(["close", "account"])(
+    "ignores a late opening response after %s",
+    async (action) => {
+      const a = await login();
+      notify(a.user.id, "EVENT_STATUS", "Обновление", "Встреча", null, null);
+      const snapshot = await createHttpNotificationRepository(request).list(0);
+      let finish!: (page: Page) => void;
+      const response = new Promise<Page>((resolve) => {
+        finish = resolve;
+      });
+      const list = vi
+        .fn()
+        .mockResolvedValueOnce(snapshot)
+        .mockReturnValueOnce(response);
+      const readAll = vi.fn();
+      const view = mount(a, { list, readAll, read: vi.fn() });
+      const user = userEvent.setup();
+      await user.click(
+        await screen.findByRole("button", {
+          name: "Уведомления: 1 непрочитанных",
+        }),
+      );
+      await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+      if (action === "close")
+        await user.click(
+          screen.getByRole("button", { name: "Закрыть уведомления" }),
+        );
+      else
+        view.client.setQueryData(
+          sessionQuery.queryKey,
+          makeSession("user-maria"),
+        );
+      finish(snapshot);
+      await waitFor(() => expect(view.client.isFetching()).toBe(0));
+      expect(readAll).not.toHaveBeenCalled();
+    },
+  );
   it("supports empty and error/retry states without inventing a success", async () => {
     const a = await login();
     let unavailable = true;

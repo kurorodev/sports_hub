@@ -3212,11 +3212,27 @@ input[type="radio"] {
   background: color-mix(in srgb, var(--color-ink) 60%, transparent);
 }
 .notification-dialog {
-  width: min(600px, calc(100vw - 24px));
+  width: min(720px, calc(100vw - 24px));
+  height: min(800px, calc(100dvh - 32px));
   max-height: calc(100dvh - 32px);
   margin: auto;
+  overflow: hidden;
+}
+.notification-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.notification-heading,
+.notification-toolbar {
+  flex-shrink: 0;
+}
+.notification-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-inline-end: 4px;
 }
 .notification-heading,
 .notification-toolbar,

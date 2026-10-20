@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Bell, Check, CheckCheck, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -18,6 +18,17 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
   const client = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const opening = useRef(0);
+  const close = () => {
+    opening.current++;
+    setOpen(false);
+  };
+  useEffect(
+    () => () => {
+      opening.current++;
+    },
+    [],
+  );
   const [now, setNow] = useState(Date.now);
   const titleId = useId();
   const key = ["notifications", viewerId];
@@ -45,7 +56,7 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
       if (client.getQueryData(sessionQuery.queryKey)?.user.id !== viewerId)
         return;
       if (follow && item.href) {
-        setOpen(false);
+        close();
         navigate(item.href);
       }
       await client.invalidateQueries({ queryKey: key });
@@ -78,12 +89,22 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
         }
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => {
+        onClick={async () => {
+          const currentOpening = ++opening.current;
           setNow(Date.now());
           setOpen(true);
-          void query.refetch();
           read.reset();
           readAll.reset();
+          // Read only a successful, fresh snapshot, never cached data after a failed load.
+          const result = await query.refetch();
+          const snapshot = result.data?.pages[0];
+          if (
+            currentOpening === opening.current &&
+            client.getQueryData(sessionQuery.queryKey)?.user.id === viewerId &&
+            result.isSuccess &&
+            snapshot?.unreadCount
+          )
+            readAll.mutate(snapshot.asOf);
         }}
       >
         <Bell size={21} aria-hidden="true" />
@@ -101,7 +122,7 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
       {open && (
         <Dialog
           labelledBy={titleId}
-          onClose={() => setOpen(false)}
+          onClose={close}
           className="notification-dialog"
         >
           <div className="notification-heading">
@@ -112,7 +133,7 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
             <button
               className="button secondary icon-button"
               aria-label="Закрыть уведомления"
-              onClick={() => setOpen(false)}
+              onClick={close}
             >
               <X size={20} />
             </button>
@@ -130,103 +151,110 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
               </button>
             </div>
           )}
-          {query.isPending && <p role="status">Загружаем уведомления…</p>}
-          {query.isError && (
-            <div role="alert" className="notification-error">
-              <p>{errorMessage(query.error)}</p>
-              <button
-                className="button secondary"
-                onClick={() => void query.refetch()}
-              >
-                Повторить загрузку
-              </button>
-            </div>
-          )}
-          {(read.isError || readAll.isError) && (
-            <p role="alert" className="field-error">
-              {errorMessage(read.error ?? readAll.error)}
-            </p>
-          )}
-          {first && !items.length && (
-            <div className="notification-empty">
-              <Bell size={32} aria-hidden="true" />
-              <h3>Пока тихо</h3>
-              <p>
-                Здесь появятся решения по заявкам, изменения встреч и
-                напоминания.
-              </p>
-            </div>
-          )}
-          <ul className="notification-list">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className={`notification-item${item.readAt ? "" : " unread"}`}
-              >
-                <div className="notification-item-heading">
-                  <h3>{item.title}</h3>
-                  {!item.readAt && (
-                    <span className="notification-unread">Новое</span>
-                  )}
-                </div>
-                <p>{item.text}</p>
-                {item.type === "COMMENT_HIDDEN" && item.commentText && (
-                  <blockquote
-                    className="notification-comment"
-                    aria-label="Скрытый комментарий"
-                  >
-                    <strong>Ваш комментарий</strong>
-                    <p>{item.commentText}</p>
-                  </blockquote>
-                )}
-                {item.reason && (
-                  <p className="notification-reason">
-                    <strong>Причина: </strong>
-                    {item.reason}
-                  </p>
-                )}
-                <time
-                  dateTime={item.createdAt}
-                  title={new Date(item.createdAt).toLocaleString("ru-RU")}
+          <div
+            className="notification-scroll"
+            role="region"
+            aria-label="Список уведомлений"
+            tabIndex={0}
+          >
+            {query.isPending && <p role="status">Загружаем уведомления…</p>}
+            {query.isError && (
+              <div role="alert" className="notification-error">
+                <p>{errorMessage(query.error)}</p>
+                <button
+                  className="button secondary"
+                  onClick={() => void query.refetch()}
                 >
-                  {relativeTime(item.createdAt, now)}
-                </time>
-                <div className="notification-actions">
-                  {item.href && (
-                    <Link
-                      to={item.href}
-                      aria-disabled={pending}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (!pending) read.mutate({ item, follow: true });
-                      }}
+                  Повторить загрузку
+                </button>
+              </div>
+            )}
+            {(read.isError || readAll.isError) && (
+              <p role="alert" className="field-error">
+                {errorMessage(read.error ?? readAll.error)}
+              </p>
+            )}
+            {first && !items.length && (
+              <div className="notification-empty">
+                <Bell size={32} aria-hidden="true" />
+                <h3>Пока тихо</h3>
+                <p>
+                  Здесь появятся решения по заявкам, изменения встреч и
+                  напоминания.
+                </p>
+              </div>
+            )}
+            <ul className="notification-list">
+              {items.map((item) => (
+                <li
+                  key={item.id}
+                  className={`notification-item${item.readAt ? "" : " unread"}`}
+                >
+                  <div className="notification-item-heading">
+                    <h3>{item.title}</h3>
+                    {!item.readAt && (
+                      <span className="notification-unread">Новое</span>
+                    )}
+                  </div>
+                  <p>{item.text}</p>
+                  {item.type === "COMMENT_HIDDEN" && item.commentText && (
+                    <blockquote
+                      className="notification-comment"
+                      aria-label="Скрытый комментарий"
                     >
-                      Открыть
-                    </Link>
+                      <strong>Ваш комментарий</strong>
+                      <p>{item.commentText}</p>
+                    </blockquote>
                   )}
-                  {!item.readAt && (
-                    <button
-                      className="notification-read"
-                      disabled={pending}
-                      onClick={() => read.mutate({ item, follow: false })}
-                    >
-                      <Check size={16} />
-                      Прочитано
-                    </button>
+                  {item.reason && (
+                    <p className="notification-reason">
+                      <strong>Причина: </strong>
+                      {item.reason}
+                    </p>
                   )}
-                </div>
-              </li>
-            ))}
-          </ul>
-          {query.hasNextPage && !accessLost && (
-            <button
-              className="button secondary notification-more"
-              disabled={query.isFetching || pending}
-              onClick={() => void query.fetchNextPage()}
-            >
-              {query.isFetchingNextPage ? "Загружаем…" : "Показать ещё"}
-            </button>
-          )}
+                  <time
+                    dateTime={item.createdAt}
+                    title={new Date(item.createdAt).toLocaleString("ru-RU")}
+                  >
+                    {relativeTime(item.createdAt, now)}
+                  </time>
+                  <div className="notification-actions">
+                    {item.href && (
+                      <Link
+                        to={item.href}
+                        aria-disabled={pending}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (!pending) read.mutate({ item, follow: true });
+                        }}
+                      >
+                        Открыть
+                      </Link>
+                    )}
+                    {!item.readAt && (
+                      <button
+                        className="notification-read"
+                        disabled={pending}
+                        onClick={() => read.mutate({ item, follow: false })}
+                      >
+                        <Check size={16} />
+                        Прочитано
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {query.hasNextPage && !accessLost && (
+              <button
+                className="button secondary notification-more"
+                disabled={query.isFetching || pending}
+                onClick={() => void query.fetchNextPage()}
+              >
+                {query.isFetchingNextPage ? "Загружаем…" : "Показать ещё"}
+              </button>
+            )}
+          </div>
         </Dialog>
       )}
     </>

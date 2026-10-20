@@ -93,8 +93,8 @@ export function EventPage() {
         <div className="creation-success" role="status">
           <strong>Встреча опубликована</strong>
           <p>Теперь её могут найти другие пользователи в каталоге.</p>
-          <Link to="/" className="button secondary">
-            Посмотреть в каталоге
+          <Link to={`/events/${event.id}`} className="button secondary">
+            Открыть мероприятие
           </Link>
         </div>
       )}
