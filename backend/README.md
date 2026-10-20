@@ -1,4 +1,4 @@
-# Sports Hub — backend
+# Стечение — backend
 
 Поиск мероприятий: [подстроки, небольшие опечатки и ограничения](docs/event-search.md).
 

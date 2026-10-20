@@ -24,7 +24,7 @@ export function Layout() {
       )}
       <header className="site-header">
         <div className="header-inner">
-          <Brand homeMark={location.pathname === "/"} />
+          <Brand onDark />
           <nav className="main-nav" aria-label="Основная навигация">
             <NavLink to="/" end>
               Активности

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Sport Hub REST API
+  title: Стечение REST API
   version: 1.0.0-draft
   description: Контракт frontend ↔ Java Spring Boot для конкурсного прототипа. P0 = обязательные сценарии, P1 = рекомендательные/сбор
     команды, P2 = расширения профиля/рейтинга/сообщений. x-phase на каждом методе. Проектные решения команды, не часть

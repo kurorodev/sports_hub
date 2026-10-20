@@ -245,36 +245,20 @@ button:disabled {
 }
 .brand {
   display: inline-flex;
-  gap: 7px;
   align-items: center;
-  font-weight: 850;
-  font-size: 24px;
-  letter-spacing: -0.045em;
-  line-height: 1;
-  white-space: nowrap;
-}
-.brand-symbol {
-  display: grid;
-  place-items: center;
-  background: var(--color-brand);
-  border-radius: var(--radius-control);
-  width: 35px;
-  height: 35px;
-  color: var(--color-ink);
   flex-shrink: 0;
+  min-height: 44px;
+  border-radius: var(--radius-control);
 }
-.brand-name {
-  white-space: normal;
-  max-width: 9ch;
-  line-height: 1.05;
-  text-wrap: balance;
+.brand-logo {
+  display: block;
+  width: 192px;
+  height: 46px;
+  /* The supplied wordmarks contain transparent space above and below the artwork. */
+  object-fit: cover;
 }
-.brand-home-mark { width: 100%; height: 100%; object-fit: contain; }
 .brand-dot {
   color: var(--color-brand);
-}
-.brand .brand-dot {
-  margin-left: -5px;
 }
 .main-nav {
   display: flex;
@@ -850,14 +834,6 @@ input[type="radio"] {
   gap: var(--space-6);
   min-height: 112px;
 }
-.footer-inner .brand {
-  font-size: 28px;
-}
-.footer-inner .brand-symbol {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-control);
-}
 .footer-inner p {
   font-size: 12px;
   color: var(--color-ink-muted);
@@ -1198,8 +1174,9 @@ input[type="radio"] {
   .header-inner {
     padding-inline: 16px;
   }
-  .brand {
-    font-size: 21px;
+  .brand-logo {
+    width: 160px;
+    height: 40px;
   }
   .header-account {
     max-width: 190px;
@@ -3662,14 +3639,6 @@ input[type="radio"] {
     margin-top: 0;
     gap: var(--space-1) var(--space-4);
   }
-  .site-header .brand {
-    font-size: 20px;
-    min-height: 44px;
-  }
-  .site-header .brand-symbol {
-    width: var(--space-8);
-    height: var(--space-8);
-  }
 }
 @media (max-width: 600px) {
   .header-actions {
@@ -3698,9 +3667,9 @@ input[type="radio"] {
   }
 }
 @media (max-width: 374px) {
-  .site-header .brand {
-    font-size: 16px;
-    gap: var(--space-1);
+  .site-header .brand-logo {
+    width: 136px;
+    height: 34px;
   }
   .header-inner {
     column-gap: var(--space-2);

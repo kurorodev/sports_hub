@@ -1,6 +1,6 @@
-# Sports Hub
+# Стечение
 
-Название приложения задаётся в [branding.json](branding.json). Инструкция по смене названия и обновлению существующей БД: [docs/branding.md](docs/branding.md).
+Финальное название проекта — **Стечение**, задано в [branding.json](branding.json). Логотипы и правила использования: [docs/branding.md](docs/branding.md).
 
 Приложение разделено на [`frontend/`](frontend/) (React + TypeScript) и [`backend/`](backend/) (Java + PostgreSQL).
 

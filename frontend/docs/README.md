@@ -1,4 +1,6 @@
-# Документация frontend «Sports Hub»
+# Документация frontend «Стечение»
+
+Финальные логотипы и исходники: [BRANDING.md](BRANDING.md).
 
 [Быстрый запуск](../README.md)
 
