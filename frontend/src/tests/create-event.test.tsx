@@ -272,7 +272,7 @@ describe("S1 creation UI", () => {
         input.title,
       ),
     );
-    expect(screen.getByText("Встреча опубликована")).toBeInTheDocument();
+    expect(screen.getByText("Мероприятие создано")).toBeInTheDocument();
     expect(screen.getByText("Вы организатор")).toBeInTheDocument();
     const conditions = screen.getByRole("region", { name: "Условия участия" });
     expect(conditions.textContent).toContain(input.requirements);

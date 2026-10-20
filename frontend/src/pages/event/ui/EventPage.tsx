@@ -5,7 +5,7 @@ import { isUuid } from "../../../shared/lib/identifiers";
 import { toEventParticipation, EventLocation } from "../../../entities/event";
 import { safeMapReturn } from "../../../shared/lib/activity-navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CalendarDays,
@@ -27,7 +27,8 @@ import {
 } from "../../../entities/event";
 import { JoinAction } from "../../../features/join-event";
 import { Participants } from "../../../entities/registration";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { Toast } from "../../../shared/ui/Toast";
 import { ReportCommentDialog } from "../../../features/support";
 import type { DiscussionComment } from "../../../entities/comment/model";
 
@@ -35,6 +36,14 @@ export function EventPage() {
   const [report, setReport] = useState<DiscussionComment | null>(null);
   const { eventId = "" } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
+  const dismissCreated = useCallback(() => {
+    navigate(`${location.pathname}${location.search}${location.hash}`, {
+      replace: true,
+      preventScrollReset: true,
+      state: { ...location.state, created: false },
+    });
+  }, [navigate, location]);
   const mapReturn = safeMapReturn(location.state);
   const session = useQuery(sessionQuery);
   const query = useQuery({
@@ -90,13 +99,12 @@ export function EventPage() {
         {mapReturn ? "Назад к карте" : "Все активности"}
       </Link>
       {created && (
-        <div className="creation-success" role="status">
-          <strong>Встреча опубликована</strong>
-          <p>Теперь её могут найти другие пользователи в каталоге.</p>
-          <Link to={`/events/${event.id}`} className="button secondary">
-            Открыть мероприятие
-          </Link>
-        </div>
+        <Toast
+          message="Мероприятие создано"
+          placement="top"
+          tone="success"
+          onDismiss={dismissCreated}
+        />
       )}
       <div className="detail-title">
         {event.viewerIsOrganizer && (

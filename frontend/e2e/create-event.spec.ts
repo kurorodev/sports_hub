@@ -57,24 +57,24 @@ for (const width of [375, 768, 1440]) {
     await page.getByRole("button", { name: "Опубликовать встречу" }).click();
     expect((await posted).status()).toBe(201);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
-    await expect(page.getByText("Встреча опубликована")).toBeVisible();
+    await expect(
+      page.getByText("Мероприятие создано", { exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByText("Вы организатор", { exact: true }),
     ).toBeVisible();
     await expect(page.locator("time")).toContainText("18:30");
     const detailUrl = page.url();
-    const publishedLink = page.getByRole("link", {
-      name: "Открыть мероприятие",
-      exact: true,
-    });
-    await expect(publishedLink).toHaveAttribute(
-      "href",
-      new URL(detailUrl).pathname,
-    );
-    await publishedLink.click();
+    await expect(
+      page.getByRole("link", { name: "Открыть мероприятие", exact: true }),
+    ).toHaveCount(0);
+    const toast = page
+      .getByRole("status")
+      .filter({ hasText: "Мероприятие создано" });
+    await expect(toast).toHaveClass(/toast-top/);
+    await expect(toast).toHaveClass(/toast-success/);
+    await expect(toast).toHaveCount(0, { timeout: 6000 });
     await expect(page).toHaveURL(detailUrl);
-    await expect(page.getByText("Встреча опубликована")).toHaveCount(0);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     await signIn(page, "Мария");
@@ -91,7 +91,9 @@ for (const width of [375, 768, 1440]) {
     await expect(page.getByText("Вы организатор", { exact: true })).toHaveCount(
       0,
     );
-    await expect(page.getByText("Встреча опубликована")).toHaveCount(0);
+    await expect(
+      page.getByText("Мероприятие создано", { exact: true }),
+    ).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     expect(
       await page.evaluate(
