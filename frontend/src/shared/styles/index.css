@@ -2844,12 +2844,13 @@ input[type="radio"] {
   width: 112px;
   height: 112px;
   border-radius: var(--radius-card);
-  background: var(--color-brand);
-  color: var(--color-on-brand);
+  background: var(--color-surface-alt);
+  color: var(--color-ink);
   font-size: 48px;
   font-weight: 800;
   overflow: hidden;
 }
+.profile-avatar > .user-avatar { display: flex; border-radius: inherit; background: transparent; }
 .profile-avatar img {
   width: 100%;
   height: 100%;
@@ -3850,8 +3851,8 @@ select:focus:not([aria-invalid="true"]),
 .questionnaire-footnote { font-size: 13px; text-align: center; margin-top: var(--space-4); }
 .questionnaire-confirm { width: min(480px, calc(100vw - 24px)); }
 .questionnaire-confirm > svg { margin-bottom: var(--space-4); }
-.profile-recommendations { margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-outline); }
-.recommendations-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); }
+.profile-recommendations { display: grid; gap: 24px; margin-top: var(--space-8); padding: clamp(20px, 4vw, 40px); border: 1px solid var(--color-outline); border-radius: var(--radius-card); background: var(--color-surface); min-width: 0; }
+.recommendations-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 0; }
 .recommendations-heading > div { flex: 1 1 320px; }
 .recommendations-heading .eyebrow { display: inline-flex; align-items: center; gap: var(--space-2); }
 .recommendations-heading h2 { font-size: clamp(24px, 4vw, 34px); margin-block: var(--space-2); }
@@ -3860,7 +3861,7 @@ select:focus:not([aria-invalid="true"]),
 .recommended-event .event-card { flex: 1; }
 .recommendation-reasons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-3); }
 .recommendation-reasons span { font-size: 12px; padding: 5px 9px; border-radius: 20px; background: color-mix(in srgb, var(--color-brand) 20%, var(--color-surface)); }
-.recommendations-empty { padding: var(--space-5); border: 1px solid var(--color-outline); border-radius: var(--radius-panel); }
+.recommendations-empty { display: grid; justify-items: start; gap: 12px; padding: clamp(16px, 3vw, 24px); border: 1px solid var(--color-outline); border-radius: 16px; background: var(--color-surface-alt); min-width: 0; }
 @media (max-width: 480px) {
   .questionnaire-dialog, .questionnaire-confirm { padding: var(--space-4); }
   .questionnaire-heading { gap: var(--space-2); }
@@ -3958,16 +3959,24 @@ select:focus:not([aria-invalid="true"]),
 
 .support-choice svg, .support-tabs [aria-current="page"], .support-status-open, .support-status-waiting_user, .questionnaire-symbol, .questionnaire-chips button { color: var(--color-on-brand); }
 
-.venue-week-preview { min-width: 0; margin: 16px 0 0; padding: 14px; border: 1px solid var(--color-outline); border-radius: 14px; background: var(--color-surface-alt); }
+.venue-week-preview { min-width: 0; margin: 12px 0 0; padding: 12px; border: 1px solid var(--color-outline); border-radius: 14px; background: var(--color-surface-alt); }
 .venue-week-preview figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
 .venue-week-preview figcaption strong { font-size: 13px; line-height: 1.4; }
 .venue-week-badge { padding: 2px 8px; border: 1px solid var(--color-outline); border-radius: var(--radius-pill); color: var(--color-ink-muted); background: var(--color-surface); font-size: 10px; font-weight: 700; }
 .venue-week-preview .venue-week-note { margin: 6px 0 0; color: var(--color-ink-muted); font-size: 11px; line-height: 1.5; }
-.venue-week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; list-style: none; margin: 14px 0 12px; padding: 0; }
+.venue-week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; list-style: none; margin: 10px 0 0; padding: 0; }
 .venue-week-days > li { min-width: 0; display: grid; justify-items: center; gap: 6px; }
 .venue-week-track { display: flex; align-items: flex-end; justify-content: center; width: 100%; height: 44px; }
 .venue-week-bar { width: min(20px, 100%); border-radius: 5px 5px 2px 2px; background: var(--occupancy-color); }
 .venue-week-day { color: var(--color-ink-muted); font-size: 11px; font-weight: 650; }
-.venue-week-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0; padding: 0; list-style: none; color: var(--color-ink-muted); font-size: 10px; }
-.venue-week-legend > li { display: inline-flex; align-items: center; gap: 5px; }
-.venue-week-legend > li > span { width: 6px; height: 6px; border-radius: 50%; background: var(--occupancy-color); }
+
+/* Fit the venue summary and demo chart in the map overlay without clipping content. */
+.map-selection-venue { padding: 16px; }
+.map-selection-venue .map-selection-heading { margin-bottom: 8px; }
+.map-selection-venue h3 { font-size: 18px; line-height: 1.3; }
+.map-selection-venue > p { margin-top: 6px; font-size: 13px; line-height: 1.45; }
+.map-selection-venue > .button { width: 100%; margin-top: 12px; }
+.map-selection-venue .venue-week-preview { margin-top: 10px; }
+.map-selection-venue .venue-week-track { height: 40px; }
+.map-selection-venue .venue-week-bar { max-height: 40px; }
+@media (min-width:1024px) { .map-selection-venue { width: 360px; } }

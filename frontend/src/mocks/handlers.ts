@@ -720,6 +720,20 @@ export const handlers = [
       );
     const patch = parsed.data;
     if (
+      patch.sportsRoles &&
+      !session.systemRoles.includes("ORGANIZATION") &&
+      [...patch.sportsRoles].sort().join(",") !==
+        [...session.user.sportsRoles].sort().join(",")
+    )
+      return json(
+        {
+          code: "FORBIDDEN",
+          message:
+            "Выбор роли доступен только представителю одобренной организации",
+        },
+        { status: 403 },
+      );
+    if (
       patch.nickname &&
       mockProfiles().some(
         (item) =>

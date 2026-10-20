@@ -30,6 +30,13 @@ public class ProfileService {
         if(u.admin && ((patch.has("sportsRoles") && !patch.path("sportsRoles").isEmpty()) ||
             (patch.has("sportsPreferences") && !patch.path("sportsPreferences").isEmpty()) ||
             (patch.hasNonNull("preferredTime") && !patch.path("preferredTime").asText().isBlank())))throw Problem.forbidden();
+        if(patch.has("sportsRoles")) {
+            var requested=new HashSet<Api.SportsRole>();
+            for(var role:patch.path("sportsRoles"))requested.add(Api.SportsRole.valueOf(role.asText()));
+            if(!requested.equals(u.sportsRoles) && db.count(OrganizationEntity.class,
+                "e.createdBy=:user and e.status=:status",Map.of("user",u.id,"status",Api.OrganizationStatus.APPROVED))==0)
+                throw Problem.forbidden();
+        }
         if(patch.has("nickname")) {
             String nickname=patch.path("nickname").asText().strip();
             if(nickname.startsWith("@"))nickname=nickname.substring(1);

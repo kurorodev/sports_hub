@@ -58,12 +58,33 @@ describe("profile HTTP and UI", () => {
     await userEvent.click(
       screen.getByRole("button", { name: "Редактировать профиль" }),
     );
-    const roles = screen.getByRole("group", { name: "Спортивные роли" });
+    expect(
+      screen.queryByRole("group", { name: "Спортивные роли" }),
+    ).not.toBeInTheDocument();
+  });
+  it("reserves role selection for approved organization representatives", async () => {
+    const session = await login("org-run");
+    mount(ownPage(), "/profile?edit=1", session);
+    const roles = await screen.findByRole("group", { name: "Спортивные роли" });
     expect(within(roles).getAllByRole("checkbox")).toHaveLength(2);
-    expect(within(roles).getByLabelText("Спортсмен")).toBeVisible();
     expect(within(roles).getByLabelText("Организатор спорта")).toBeVisible();
-    expect(within(roles).queryByLabelText("Тренер")).not.toBeInTheDocument();
-    expect(within(roles).queryByLabelText("Судья")).not.toBeInTheDocument();
+  });
+  it("rejects role changes over HTTP for ordinary users while preserving profile editing", async () => {
+    await login();
+    await expect(
+      request("/me/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ sportsRoles: ["SPORTS_ORGANIZER"] }),
+      }),
+    ).rejects.toMatchObject({ status: 403 });
+    const saved = await request<UserProfileDto>("/me/profile", {
+      method: "PATCH",
+      body: JSON.stringify({
+        displayName: "Новое имя",
+        sportsRoles: ["ATHLETE"],
+      }),
+    });
+    expect(saved.displayName).toBe("Новое имя");
   });
   it("lets a user choose a character and persists it in their public profile", async () => {
     const session = await login();
@@ -114,7 +135,7 @@ describe("profile HTTP and UI", () => {
         displayName: "Александр Новый",
         nickname: "alex-new",
         bio: "Люблю бег",
-        sportsRoles: ["SPORTS_ORGANIZER"],
+        sportsRoles: ["ATHLETE"],
         sportsPreferences: [{ sportId: mockId("running"), level: "AMATEUR" }],
         preferredTime: "EVENING",
       }),

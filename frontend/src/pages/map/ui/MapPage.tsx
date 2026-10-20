@@ -388,7 +388,7 @@ export function MapPage() {
         </GeoMap>
         {selectionKey && (
           <aside
-            className="map-selection"
+            className={`map-selection${selectedMapVenue && reporting !== selectedMapVenue.id ? " map-selection-venue" : ""}`}
             ref={selectionPanel}
             tabIndex={-1}
             aria-label={tr("Выбранный объект")}

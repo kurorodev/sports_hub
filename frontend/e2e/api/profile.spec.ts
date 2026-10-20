@@ -59,7 +59,9 @@ for (const width of [375, 768, 1440]) {
       await page
         .getByLabel("Когда удобно заниматься", { exact: true })
         .selectOption("MORNING");
-      await page.getByLabel("Тренер", { exact: true }).check();
+      await expect(
+        page.getByRole("group", { name: "Спортивные роли", exact: true }),
+      ).toHaveCount(0);
       await page.getByLabel("Легкая атлетика", { exact: true }).check();
       await page
         .getByLabel("Уровень: Легкая атлетика", { exact: true })
@@ -164,7 +166,6 @@ for (const width of [375, 768, 1440]) {
         bio: original.bio ?? null,
         city: original.city ?? null,
         avatarUrl: original.avatarUrl ?? null,
-        sportsRoles: original.sportsRoles,
         sportsPreferences: original.sportsPreferences,
         preferredTime: original.preferredTime ?? null,
       };

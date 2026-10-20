@@ -13,12 +13,6 @@ const days = [
   { short: "Сб", name: "Суббота", level: "HIGH", height: 44 },
   { short: "Вс", name: "Воскресенье", level: "MEDIUM", height: 32 },
 ] as const;
-const legend = [
-  { level: "LOW", label: "Низкая" },
-  { level: "MEDIUM", label: "Средняя" },
-  { level: "HIGH", label: "Высокая" },
-] as const;
-
 export function VenueWeekPreview() {
   useLocale();
   const titleId = useId();
@@ -61,17 +55,6 @@ export function VenueWeekPreview() {
           );
         })}
       </ol>
-      <ul className="venue-week-legend" aria-label={tr("Уровни загруженности")}>
-        {legend.map((item) => (
-          <li
-            key={item.level}
-            className={`occupancy-${occupancyPresentation[item.level].tone}`}
-          >
-            <span aria-hidden="true" />
-            {tr(item.label)}
-          </li>
-        ))}
-      </ul>
     </figure>
   );
 }

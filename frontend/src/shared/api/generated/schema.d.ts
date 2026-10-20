@@ -385,7 +385,7 @@ export interface paths {
         head?: never;
         /**
          * Обновить свой профиль
-         * @description ratingPoints/rank/системные роли редактировать нельзя.
+         * @description Допустимы только ATHLETE и SPORTS_ORGANIZER. Геймификация отключена; ratingPoints/rank/системные роли редактировать нельзя.
          */
         patch: operations["patchMeProfile"];
         trace?: never;
@@ -414,7 +414,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Рейтинг и ранг пользователя */
+        /**
+         * Устаревший рейтинг (геймификация отключена, нейтральные значения)
+         * @deprecated
+         */
         get: operations["getUsersUseridRating"];
         put?: never;
         post?: never;
@@ -431,7 +434,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** История начислений */
+        /**
+         * Устаревшая история начислений (геймификация отключена, пустой список)
+         * @deprecated
+         */
         get: operations["getUsersUseridRatingHistory"];
         put?: never;
         post?: never;
@@ -944,8 +950,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Назначить судью соревнования
-         * @description Назначает только автор соревнования; судья должен иметь спортивную роль REFEREE.
+         * Назначение судьи отключено (410)
+         * @deprecated
+         * @description Судейство отменено. Аутентифицированный запрос возвращает 410 без изменений данных.
          */
         post: operations["postCompetitionsEventidReferees"];
         delete?: never;
@@ -964,8 +971,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Подтвердить фактическое участие в соревновании
-         * @description Только после endsAt у события COMPETITION. Автор или назначенный судья, подтвержденная запись CONFIRMED. Повторный запрос безопасен: тот же ledger, повторных баллов нет.
+         * Подтверждение участия для рейтинга отключено (410)
+         * @deprecated
+         * @description Геймификация отменена. Аутентифицированный запрос возвращает 410 без начислений и изменения участия.
          */
         post: operations["postCompetitionsEventidParticipationsRegistrationidVerify"];
         delete?: never;
@@ -1399,7 +1407,7 @@ export interface components {
          */
         SystemRole: "USER" | "ORGANIZATION" | "ADMIN";
         /**
-         * @description Спортивные роли профиля не предоставляют системных привилегий.
+         * @description Спортивные роли не предоставляют системных привилегий. Выбор доступен представителю одобренной организации. COACH и REFEREE сохранены только для чтения старых данных.
          * @enum {string}
          */
         SportsRole: "ATHLETE" | "COACH" | "REFEREE" | "SPORTS_ORGANIZER";
@@ -1454,6 +1462,10 @@ export interface components {
             avatarUrl?: string | null;
             sportsRoles: components["schemas"]["SportsRole"][];
             rank: components["schemas"]["Rank"];
+            /**
+             * @deprecated
+             * @description Устаревшее поле совместимости. Всегда 0; начисления отключены.
+             */
             ratingPoints: number;
         };
         /** @enum {string} */
@@ -1490,6 +1502,10 @@ export interface components {
             avatarUrl?: string | null;
             sportsRoles: components["schemas"]["SportsRole"][];
             rank: components["schemas"]["Rank"];
+            /**
+             * @deprecated
+             * @description Устаревшее поле совместимости. Всегда 0; начисления отключены.
+             */
             ratingPoints: number;
             firstName?: string | null;
             lastName?: string | null;
@@ -1501,6 +1517,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        /** @description Изменение sportsRoles доступно только представителю одобренной организации. Неизменённый набор ролей разрешено передавать при сохранении остальных полей. */
         ProfilePatch: {
             nickname?: string;
             displayName?: string;
@@ -1510,7 +1527,7 @@ export interface components {
             /** Format: uri-reference */
             avatarUrl?: string | null;
             city?: string | null;
-            sportsRoles?: components["schemas"]["SportsRole"][];
+            sportsRoles?: ("ATHLETE" | "SPORTS_ORGANIZER")[];
             sportsPreferences?: components["schemas"]["SportsPreference"][];
             /** @enum {string|null} */
             preferredTime?: "MORNING" | "DAY" | "EVENING" | "ANY" | null;
@@ -4405,6 +4422,13 @@ export interface operations {
             403: components["responses"]["403"];
             404: components["responses"]["404"];
             409: components["responses"]["409"];
+            /** @description Судейство и начисление очков отключены. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["422"];
             500: components["responses"]["500"];
         };
@@ -4442,6 +4466,13 @@ export interface operations {
             403: components["responses"]["403"];
             404: components["responses"]["404"];
             409: components["responses"]["409"];
+            /** @description Судейство и начисление очков отключены. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["422"];
             500: components["responses"]["500"];
         };

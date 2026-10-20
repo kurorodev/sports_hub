@@ -25,7 +25,7 @@ class ExtensionsTest extends ApiTestSupport {
     }
     @Test void profileIsEditablePublicAndRatingReadOnly() throws Exception {
         var a=login("athlete-a");var b=login("athlete-b");
-        call(a,"PATCH","/me/profile",Map.of("displayName","Новое имя","sportsRoles",List.of("ATHLETE","SPORTS_ORGANIZER"),"bio","Люблю спорт"),200);
+        call(a,"PATCH","/me/profile",Map.of("displayName","Новое имя","sportsRoles",List.of("ATHLETE"),"bio","Люблю спорт"),200);
         var publicProfile=getJson(b,"/users/"+a.id());assertThat(publicProfile.path("displayName").asText()).isEqualTo("Новое имя");assertThat(publicProfile.toString()).doesNotContain("demoAccount","admin","csrfToken");
         call(a,"PATCH","/me/profile",Map.of("ratingPoints",100000),400);
         call(a,"PATCH","/me/profile",Map.of("systemRoles",List.of("ADMIN")),400);
@@ -34,6 +34,16 @@ class ExtensionsTest extends ApiTestSupport {
         call(a,"PATCH","/me/profile",Map.of("nickname","ATHLETE-B"),409);
         call(a,"PATCH","/me/profile","{\"bio\":null}",200);
         call(a,"GET","/admin/events",null,403);
+    }
+    @Test void onlyApprovedOrganizationRepresentativeCanChangeSportsRoles() throws Exception {
+        var user=login("athlete-a");var pending=login("org-pending");var organizer=login("org-approved");
+        call(user,"PATCH","/me/profile",Map.of("sportsRoles",List.of("SPORTS_ORGANIZER")),403);
+        call(user,"PATCH","/me/profile",Map.of("sportsRoles",List.of()),403);
+        call(user,"PATCH","/me/profile",Map.of("sportsRoles",List.of("ATHLETE"),"displayName","Новое имя"),200);
+        call(pending,"PATCH","/me/profile",Map.of("sportsRoles",List.of("ATHLETE")),403);
+        call(organizer,"PATCH","/me/profile",Map.of("sportsRoles",List.of("ATHLETE","SPORTS_ORGANIZER")),200);
+        assertThat(getJson(user,"/me/profile").path("sportsRoles").toString()).isEqualTo("[\"ATHLETE\"]");
+        call(organizer,"PATCH","/me/profile",Map.of("sportsRoles",List.of("SPORTS_ORGANIZER")),200);
     }
     @Test void recommendationsExplainActualPreferenceChanges() throws Exception {
         var a=login("athlete-a");var owner=login("coach");String event=createEvent(owner,"OPEN",10);

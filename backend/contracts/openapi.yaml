@@ -3671,14 +3671,13 @@ components:
       - ADMIN
       description: Системные контуры; ORGANIZATION доступен представителю только после одобрения.
     SportsRole:
-      description: COACH и REFEREE оставлены только для чтения старых данных; выбрать их нельзя.
       type: string
       enum:
       - ATHLETE
       - COACH
       - REFEREE
       - SPORTS_ORGANIZER
-      description: Спортивные роли профиля не предоставляют системных привилегий.
+      description: Спортивные роли не предоставляют системных привилегий. Выбор доступен представителю одобренной организации. COACH и REFEREE сохранены только для чтения старых данных.
     ExperienceLevel:
       type: string
       enum:
@@ -3956,6 +3955,7 @@ components:
       - createdAt
     ProfilePatch:
       type: object
+      description: Изменение sportsRoles доступно только представителю одобренной организации. Неизменённый набор ролей разрешено передавать при сохранении остальных полей.
       properties:
         nickname:
           type: string
