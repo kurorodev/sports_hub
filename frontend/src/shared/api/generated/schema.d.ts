@@ -385,7 +385,7 @@ export interface paths {
         head?: never;
         /**
          * Обновить свой профиль
-         * @description ratingPoints/rank/системные роли редактировать нельзя.
+         * @description Допустимы только ATHLETE и SPORTS_ORGANIZER. Геймификация отключена; ratingPoints/rank/системные роли редактировать нельзя.
          */
         patch: operations["patchMeProfile"];
         trace?: never;
@@ -414,7 +414,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Рейтинг и ранг пользователя */
+        /**
+         * Устаревший рейтинг (геймификация отключена, нейтральные значения)
+         * @deprecated
+         */
         get: operations["getUsersUseridRating"];
         put?: never;
         post?: never;
@@ -431,7 +434,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** История начислений */
+        /**
+         * Устаревшая история начислений (геймификация отключена, пустой список)
+         * @deprecated
+         */
         get: operations["getUsersUseridRatingHistory"];
         put?: never;
         post?: never;
@@ -944,8 +950,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Назначить судью соревнования
-         * @description Назначает только автор соревнования; судья должен иметь спортивную роль REFEREE.
+         * Назначение судьи отключено (410)
+         * @deprecated
+         * @description Судейство отменено. Аутентифицированный запрос возвращает 410 без изменений данных.
          */
         post: operations["postCompetitionsEventidReferees"];
         delete?: never;
@@ -964,8 +971,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Подтвердить фактическое участие в соревновании
-         * @description Только после endsAt у события COMPETITION. Автор или назначенный судья, подтвержденная запись CONFIRMED. Повторный запрос безопасен: тот же ledger, повторных баллов нет.
+         * Подтверждение участия для рейтинга отключено (410)
+         * @deprecated
+         * @description Геймификация отменена. Аутентифицированный запрос возвращает 410 без начислений и изменения участия.
          */
         post: operations["postCompetitionsEventidParticipationsRegistrationidVerify"];
         delete?: never;
@@ -1252,6 +1260,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Активные сторис для всех вошедших пользователей; срок строго 24 часа. */
+        get: operations["listStories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Опубликовать сторис (только ADMIN); expiresAt задаёт сервер: createdAt + 24 часа. */
+        post: operations["createStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/stories/{storyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Удалить сторис раньше срока (только ADMIN). */
+        delete: operations["deleteStory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{storyId}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отметить просмотр для текущего пользователя; первый просмотр сохраняется. */
+        post: operations["viewStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{storyId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        /** Изображение активной сторис; удалённое или просроченное недоступно. */
+        get: operations["getStoryImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1399,7 +1498,7 @@ export interface components {
          */
         SystemRole: "USER" | "ORGANIZATION" | "ADMIN";
         /**
-         * @description Спортивные роли профиля не предоставляют системных привилегий.
+         * @description COACH и REFEREE оставлены только для чтения старых данных; выбрать их нельзя. Спортивные роли профиля не предоставляют системных привилегий.
          * @enum {string}
          */
         SportsRole: "ATHLETE" | "COACH" | "REFEREE" | "SPORTS_ORGANIZER";
@@ -1454,6 +1553,10 @@ export interface components {
             avatarUrl?: string | null;
             sportsRoles: components["schemas"]["SportsRole"][];
             rank: components["schemas"]["Rank"];
+            /**
+             * @deprecated
+             * @description Устаревшее поле совместимости. Всегда 0; начисления отключены.
+             */
             ratingPoints: number;
         };
         /** @enum {string} */
@@ -1490,6 +1593,10 @@ export interface components {
             avatarUrl?: string | null;
             sportsRoles: components["schemas"]["SportsRole"][];
             rank: components["schemas"]["Rank"];
+            /**
+             * @deprecated
+             * @description Устаревшее поле совместимости. Всегда 0; начисления отключены.
+             */
             ratingPoints: number;
             firstName?: string | null;
             lastName?: string | null;
@@ -1510,7 +1617,7 @@ export interface components {
             /** Format: uri-reference */
             avatarUrl?: string | null;
             city?: string | null;
-            sportsRoles?: components["schemas"]["SportsRole"][];
+            sportsRoles?: ("ATHLETE" | "SPORTS_ORGANIZER")[];
             sportsPreferences?: components["schemas"]["SportsPreference"][];
             /** @enum {string|null} */
             preferredTime?: "MORNING" | "DAY" | "EVENING" | "ANY" | null;
@@ -2003,6 +2110,33 @@ export interface components {
         MapVenuesResponse: {
             items: components["schemas"]["VenueMapItem"][];
             truncated: boolean;
+        };
+        Story: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            text: string;
+            imageUrl: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Всегда createdAt + 24 часа.
+             */
+            expiresAt: string;
+            /** Format: date-time */
+            readAt: string | null;
+        };
+        StoryFeed: {
+            items: components["schemas"]["Story"][];
+            /** Format: date-time */
+            asOf: string;
+        };
+        StoryCreate: {
+            title: string;
+            text: string;
+            /** @description PNG/JPEG data URL: до 2 МБ, размеры до 4096×4096. Необязательно. */
+            imageData?: string | null;
         };
     };
     responses: {
@@ -4405,6 +4539,13 @@ export interface operations {
             403: components["responses"]["403"];
             404: components["responses"]["404"];
             409: components["responses"]["409"];
+            /** @description Судейство и начисление очков отключены. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["422"];
             500: components["responses"]["500"];
         };
@@ -4442,6 +4583,13 @@ export interface operations {
             403: components["responses"]["403"];
             404: components["responses"]["404"];
             409: components["responses"]["409"];
+            /** @description Судейство и начисление очков отключены. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["422"];
             500: components["responses"]["500"];
         };
@@ -5081,6 +5229,127 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    listStories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сторис от новых к старым, персональные отметки просмотра и серверное время. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryFeed"];
+                };
+            };
+            401: components["responses"]["401"];
+        };
+    };
+    createStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Опубликовано. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            400: components["responses"]["400"];
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+        };
+    };
+    deleteStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Удалено; повторное удаление не меняет результат. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+        };
+    };
+    viewStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Персональный readAt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+        };
+    };
+    getStoryImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Проверенное изображение. Cache-Control: no-store. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                };
+            };
+            401: components["responses"]["401"];
+            404: components["responses"]["404"];
         };
     };
 }

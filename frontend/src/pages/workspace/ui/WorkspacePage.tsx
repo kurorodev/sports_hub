@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { LockKeyhole } from "lucide-react";
 import { sessionQuery } from "../../../entities/session";
 import { ErrorState } from "../../../shared/ui/Feedback";
+import { Stories } from "../../../features/stories";
 
 export function WorkspacePage() {
   useLocale();
@@ -59,7 +60,8 @@ export function WorkspacePage() {
           aria-current={
             section !== "events" &&
             section !== "comments" &&
-            section !== "sports"
+            section !== "sports" &&
+            section !== "stories"
               ? "page"
               : undefined
           }
@@ -84,8 +86,16 @@ export function WorkspacePage() {
         >
           {tr("Виды спорта")}
         </Link>
+        <Link
+          to="/admin?section=stories"
+          aria-current={section === "stories" ? "page" : undefined}
+        >
+          {tr("Сторис")}
+        </Link>
       </nav>
-      {section === "sports" ? (
+      {section === "stories" ? (
+        <Stories management />
+      ) : section === "sports" ? (
         <AdminSports />
       ) : section === "events" ? (
         <AdminEvents viewerId={query.data.user.id} />

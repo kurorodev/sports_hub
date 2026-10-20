@@ -2,6 +2,7 @@ import { resetMockNotifications } from "../mocks/notifications";
 import { resetMockSupport } from "../mocks/support";
 import { resetMockProfiles } from "../mocks/profiles";
 import { resetMockQuestionnaires } from "../mocks/questionnaire";
+import { resetMockStories } from "../mocks/stories";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
@@ -17,6 +18,7 @@ import { resetMockMaps } from "../mocks/maps";
 export const server = setupServer(...handlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
+  resetMockStories();
   resetMockQuestionnaires();
   resetMockSupport();
   cleanup();

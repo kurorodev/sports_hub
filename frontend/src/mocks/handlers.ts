@@ -41,6 +41,7 @@ import { mapHandlers } from "./maps";
 import { supportHandlers } from "./support";
 import { matchesEventSearch } from "./event-search";
 import { questionnaireHandlers } from "./questionnaire";
+import { storyHandlers } from "./stories";
 
 function json(body: unknown, init?: ResponseInit) {
   if (body && typeof body === "object" && "code" in body)
@@ -95,6 +96,7 @@ const denyAdmin = () =>
       )
     : undefined;
 export const handlers = [
+  ...storyHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...questionnaireHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...sportHandlers(api, () => makeSession(savedAccount() ?? ""), getSports),
   ...[

@@ -50,3 +50,6 @@ export type AuthRegistrationRequest =
   components["schemas"]["AuthRegistrationRequest"];
 export type AuthLoginRequest = components["schemas"]["AuthLoginRequest"];
 export type Mention = components["schemas"]["Mention"];
+export type Story = Schemas["Story"];
+export type StoryFeed = Schemas["StoryFeed"];
+export type StoryCreate = Schemas["StoryCreate"];

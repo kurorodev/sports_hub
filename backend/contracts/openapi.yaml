@@ -28,6 +28,7 @@ tags:
 - name: Map
 - name: Notifications
 - name: Support
+- name: Stories
 security:
 - cookieAuth: []
 paths:
@@ -3135,6 +3136,133 @@ paths:
             image/jpeg:
               schema: {type: string, format: binary}
         '404': {description: Фото не задано.}
+  /stories:
+    get:
+      tags:
+        - Stories
+      operationId: listStories
+      summary: Активные сторис для всех вошедших пользователей; срок строго 24 часа.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Сторис от новых к старым, персональные отметки просмотра и серверное время.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryFeed'
+        '401':
+          $ref: '#/components/responses/401'
+  /admin/stories:
+    post:
+      tags:
+        - Stories
+      operationId: createStory
+      summary: 'Опубликовать сторис (только ADMIN); expiresAt задаёт сервер: createdAt + 24 часа.'
+      security:
+        - cookieAuth: []
+      responses:
+        '201':
+          description: Опубликовано.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryCreate'
+  /admin/stories/{storyId}:
+    parameters:
+      - name: storyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      tags:
+        - Stories
+      operationId: deleteStory
+      summary: Удалить сторис раньше срока (только ADMIN).
+      security:
+        - cookieAuth: []
+      responses:
+        '204':
+          description: Удалено; повторное удаление не меняет результат.
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /stories/{storyId}/view:
+    parameters:
+      - name: storyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags:
+        - Stories
+      operationId: viewStory
+      summary: Отметить просмотр для текущего пользователя; первый просмотр сохраняется.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Персональный readAt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /stories/{storyId}/image:
+    parameters:
+      - name: storyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Stories
+      operationId: getStoryImage
+      summary: Изображение активной сторис; удалённое или просроченное недоступно.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: 'Проверенное изображение. Cache-Control: no-store.'
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
 components:
   securitySchemes:
     cookieAuth:
@@ -3671,14 +3799,13 @@ components:
       - ADMIN
       description: Системные контуры; ORGANIZATION доступен представителю только после одобрения.
     SportsRole:
-      description: COACH и REFEREE оставлены только для чтения старых данных; выбрать их нельзя.
       type: string
       enum:
       - ATHLETE
       - COACH
       - REFEREE
       - SPORTS_ORGANIZER
-      description: Спортивные роли профиля не предоставляют системных привилегий.
+      description: COACH и REFEREE оставлены только для чтения старых данных; выбрать их нельзя. Спортивные роли профиля не предоставляют системных привилегий.
     ExperienceLevel:
       type: string
       enum:
@@ -5362,3 +5489,70 @@ components:
       required:
       - items
       - truncated
+
+    Story:
+      type: object
+      required:
+        - id
+        - title
+        - text
+        - imageUrl
+        - createdAt
+        - expiresAt
+        - readAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 80
+        text:
+          type: string
+          maxLength: 1000
+        imageUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          description: Всегда createdAt + 24 часа.
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+    StoryFeed:
+      type: object
+      required:
+        - items
+        - asOf
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Story'
+        asOf:
+          type: string
+          format: date-time
+    StoryCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - text
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 80
+        text:
+          type: string
+          maxLength: 1000
+        imageData:
+          type: string
+          nullable: true
+          maxLength: 2800000
+          description: 'PNG/JPEG data URL: до 2 МБ, размеры до 4096×4096. Необязательно.'
