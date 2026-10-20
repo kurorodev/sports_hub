@@ -1,3 +1,4 @@
+import { sportOverrides, resetMockSports } from "./sports";
 import registry from "./generated/sports-registry.json";
 import { savedProfile, refreshMockUser, mockAvatar } from "./profiles";
 import { avatarSource } from "../shared/model/avatars";
@@ -166,7 +167,17 @@ export function makeSession(accountId: string): Session | undefined {
   return {
     user: {
       ...profile,
-      avatarUrl: mockAvatar(profile, manageable.length ? "organizer" : "user"),
+      ...(account.systemRoles.includes("ADMIN")
+        ? { sportsRoles: [], sportsPreferences: [], preferredTime: null }
+        : {}),
+      avatarUrl: mockAvatar(
+        profile,
+        account.systemRoles.includes("ADMIN")
+          ? "admin"
+          : manageable.length
+            ? "organizer"
+            : "user",
+      ),
     },
     systemRoles: [
       ...account.systemRoles.filter((role) => role !== "ORGANIZATION"),
@@ -586,12 +597,12 @@ const catalog: Sport[] = [
   },
 ];
 export function getSports(): Sport[] {
-  return catalog;
+  return sportOverrides(catalog);
 }
 function canonicalSport(sport: Sport): Sport {
   const name = sport.name === "Бег" ? "Легкая атлетика" : sport.name;
   return (
-    catalog.find(
+    sportOverrides(catalog, true).find(
       (item) =>
         item.id === sport.id || normalize(item.name) === normalize(name),
     ) ?? catalog[catalog.length - 1]
@@ -623,6 +634,7 @@ export function saveEvent(
   return getEvents(ownerId).find((event) => event.id === id);
 }
 export function resetMockDatabase() {
+  resetMockSports();
   memoryStore = { version: 2, events: [] };
   memoryRegistrations = [];
   memorySignups = [];

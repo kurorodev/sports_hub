@@ -63,14 +63,15 @@ export function OrganizationPage() {
       </Link>
       <h1>{organization.name}</h1>
       <OrganizationCard organization={organization} showTitle={false}>
-        {session.data?.manageableOrganizationIds.includes(organization.id) && (
-          <Link
-            className="button primary"
-            to={`/events/new?organizationId=${organization.id}`}
-          >
-            Создать встречу от организации
-          </Link>
-        )}
+        {!session.data?.systemRoles.includes("ADMIN") &&
+          session.data?.manageableOrganizationIds.includes(organization.id) && (
+            <Link
+              className="button primary"
+              to={`/events/new?organizationId=${organization.id}`}
+            >
+              Создать встречу от организации
+            </Link>
+          )}
       </OrganizationCard>
       <h2 className="organization-events-title">Встречи организации</h2>
       {events.isPending ? (

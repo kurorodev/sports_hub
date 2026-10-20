@@ -37,6 +37,12 @@ export function JoinAction({
         </button>
       </div>
     );
+  if (session.data?.systemRoles.includes("ADMIN"))
+    return (
+      <p className="join-note">
+        Вы просматриваете мероприятие как администратор.
+      </p>
+    );
   if (event.organizer)
     return (
       <div className="join-feedback">

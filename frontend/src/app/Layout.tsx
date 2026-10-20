@@ -30,7 +30,9 @@ export function Layout() {
             <NavLink to="/" end>
               Активности
             </NavLink>
-            <NavLink to="/events/new">Создать</NavLink>
+            {!session.data?.systemRoles.includes("ADMIN") && (
+              <NavLink to="/events/new">Создать</NavLink>
+            )}
             <NavLink to="/map">Карта</NavLink>
             <NavLink to="/organizations">Организации</NavLink>
             {session.data?.systemRoles.includes("ADMIN") && (
@@ -102,7 +104,7 @@ export function Layout() {
           <span>Спортивные встречи · 2026</span>
         </div>
       </footer>
-      {session.data && !session.isError && (
+      {session.data && !session.isError && !session.data.systemRoles.includes("ADMIN") && (
         <QuestionnaireOnboarding
           key={session.data.user.id}
           userId={session.data.user.id}

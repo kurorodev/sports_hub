@@ -14,10 +14,10 @@ public class EventService {
     private final Store db;private final Access access;private final Views view;private final PatchValidator validator;private final Clock clock;private final SportsCatalog catalog;private final NotificationService notifications;
     public EventService(Store db,Access access,Views view,PatchValidator validator,Clock clock,SportsCatalog catalog,NotificationService notifications) { this.db=db;this.access=access;this.view=view;this.validator=validator;this.clock=clock;this.catalog=catalog;this.notifications=notifications; }
     public List<Api.Sport> sports(String q) {
-        return db.list(SportEntity.class,"e.canonicalId is null and lower(e.name) like :q",Map.of("q",like(q)),"e.isCustom asc,e.name asc,e.id asc",0,Integer.MAX_VALUE).stream().map(view::sport).toList();
+        return db.list(SportEntity.class,"e.canonicalId is null and e.archived=false and lower(e.name) like :q",Map.of("q",like(q)),"e.isCustom asc,e.name asc,e.id asc",0,Integer.MAX_VALUE).stream().map(view::sport).toList();
     }
     @Transactional public Api.Event create(Api.EventCreate r) {
-        var actor=access.user();
+        var actor=access.participant();
         var e=new EventEntity();
         if(r.organizer().type()==Api.OrganizerType.USER) {
             if(!actor.id.equals(r.organizer().id()))throw Problem.forbidden();

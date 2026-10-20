@@ -35,22 +35,22 @@ public class Views {
     }
     private Api.PublicUser user(UserEntity u,boolean organizer) {
         int points=points(u.id);
-        return new Api.PublicUser(u.id,u.nickname,u.displayName,AvatarImages.forUser(u,organizer),u.sportsRoles.stream().sorted().toList(),rank(points),points);
+        return new Api.PublicUser(u.id,u.nickname,u.displayName,AvatarImages.forUser(u,organizer),u.admin?List.of():u.sportsRoles.stream().sorted().toList(),rank(points),points);
     }
     public Api.UserProfile profile(UserEntity u) {
         int points=points(u.id);
         boolean organizer=db.count(OrganizationEntity.class,"e.createdBy=:user and e.status=:status",Map.of("user",u.id,"status",Api.OrganizationStatus.APPROVED))>0;
         return dto(Api.UserProfile.class,fields("id",u.id,"nickname",u.nickname,"displayName",u.displayName,"avatarUrl",AvatarImages.forUser(u,organizer),
-            "sportsRoles",u.sportsRoles.stream().sorted().toList(),"rank",rank(points),"ratingPoints",points,
-            "firstName",u.firstName,"lastName",u.lastName,"bio",u.bio,"city",u.city,"preferredTime",u.preferredTime,
-            "sportsPreferences",u.sportsPreferences.stream().map(p -> new Api.SportsPreference(p.sportId,p.level)).toList(),"createdAt",u.createdAt));
+            "sportsRoles",u.admin?List.of():u.sportsRoles.stream().sorted().toList(),"rank",rank(points),"ratingPoints",points,
+            "firstName",u.firstName,"lastName",u.lastName,"bio",u.bio,"city",u.city,"preferredTime",u.admin?null:u.preferredTime,
+            "sportsPreferences",u.admin?List.of():u.sportsPreferences.stream().map(p -> new Api.SportsPreference(p.sportId,p.level)).toList(),"createdAt",u.createdAt));
     }
     public Api.Rating rating(UserEntity u) {
         int points=points(u.id);
         int count=(int)db.count(ParticipationEntity.class,"e.userId=:user and e.status='VERIFIED'",Map.of("user",u.id));
         return new Api.Rating(u.id,points,rank(points),count,"v1");
     }
-    public Api.Sport sport(SportEntity s) { return new Api.Sport(s.id,s.name,s.isCustom,s.registryCode); }
+    public Api.Sport sport(SportEntity s) { return new Api.Sport(s.id,s.name,s.isCustom,s.registryCode,s.imageData==null?null:"/api/v1/sports/"+s.id+"/image?v="+s.updatedAt.toEpochMilli()); }
     public Api.Organization organization(OrganizationEntity o) {
         return dto(Api.Organization.class,fields("id",o.id,"name",o.name,"description",o.description,"avatarUrl",o.avatarUrl,
             "sports",o.sports.stream().sorted().map(id -> sport(db.get(SportEntity.class,id))).toList(),"status",o.status,

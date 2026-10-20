@@ -1,3 +1,4 @@
+import { AdminSports } from "../../../features/manage-sports";
 import { AdminEvents, AdminComments } from "../../../features/moderate-content";
 import { useSearchParams } from "react-router-dom";
 import { AdminOrganizations } from "../../../features/review-organizations";
@@ -45,15 +46,19 @@ export function WorkspacePage() {
       </section>
     );
   return (
-    <section className="workspace-page">
-      <span className="eyebrow muted">Демо-аккаунт</span>
+    <section className="workspace-page admin-workspace">
+      <span className="eyebrow muted">Управление платформой</span>
       <h1>Кабинет администратора</h1>
       <nav className="admin-sections" aria-label="Разделы модерации">
         <Link to="/support?view=queue">Поддержка</Link>
         <Link
           to="/admin"
           aria-current={
-            section !== "events" && section !== "comments" ? "page" : undefined
+            section !== "events" &&
+            section !== "comments" &&
+            section !== "sports"
+              ? "page"
+              : undefined
           }
         >
           Организации
@@ -70,8 +75,16 @@ export function WorkspacePage() {
         >
           Комментарии
         </Link>
+        <Link
+          to="/admin?section=sports"
+          aria-current={section === "sports" ? "page" : undefined}
+        >
+          Виды спорта
+        </Link>
       </nav>
-      {section === "events" ? (
+      {section === "sports" ? (
+        <AdminSports />
+      ) : section === "events" ? (
         <AdminEvents viewerId={query.data.user.id} />
       ) : section === "comments" ? (
         <AdminComments viewerId={query.data.user.id} />

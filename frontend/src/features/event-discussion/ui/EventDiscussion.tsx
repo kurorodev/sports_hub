@@ -185,6 +185,10 @@ export function EventDiscussion({
             Повторить проверку аккаунта
           </button>
         </div>
+      ) : session.data?.systemRoles.includes("ADMIN") ? (
+        <p className="field-hint">
+          Модерация комментариев доступна в кабинете администратора.
+        </p>
       ) : viewerId ? (
         <PublishCommentForm
           key={`${eventId}:${viewerId}`}

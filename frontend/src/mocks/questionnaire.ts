@@ -60,6 +60,7 @@ export function questionnaireHandlers(
     http.post(`${api}/me/questionnaire`, async ({ request }) => {
       const user = session();
       if (!user) return failure(401, "UNAUTHENTICATED", "Войдите в аккаунт");
+      if (user.systemRoles.includes("ADMIN")) return failure(403, "FORBIDDEN", "Действие недоступно администратору");
       if (request.headers.get("X-CSRF-Token") !== user.csrfToken)
         return failure(403, "FORBIDDEN", "Неверный CSRF токен");
       const parsed = questionnaireAnswersSchema.safeParse(await request.json());

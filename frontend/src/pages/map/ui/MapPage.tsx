@@ -41,6 +41,7 @@ import { MapSearch } from "./MapSearch";
 
 export function MapPage() {
   const session = useQuery(sessionQuery);
+  const isAdmin = session.data?.systemRoles.includes("ADMIN");
   const sports = useQuery(sportsQuery);
   const [bbox, setBbox] = useState("");
   const [params, setParams] = useMapParams();
@@ -220,17 +221,19 @@ export function MapPage() {
           </h1>
           <p>Найдите компанию или площадку для своей игры.</p>
         </div>
-        <button
-          className="button primary"
-          type="button"
-          onClick={() => {
-            setCreating(true);
-            setReporting(null);
-            setNotice("");
-          }}
-        >
-          Добавить площадку
-        </button>
+        {!isAdmin && (
+          <button
+            className="button primary"
+            type="button"
+            onClick={() => {
+              setCreating(true);
+              setReporting(null);
+              setNotice("");
+            }}
+          >
+            Добавить площадку
+          </button>
+        )}
       </div>
       <ActivityViewSwitch view="map" params={params} />
       {unsupported.length > 0 && (
@@ -259,7 +262,7 @@ export function MapPage() {
               { id: "", name: "Все виды спорта" },
               ...(sports.data ?? []).map((sport) => ({
                 ...sport,
-                imageUrl: sportIcon(sport.name),
+                imageUrl: sport.imageUrl || sportIcon(sport.name),
               })),
             ]}
             onChange={(value) => setParam("sportId", value)}
@@ -450,12 +453,14 @@ export function MapPage() {
                     )}
                   </div>
                 ) : (
-                  <button
-                    className="button primary"
-                    onClick={() => report(selectedMapVenue.id)}
-                  >
-                    Оценить загруженность
-                  </button>
+                  !isAdmin && (
+                    <button
+                      className="button primary"
+                      onClick={() => report(selectedMapVenue.id)}
+                    >
+                      Оценить загруженность
+                    </button>
+                  )
                 )}
               </>
             ) : events.isFetching || venues.isFetching || !bbox ? (

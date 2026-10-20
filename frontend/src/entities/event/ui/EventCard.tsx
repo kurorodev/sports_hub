@@ -31,7 +31,7 @@ export function EventCard({
     <article className="event-card">
       <div className="event-art">
         <img
-          src={sportImage(event.sport.name)}
+          src={event.sport.imageUrl || sportImage(event.sport.name)}
           alt=""
           loading="lazy"
           width="600"

@@ -40,13 +40,15 @@ export async function findOrganizationsForReview(page: Page, q: string) {
     .getByLabel("Название или описание организации", { exact: true })
     .fill(q);
   await page
-    .getByRole("button", { name: "Найти организации", exact: true })
+    .getByRole("button", { name: "Применить фильтры", exact: true })
     .click();
 }
 export async function publishOrganizationEvent(page: Page, title: string) {
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
   await page.getByLabel("Вид спорта", { exact: true }).click();
-  await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
+  await page
+    .getByRole("option", { name: "Легкая атлетика", exact: true })
+    .click();
   await page
     .getByLabel("О встрече", { exact: true })
     .fill(

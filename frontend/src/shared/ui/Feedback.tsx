@@ -24,7 +24,13 @@ export function ErrorState({
     </div>
   );
 }
-export function EmptyState({ reset }: { reset: () => void }) {
+export function EmptyState({
+  reset,
+  canCreate = true,
+}: {
+  reset: () => void;
+  canCreate?: boolean;
+}) {
   return (
     <div className="feedback">
       <SearchX size={36} />
@@ -35,9 +41,11 @@ export function EmptyState({ reset }: { reset: () => void }) {
       <button className="button primary" onClick={reset}>
         Сбросить фильтры
       </button>
-      <Link className="button secondary" to="/events/new">
-        Создать свою встречу
-      </Link>
+      {canCreate && (
+        <Link className="button secondary" to="/events/new">
+          Создать свою встречу
+        </Link>
+      )}
     </div>
   );
 }

@@ -377,10 +377,11 @@ describe("moderation UI", () => {
     expect(
       await screen.findByText(/снято с публикации. Решение сохранено/),
     ).toBeVisible();
-    await user.selectOptions(
-      screen.getByLabelText("Статус мероприятий"),
-      "UNPUBLISHED",
+    await user.click(screen.getByLabelText("Статус мероприятий"));
+    await user.click(
+      screen.getByRole("option", { name: "Снятые с публикации" }),
     );
+    await user.click(screen.getByRole("button", { name: "Применить фильтры" }));
     expect(
       await screen.findByRole("article", { name: `Мероприятие: ${e.title}` }),
     ).not.toHaveTextContent("Неподходящее описание");

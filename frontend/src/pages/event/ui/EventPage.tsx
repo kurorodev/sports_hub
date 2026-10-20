@@ -128,7 +128,7 @@ export function EventPage() {
         <div>
           <img
             className="detail-art"
-            src={sportImage(event.sport.name)}
+            src={event.sport.imageUrl || sportImage(event.sport.name)}
             alt={`Спортивная иллюстрация: ${event.sport.name}`}
             width="600"
             height="360"

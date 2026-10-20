@@ -19,7 +19,7 @@ public class RegistrationService {
     private boolean full(EventEntity e) { return e.maxParticipants!=null && view.registrations(e.id,Api.RegistrationStatus.CONFIRMED)>=e.maxParticipants; }
     private void capacity(EventEntity e) { if(full(e))throw Problem.conflict(Api.ErrorCode.EVENT_FULL,"Свободных мест нет"); }
     @Transactional public Api.Registration join(UUID eventId,Api.RegistrationCreate request,boolean waitlist) {
-        var u=access.user();var e=db.lock(EventEntity.class,eventId);available(e);
+        var u=access.participant();var e=db.lock(EventEntity.class,eventId);available(e);
         var existing=db.first(RegistrationEntity.class,"e.eventId=:event and e.userId=:user",Map.of("event",eventId,"user",u.id));
         if(existing.isPresent() && existing.get().status!=Api.RegistrationStatus.CANCELLED)
             throw Problem.conflict(Api.ErrorCode.ALREADY_REGISTERED,"Вы уже отправили заявку на это событие");
@@ -92,7 +92,7 @@ public class RegistrationService {
     }
     public Api.TeamStatus team(UUID eventId) {
         var e=db.get(EventEntity.class,eventId);access.eventVisible(e);boolean available=e.status==Api.EventStatus.PUBLISHED && e.startsAt.isAfter(clock.instant());
-        var viewer=view.viewerStatus(e.id);boolean canJoin=viewer==null || viewer==Api.RegistrationStatus.CANCELLED;
+        var viewer=view.viewerStatus(e.id);boolean canJoin=!access.admin() && (viewer==null || viewer==Api.RegistrationStatus.CANCELLED);
         return new Api.TeamStatus(e.id,e.maxParticipants,(int)view.registrations(e.id,Api.RegistrationStatus.CONFIRMED),(int)view.registrations(e.id,Api.RegistrationStatus.PENDING),
             (int)view.registrations(e.id,Api.RegistrationStatus.WAITLISTED),view.spots(e),viewer==null?null:viewer.name(),available && canJoin && (e.joinMode==Api.JoinMode.APPROVAL || !full(e)),available && canJoin && e.joinMode==Api.JoinMode.OPEN && full(e));
     }

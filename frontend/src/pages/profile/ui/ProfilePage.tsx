@@ -52,7 +52,8 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
     enabled: !own && isUuid(id),
   });
   const query = own ? ownQuery : publicQuery;
-  const sports = useQuery(sportsQuery);
+  const isOwnAdmin = own && session.data?.systemRoles.includes("ADMIN");
+  const sports = useQuery({ ...sportsQuery, enabled: !isOwnAdmin });
   const editing = own && params.get("edit") === "1";
   function closeEditor() {
     setParams((current) => {
@@ -173,13 +174,14 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
         />
       ) : (
         <>
-          {sports.isError && (
+          {!isOwnAdmin && sports.isError && (
             <ErrorState
               error={sports.error}
               retry={() => void sports.refetch()}
             />
           )}
           <ProfileSummary
+            administrative={own && session.data?.systemRoles.includes("ADMIN")}
             profile={profile}
             sports={sports.data ?? []}
             sportsLoading={sports.isPending}
@@ -191,7 +193,7 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
               </Link>
             </p>
           )}
-          {own && (
+          {own && !isOwnAdmin && (
             <ProfileRecommendations key={profile.id} userId={profile.id} />
           )}
         </>

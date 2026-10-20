@@ -48,7 +48,7 @@ public class SportsMapService {
         access.requireAdmin();return create(input,true);
     }
     private Api.VenueMapItem create(Api.VenueCreate input,boolean reviewed) {
-        var user=db.lock(UserEntity.class,access.user().id);
+        var user=db.lock(UserEntity.class,(reviewed?access.user():access.participant()).id);
         Instant now=clock.instant();
         if(!reviewed && db.count(VenueEntity.class,"e.createdBy=:user and e.createdAt>:since",Map.of("user",user.id,"since",now.minus(Duration.ofHours(1))))>=3)
             throw new Problem(429,Api.ErrorCode.RATE_LIMITED,"Можно добавить не более 3 площадок за час",3600);
@@ -67,7 +67,7 @@ public class SportsMapService {
         return items(List.of(v)).getFirst();
     }
     public Api.VenueMapItem report(UUID venueId,Api.OccupancyReportCreate input) {
-        UUID user=access.user().id;var venue=db.lock(VenueEntity.class,venueId);Instant now=clock.instant();
+        UUID user=access.participant().id;var venue=db.lock(VenueEntity.class,venueId);Instant now=clock.instant();
         if(db.count(VenueOccupancyReportEntity.class,"e.venueId=:venue and e.userId=:user and e.createdAt>:since",
             Map.of("venue",venueId,"user",user,"since",now.minus(Duration.ofMinutes(10))))>0)
             throw new Problem(429,Api.ErrorCode.RATE_LIMITED,"Повторную оценку можно оставить через 10 минут",600);

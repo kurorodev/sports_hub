@@ -1,3 +1,4 @@
+import { sportHandlers } from "./sports";
 import { withinDistance, distanceParamError } from "../shared/lib/distance";
 import {
   notificationHandlers,
@@ -86,8 +87,40 @@ const moderationSchema = z
   })
   .strict();
 
+const denyAdmin = () =>
+  makeSession(savedAccount() ?? "")?.systemRoles.includes("ADMIN")
+    ? json(
+        { code: "FORBIDDEN", message: "Действие недоступно администратору" },
+        { status: 403 },
+      )
+    : undefined;
 export const handlers = [
   ...questionnaireHandlers(api, () => makeSession(savedAccount() ?? "")),
+  ...sportHandlers(api, () => makeSession(savedAccount() ?? ""), getSports),
+  ...[
+    "/events",
+    "/organizations",
+    "/events/:eventId/registrations",
+    "/events/:eventId/waitlist",
+    "/events/:eventId/comments",
+    "/map/venues",
+    "/map/venues/:venueId/reports",
+  ].map((path) => http.post(`${api}${path}`, denyAdmin)),
+  http.patch(`${api}/me/profile`, async ({ request }) => {
+    if (!makeSession(savedAccount() ?? "")?.systemRoles.includes("ADMIN"))
+      return;
+    const body = (await request.clone().json()) as {
+      sportsRoles?: unknown[];
+      sportsPreferences?: unknown[];
+      preferredTime?: string | null;
+    };
+    if (
+      body.sportsRoles?.length ||
+      body.sportsPreferences?.length ||
+      body.preferredTime
+    )
+      return denyAdmin();
+  }),
   ...supportHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...notificationHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...mapHandlers(api, () => makeSession(savedAccount() ?? "")),
@@ -1058,7 +1091,9 @@ export const handlers = [
     );
     if (!event || !eventVisible(event, session)) return notFound();
     const available =
-      event.status === "PUBLISHED" && Date.parse(event.startsAt) > Date.now();
+      !session?.systemRoles.includes("ADMIN") &&
+      event.status === "PUBLISHED" &&
+      Date.parse(event.startsAt) > Date.now();
     const canJoin =
       event.viewerRegistrationStatus == null ||
       event.viewerRegistrationStatus === "CANCELLED";

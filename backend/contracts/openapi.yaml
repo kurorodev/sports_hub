@@ -3039,6 +3039,97 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OccupancyReportCreate'
+  /admin/sports:
+    post:
+      tags: [Admin]
+      summary: Создать категорию вида спорта (только ADMIN).
+      operationId: createSportCategory
+      security: [{cookieAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SportCategoryCreate'}
+      responses:
+        '201':
+          description: Категория создана.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Sport'}
+        '400': {description: Некорректное название или изображение.}
+        '403': {description: Требуется ADMIN.}
+        '409': {description: Название уже существует.}
+  /admin/sports/{sportId}:
+    parameters:
+    - {name: sportId, in: path, required: true, schema: {type: string, format: uuid}}
+    patch:
+      tags: [Admin]
+      summary: Переименовать категорию и заменить фото (только ADMIN).
+      operationId: updateSportCategory
+      security: [{cookieAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SportCategoryPatch'}
+      responses:
+        '200':
+          description: Категория обновлена; изменения сохраняются вместе.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Sport'}
+        '400': {description: Некорректные данные или переименование категории Другое.}
+        '403': {description: Требуется ADMIN.}
+        '404': {description: Категория не найдена или удалена.}
+        '409': {description: Название уже существует, включая удалённые категории.}
+    delete:
+      tags: [Admin]
+      summary: Удалить категорию из выбора, сохранив существующие связи (только ADMIN).
+      operationId: deleteSportCategory
+      security: [{cookieAuth: []}]
+      responses:
+        '204': {description: Категория удалена из выбора. Повторное удаление допустимо.}
+        '400': {description: Общую категорию Другое нельзя удалить.}
+        '403': {description: Требуется ADMIN.}
+        '404': {description: Категория не найдена.}
+  /admin/sports/{sportId}/image:
+    put:
+      tags: [Admin]
+      summary: Загрузить, заменить или убрать фото категории (только ADMIN).
+      operationId: setSportCategoryImage
+      security: [{cookieAuth: []}]
+      parameters:
+      - {name: sportId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SportCategoryImage'}
+      responses:
+        '200':
+          description: Категория обновлена.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Sport'}
+        '400': {description: Некорректное изображение.}
+        '403': {description: Требуется ADMIN.}
+        '404': {description: Категория не найдена.}
+  /sports/{sportId}/image:
+    get:
+      tags: [Sports]
+      summary: Публичное изображение категории.
+      operationId: getSportCategoryImage
+      parameters:
+      - {name: sportId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Проверенное изображение PNG или JPEG, до 2 МБ.
+          content:
+            image/png:
+              schema: {type: string, format: binary}
+            image/jpeg:
+              schema: {type: string, format: binary}
+        '404': {description: Фото не задано.}
 components:
   securitySchemes:
     cookieAuth:
@@ -3985,6 +4076,10 @@ components:
     Sport:
       type: object
       properties:
+        imageUrl:
+          type: string
+          nullable: true
+          description: Относительный URL фото категории; null использует стандартную иллюстрацию.
         id:
           type: string
           format: uuid
@@ -4001,6 +4096,38 @@ components:
       - id
       - name
       - isCustom
+    SportCategoryCreate:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 2, maxLength: 80}
+        imageData:
+          type: string
+          nullable: true
+          maxLength: 2800000
+          description: Data URL PNG/JPEG до 2 МБ и 4096×4096 пикселей.
+    SportCategoryPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name: {type: string, minLength: 2, maxLength: 80}
+        imageData:
+          type: string
+          nullable: true
+          maxLength: 2800000
+          description: Data URL PNG/JPEG; null возвращает стандартное фото. Пропуск сохраняет текущее фото.
+    SportCategoryImage:
+      type: object
+      additionalProperties: false
+      required: [imageData]
+      properties:
+        imageData:
+          type: string
+          nullable: true
+          maxLength: 2800000
+          description: Data URL PNG/JPEG; null удаляет фото.
     SportInput:
       description: 'Ровно один вариант: sportId из справочника ИЛИ customName активности категории Другое. customName не создаёт общую категорию.'
       oneOf:

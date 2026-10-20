@@ -26,7 +26,7 @@ public class QuestionnaireService {
     public Api.Questionnaire save(Api.QuestionnaireAnswers answers) {
         try { ZoneId.of(answers.timeZone()); }
         catch (DateTimeException ex) { throw Problem.invalid("Неизвестный часовой пояс"); }
-        var user=db.lock(UserEntity.class,access.user().id);
+        var user=db.lock(UserEntity.class,access.participant().id);
         var seen=new HashSet<UUID>();
         var preferences=new ArrayList<SportPreference>();
         for (var answer:answers.sportsPreferences()) {

@@ -28,6 +28,9 @@ public class ProfileService {
     @Transactional public Api.UserProfile patch(JsonNode patch) {
         validator.validate("ProfilePatch",patch);
         var u=db.lock(UserEntity.class,access.user().id);
+        if(u.admin && ((patch.has("sportsRoles") && !patch.path("sportsRoles").isEmpty()) ||
+            (patch.has("sportsPreferences") && !patch.path("sportsPreferences").isEmpty()) ||
+            (patch.hasNonNull("preferredTime") && !patch.path("preferredTime").asText().isBlank())))throw Problem.forbidden();
         if(patch.has("nickname")) {
             String nickname=patch.path("nickname").asText().strip();
             if(nickname.startsWith("@"))nickname=nickname.substring(1);

@@ -13,7 +13,7 @@ public class OrganizationService {
     private final Store db;private final Access access;private final Views view;private final SportsCatalog catalog;private final Clock clock;private final NotificationService notifications;
     public OrganizationService(Store db,Access access,Views view,Clock clock,SportsCatalog catalog,NotificationService notifications){this.db=db;this.access=access;this.view=view;this.clock=clock;this.catalog=catalog;this.notifications=notifications;}
     @Transactional public Api.Organization create(Api.OrganizationCreate r) {
-        var org=new OrganizationEntity();org.createdBy=access.user().id;org.name=r.name().strip();org.description=r.description().strip();org.avatarUrl=r.avatarUrl();safeAvatar(org.avatarUrl);
+        var org=new OrganizationEntity();org.createdBy=access.participant().id;org.name=r.name().strip();org.description=r.description().strip();org.avatarUrl=r.avatarUrl();safeAvatar(org.avatarUrl);
         if(r.sports()!=null) for(UUID sport:r.sports()){if(sport==null)throw Problem.invalid("sports не может содержать null");org.sports.add(catalog.resolve(sport).id);}
         org.createdAt=clock.instant();org.updatedAt=org.createdAt;db.add(org);return view.organization(org);
     }

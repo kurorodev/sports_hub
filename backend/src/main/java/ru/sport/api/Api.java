@@ -85,7 +85,9 @@ public final class Api {
     public record NotificationsReadRequest(@NotNull Instant through) {}
     public record Mention(UUID userId,String nickname,int start,int end) {}
     public record Session(@NotNull @Valid UserProfile user, @NotNull @Valid List<SystemRole> systemRoles, @NotNull @Valid List<UUID> manageableOrganizationIds, @NotNull String csrfToken, @NotNull Boolean demo) {}
-    public record Sport(@NotNull UUID id, @NotNull String name, @NotNull Boolean isCustom, String registryCode) {}
+    public record Sport(@NotNull UUID id, @NotNull String name, @NotNull Boolean isCustom, String registryCode, String imageUrl) {
+        public Sport(UUID id,String name,Boolean isCustom,String registryCode){this(id,name,isCustom,registryCode,null);}
+    }
     public record Location(@NotNull @NotBlank @Size(min = 1, max = 120) String city, @NotNull @NotBlank @Size(min = 1, max = 300) String address, @DecimalMin("-90") @DecimalMax("90") Double latitude, @DecimalMin("-180") @DecimalMax("180") Double longitude) {}
     public record OrganizerRef(@NotNull @Valid OrganizerType type, @NotNull UUID id) {}
     public record OrganizerSummary(@NotNull @Valid OrganizerType type, @NotNull UUID id, @NotNull String name, String avatarUrl) {}

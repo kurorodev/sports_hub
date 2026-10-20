@@ -20,7 +20,7 @@ abstract class ApiTestSupport {
         return new Actor((MockHttpSession)result.getRequest().getSession(false),json.path("csrfToken").asText(),json.path("user").path("id").asText());
     }
     MvcResult call(Actor actor,String method,String path,Object body,int expected) throws Exception {
-        var request=switch(method){case "GET"->get(api(path));case "POST"->post(api(path));case "PATCH"->patch(api(path));case "DELETE"->delete(api(path));default->throw new IllegalArgumentException();};
+        var request=switch(method){case "GET"->get(api(path));case "POST"->post(api(path));case "PATCH"->patch(api(path));case "PUT"->put(api(path));case "DELETE"->delete(api(path));default->throw new IllegalArgumentException();};
         if(actor!=null)request.session(actor.session).header("X-CSRF-Token",actor.csrf);
         if(body!=null)request.contentType("application/json").content(body instanceof String s?s:mapper.writeValueAsString(body));
         var result=mvc.perform(request).andReturn();

@@ -4,7 +4,9 @@ services:
     environment:
       SERVER_FORWARD_HEADERS_STRATEGY: framework
   web:
-    build: ../frontend
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
     environment:
       PUBLIC_SCHEME: ${PUBLIC_SCHEME:-http}
     ports:

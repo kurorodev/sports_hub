@@ -12,8 +12,10 @@ import { OrganizationApplication } from "./OrganizationApplication";
 export function OrganizationsPage() {
   const session = useQuery(sessionQuery);
   const [params, setParams] = useSearchParams();
-  const view =
-    params.get("view") === "apply"
+  const isAdmin = session.data?.systemRoles.includes("ADMIN");
+  const view = isAdmin
+    ? "all"
+    : params.get("view") === "apply"
       ? "apply"
       : params.get("view") === "mine"
         ? "mine"
@@ -45,7 +47,7 @@ export function OrganizationsPage() {
             <p>Найдите свою команду или развивайте собственный клуб.</p>
           </div>
         </div>
-        {view !== "apply" && (
+        {!isAdmin && view !== "apply" && (
           <Link className="button primary" to={destination("apply")}>
             <Plus size={18} aria-hidden="true" />
             Добавить организацию
@@ -59,12 +61,14 @@ export function OrganizationsPage() {
         >
           Все организации
         </Link>
-        <Link
-          to={destination("mine")}
-          aria-current={view !== "all" ? "page" : undefined}
-        >
-          Мои организации
-        </Link>
+        {!isAdmin && (
+          <Link
+            to={destination("mine")}
+            aria-current={view !== "all" ? "page" : undefined}
+          >
+            Мои организации
+          </Link>
+        )}
       </nav>
       {session.isError ? (
         <ErrorState

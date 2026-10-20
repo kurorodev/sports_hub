@@ -69,8 +69,9 @@ export function ProfileForm({
     control: form.control,
     name: "preferences",
   });
-  const sports = useQuery(sportsQuery);
   const session = useQuery(sessionQuery);
+  const isAdmin = session.data?.systemRoles.includes("ADMIN");
+  const sports = useQuery({ ...sportsQuery, enabled: !isAdmin });
   const avatarUrl = useWatch({ control: form.control, name: "avatarUrl" });
   const avatarTone = session.data?.systemRoles.includes("ADMIN")
     ? "admin"
@@ -176,12 +177,20 @@ export function ProfileForm({
         <FormField
           id="profile-about"
           label="О себе"
-          hint="До 1000 символов. Например, какой спорт любите и какую компанию ищете."
+          hint={
+            isAdmin
+              ? "До 1000 символов. Кратко расскажите о себе."
+              : "До 1000 символов. Например, какой спорт любите и какую компанию ищете."
+          }
           error={errors.about?.message}
         >
           <Textarea
             id="profile-about"
-            placeholder="Расскажите, каким спортом занимаетесь и с кем хотите тренироваться"
+            placeholder={
+              isAdmin
+                ? "Краткая информация о себе"
+                : "Расскажите, каким спортом занимаетесь и с кем хотите тренироваться"
+            }
             {...form.register("about")}
             rows={5}
             maxLength={1000}
@@ -191,98 +200,108 @@ export function ProfileForm({
             }
           />
         </FormField>
-        <FormField id="profile-time" label="Когда удобно заниматься">
-          <Select id="profile-time" {...form.register("preferredTime")}>
-            <option value="">Не указано</option>
-            {preferredTimes.map((value) => (
-              <option value={value} key={value}>
-                {timeLabels[value]}
-              </option>
-            ))}
-          </Select>
-        </FormField>
+        {!isAdmin && (
+          <FormField id="profile-time" label="Когда удобно заниматься">
+            <Select id="profile-time" {...form.register("preferredTime")}>
+              <option value="">Не указано</option>
+              {preferredTimes.map((value) => (
+                <option value={value} key={value}>
+                  {timeLabels[value]}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        )}
       </fieldset>
-      <fieldset disabled={mutation.isPending}>
-        <legend>Спортивные роли</legend>
-        <p className="field-hint">
-          Роли описывают ваш опыт. Они не дают административных прав или доступа
-          к чужим соревнованиям.
-        </p>
-        <div className="profile-role-options">
-          {sportRoles.map((role) => (
-            <label key={role}>
-              <input type="checkbox" value={role} {...form.register("roles")} />
-              {sportRoleLabels[role]}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <fieldset disabled={mutation.isPending}>
-        <legend>Любимые виды спорта</legend>
-        <p className="field-hint">
-          Выберите интересы и свой уровень. Их можно изменить или убрать.
-        </p>
-        {sports.isPending ? (
-          <p role="status">Загружаем виды спорта…</p>
-        ) : sports.isError ? (
-          <ErrorState
-            error={sports.error}
-            retry={() => void sports.refetch()}
-          />
-        ) : (
-          <div className="profile-sport-options">
-            {sports.data.map((sport) => {
-              const index = preferences.fields.findIndex(
-                (item) => item.sportId === sport.id,
-              );
-              return (
-                <label key={sport.id}>
+      {!isAdmin && (
+        <>
+          <fieldset disabled={mutation.isPending}>
+            <legend>Спортивные роли</legend>
+            <p className="field-hint">
+              Роли описывают ваш опыт. Они не дают административных прав или
+              доступа к чужим соревнованиям.
+            </p>
+            <div className="profile-role-options">
+              {sportRoles.map((role) => (
+                <label key={role}>
                   <input
                     type="checkbox"
-                    checked={index >= 0}
-                    onChange={(event) =>
-                      event.target.checked
-                        ? preferences.append({
-                            sportId: sport.id,
-                            level: "BEGINNER",
-                          })
-                        : preferences.remove(index)
-                    }
+                    value={role}
+                    {...form.register("roles")}
                   />
-                  {sport.name}
+                  {sportRoleLabels[role]}
                 </label>
-              );
-            })}
-          </div>
-        )}
-        {preferences.fields.map((item, index) => (
-          <div className="profile-preference-row" key={item.id}>
-            <FormField
-              id={`profile-level-${item.sportId}`}
-              label={`Уровень: ${sports.data?.find((sport) => sport.id === item.sportId)?.name ?? "Вид спорта недоступен"}`}
-              error={errors.preferences?.[index]?.level?.message}
-            >
-              <Select
-                id={`profile-level-${item.sportId}`}
-                {...form.register(`preferences.${index}.level`)}
-              >
-                {experienceLevels.map((level) => (
-                  <option key={level} value={level}>
-                    {levelLabels[level]}
-                  </option>
-                ))}
-              </Select>
-            </FormField>
-            <button
-              className="button secondary"
-              type="button"
-              onClick={() => preferences.remove(index)}
-            >
-              Убрать интерес
-            </button>
-          </div>
-        ))}
-      </fieldset>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset disabled={mutation.isPending}>
+            <legend>Любимые виды спорта</legend>
+            <p className="field-hint">
+              Выберите интересы и свой уровень. Их можно изменить или убрать.
+            </p>
+            {sports.isPending ? (
+              <p role="status">Загружаем виды спорта…</p>
+            ) : sports.isError ? (
+              <ErrorState
+                error={sports.error}
+                retry={() => void sports.refetch()}
+              />
+            ) : (
+              <div className="profile-sport-options">
+                {sports.data.map((sport) => {
+                  const index = preferences.fields.findIndex(
+                    (item) => item.sportId === sport.id,
+                  );
+                  return (
+                    <label key={sport.id}>
+                      <input
+                        type="checkbox"
+                        checked={index >= 0}
+                        onChange={(event) =>
+                          event.target.checked
+                            ? preferences.append({
+                                sportId: sport.id,
+                                level: "BEGINNER",
+                              })
+                            : preferences.remove(index)
+                        }
+                      />
+                      {sport.name}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            {preferences.fields.map((item, index) => (
+              <div className="profile-preference-row" key={item.id}>
+                <FormField
+                  id={`profile-level-${item.sportId}`}
+                  label={`Уровень: ${sports.data?.find((sport) => sport.id === item.sportId)?.name ?? "Вид спорта недоступен"}`}
+                  error={errors.preferences?.[index]?.level?.message}
+                >
+                  <Select
+                    id={`profile-level-${item.sportId}`}
+                    {...form.register(`preferences.${index}.level`)}
+                  >
+                    {experienceLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {levelLabels[level]}
+                      </option>
+                    ))}
+                  </Select>
+                </FormField>
+                <button
+                  className="button secondary"
+                  type="button"
+                  onClick={() => preferences.remove(index)}
+                >
+                  Убрать интерес
+                </button>
+              </div>
+            ))}
+          </fieldset>
+        </>
+      )}
       {mutation.isError && (
         <p className="field-error" role="alert">
           {profileErrorMessage(mutation.error)} Введённые данные сохранены,

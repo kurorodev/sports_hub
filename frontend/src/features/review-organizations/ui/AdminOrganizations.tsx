@@ -1,4 +1,4 @@
-import { Select } from "../../../shared/ui/Select";
+import { AdminListFilters } from "../../../shared/ui/AdminListFilters";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,7 +17,6 @@ export function AdminOrganizations({ viewerId }: { viewerId: string }) {
     "PENDING",
   );
   const [q, setQ] = useState("");
-  const [draft, setDraft] = useState("");
   const [page, setPage] = useState(0);
   const [notice, setNotice] = useState("");
   const query = useQuery(
@@ -26,62 +25,29 @@ export function AdminOrganizations({ viewerId }: { viewerId: string }) {
   return (
     <section aria-labelledby="admin-organizations-heading">
       <h2 id="admin-organizations-heading">Заявки организаций</h2>
-      <div className="organization-toolbar">
-        <form
-          className="organization-search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            setQ(draft.trim());
-            setPage(0);
-          }}
-        >
-          <label htmlFor="admin-organization-search">
-            Название или описание организации
-          </label>
-          <div>
-            <input
-              id="admin-organization-search"
-              placeholder="Например, беговой клуб"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <button className="button secondary" type="submit">
-              Найти организации
-            </button>
-          </div>
-        </form>
-        <div className="form-field">
-          <label htmlFor="organization-status">Статус организаций</label>
-          <Select
-            id="organization-status"
-            value={status ?? ""}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (
-                value === "" ||
-                value === "PENDING" ||
-                value === "APPROVED" ||
-                value === "REJECTED"
-              ) {
-                setStatus(value || undefined);
-                setPage(0);
-              }
-            }}
-          >
-            <option value="PENDING">На рассмотрении</option>
-            <option value="APPROVED">Одобренные</option>
-            <option value="REJECTED">Отклонённые</option>
-            <option value="">Все статусы</option>
-          </Select>
-        </div>
-        <button
-          className="button secondary"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          Обновить заявки организаций
-        </button>
-      </div>
+      <AdminListFilters
+        statusLabel="Статус организаций"
+        title="Фильтры организаций"
+        label="Название или описание организации"
+        placeholder="Поиск по названию или описанию"
+        query={q}
+        status={status ?? ""}
+        options={[
+          { value: "", label: "Все статусы" },
+          { value: "PENDING", label: "На рассмотрении" },
+          { value: "APPROVED", label: "Одобренные" },
+          { value: "REJECTED", label: "Отклонённые" },
+        ]}
+        refreshing={query.isFetching}
+        onApply={(text, nextStatus) => {
+          setQ(text);
+          setStatus(
+            (nextStatus || undefined) as OrganizationStatus | undefined,
+          );
+          setPage(0);
+        }}
+        onRefresh={() => void query.refetch()}
+      />
       {notice && (
         <p className="notice success" role="status">
           {notice}
