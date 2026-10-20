@@ -14,6 +14,8 @@ test("password signup persists across reload and requires a password after switc
     .getByRole("button", { name: "Создать аккаунт", exact: true })
     .click();
   await expect(page).toHaveURL("/profile");
+  await page.getByRole("button", { name: "Пропустить, заполню позже" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);

@@ -39,6 +39,7 @@ import { getComments, saveComment, hideComment } from "./comments";
 import { mapHandlers } from "./maps";
 import { supportHandlers } from "./support";
 import { matchesEventSearch } from "./event-search";
+import { questionnaireHandlers } from "./questionnaire";
 
 function json(body: unknown, init?: ResponseInit) {
   if (body && typeof body === "object" && "code" in body)
@@ -86,6 +87,7 @@ const moderationSchema = z
   .strict();
 
 export const handlers = [
+  ...questionnaireHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...supportHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...notificationHandlers(api, () => makeSession(savedAccount() ?? "")),
   ...mapHandlers(api, () => makeSession(savedAccount() ?? "")),

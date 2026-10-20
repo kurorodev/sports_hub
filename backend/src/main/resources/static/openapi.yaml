@@ -1030,6 +1030,77 @@ paths:
         description: Поиск по названию спорта (без учета регистра)
       security: []
       x-phase: P0
+  /me/questionnaire:
+    get:
+      tags: [Recommendations]
+      operationId: getMyQuestionnaire
+      summary: Статус анкеты и текущие предпочтения пользователя
+      x-phase: P1
+      responses:
+        '200':
+          description: Анкета текущего пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Questionnaire'
+        '401':
+          $ref: '#/components/responses/401'
+    post:
+      tags: [Recommendations]
+      operationId: saveMyQuestionnaire
+      summary: Сохранить анкету и сформировать рекомендации
+      description: Обновляет город, любимые виды спорта, уровень и время в профиле. Данные других полей профиля сохраняются. Повторная отправка заменяет ответы атомарно.
+      x-phase: P1
+      parameters:
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionnaireAnswers'
+      responses:
+        '200':
+          description: Сохранённые ответы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Questionnaire'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /me/questionnaire/skip:
+    post:
+      tags: [Recommendations]
+      operationId: skipMyQuestionnaire
+      summary: Пропустить анкету; сохранённые ответы не удаляются
+      x-phase: P1
+      parameters:
+      - name: X-CSRF-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Текущее состояние анкеты
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Questionnaire'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
   /me/profile:
     get:
       tags:
@@ -1383,7 +1454,7 @@ paths:
       summary: Мне подходит — рекомендуемые мероприятия
       operationId: getEventsRecommended
       description: 'Только PUBLISHED предстоящие; scoring v1: +50 совпавший любимый спорт, +20 подходящий уровень,
-        +20 подходящее время, +10 доступные места. Tie-break startsAt ASC, id ASC. Признаки объясняются в matchReasons.'
+        +20 подходящее время, +10 доступные места. Tie-break startsAt ASC, id ASC. Признаки объясняются в matchReasons. Если city не указан, используется город профиля. Время сопоставляется в часовом поясе анкеты (для старых профилей UTC).'
       responses:
         '200':
           description: Успешный ответ
@@ -3675,6 +3746,55 @@ components:
       - sportsRoles
       - rank
       - ratingPoints
+    QuestionnaireStatus:
+      type: string
+      enum: [PENDING, SKIPPED, COMPLETED]
+    QuestionnaireAnswers:
+      type: object
+      additionalProperties: false
+      required: [city, sportsPreferences, preferredTime, timeZone]
+      properties:
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+        sportsPreferences:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/SportsPreference'
+        preferredTime:
+          type: string
+          enum: [MORNING, DAY, EVENING, ANY]
+        timeZone:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: Часовой пояс IANA для сопоставления удобного времени с началом мероприятия
+    Questionnaire:
+      type: object
+      required: [status, completedAt, city, sportsPreferences, preferredTime, timeZone]
+      properties:
+        status:
+          $ref: '#/components/schemas/QuestionnaireStatus'
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        sportsPreferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/SportsPreference'
+        preferredTime:
+          type: string
+          nullable: true
+          enum: [MORNING, DAY, EVENING, ANY]
+        timeZone:
+          type: string
     SportsPreference:
       type: object
       properties:

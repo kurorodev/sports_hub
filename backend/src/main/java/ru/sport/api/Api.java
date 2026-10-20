@@ -45,6 +45,13 @@ public final class Api {
     public record ApiError(@NotNull @Valid ErrorCode code, @NotNull String message, @Valid List<ErrorField> details, @NotNull String requestId) {}
     public record PublicUser(@NotNull UUID id, @NotNull String nickname, @NotNull String displayName, String avatarUrl, @NotNull @Valid List<SportsRole> sportsRoles, @NotNull @Valid Rank rank, @NotNull @Min(0) Integer ratingPoints) {}
     public record SportsPreference(@NotNull UUID sportId, @NotNull @Valid ExperienceLevel level) {}
+    public enum QuestionnaireStatus { PENDING, SKIPPED, COMPLETED }
+    public enum PreferredTime { MORNING, DAY, EVENING, ANY }
+    public record QuestionnaireAnswers(@NotBlank @Size(max=100) String city,
+        @NotNull @Size(min=1,max=10) List<@NotNull @Valid SportsPreference> sportsPreferences,
+        @NotNull PreferredTime preferredTime, @NotBlank @Size(max=64) String timeZone) {}
+    public record Questionnaire(QuestionnaireStatus status, Instant completedAt, String city,
+        List<SportsPreference> sportsPreferences, String preferredTime, String timeZone) {}
     public record UserProfile(@NotNull UUID id, @NotNull String nickname, @NotNull String displayName, String avatarUrl, @NotNull @Valid List<SportsRole> sportsRoles, @NotNull @Valid Rank rank, @NotNull @Min(0) Integer ratingPoints, @Size(max = 80) String firstName, @Size(max = 80) String lastName, @Size(max = 1000) String bio, String city, @NotNull @Valid List<SportsPreference> sportsPreferences, String preferredTime, @NotNull Instant createdAt) {}
     public record ProfilePatch(@NotBlank @Size(min = 3, max = 41) @Pattern(regexp="@?[A-Za-z0-9_-]{3,40}") String nickname, @NotBlank @Size(min = 1, max = 100) String displayName, @Size(max = 80) String firstName, @Size(max = 80) String lastName, @Size(max = 1000) String bio, String avatarUrl, @Size(max = 100) String city, @Valid List<SportsRole> sportsRoles, @Valid List<SportsPreference> sportsPreferences, String preferredTime) {}
     public record DemoAccount(@NotNull String id, @NotNull String label, @NotNull @Valid List<SystemRole> systemRoles, @NotNull @Valid List<SportsRole> sportsRoles) {}
