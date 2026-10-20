@@ -16,7 +16,8 @@ export function SearchableSelect({
   ref,
   disabled = false,
   searchable = true,
-  allowCustomValue = false,
+  matchFromStart = false,
+  maxOptions,
   placeholder = "Выберите вид спорта",
   searchLabel = "Поиск вида спорта",
   searchPlaceholder = "Найти вид спорта…",
@@ -44,7 +45,8 @@ export function SearchableSelect({
   onBlur?: () => void;
   disabled?: boolean;
   searchable?: boolean;
-  allowCustomValue?: boolean;
+  matchFromStart?: boolean;
+  maxOptions?: number;
   placeholder?: string;
   searchLabel?: string;
   searchPlaceholder?: string;
@@ -59,24 +61,13 @@ export function SearchableSelect({
   useImperativeHandle(ref, () => trigger.current!, []);
   const input = useRef<HTMLInputElement>(null);
   const selected = options.find((option) => option.id === value);
-  const filtered = options.filter((option) =>
-    option.name
-      .toLocaleLowerCase("ru")
-      .replaceAll("ё", "е")
-      .includes(search.trim().toLocaleLowerCase("ru").replaceAll("ё", "е")),
-  );
-  const enteredValue = search.trim().replace(/\s+/g, " ");
-  if (
-    allowCustomValue &&
-    enteredValue &&
-    !options.some(
-      (option) =>
-        option.id.localeCompare(enteredValue, "ru", { sensitivity: "base" }) ===
-        0,
-    )
-  ) {
-    filtered.push({ id: enteredValue, name: `Использовать «${enteredValue}»` });
-  }
+  const term = search.trim().toLocaleLowerCase("ru").replaceAll("ё", "е");
+  const matching = options.filter((option) => {
+    if (matchFromStart && term && !option.id) return false;
+    const name = option.name.toLocaleLowerCase("ru").replaceAll("ё", "е");
+    return matchFromStart ? name.startsWith(term) : name.includes(term);
+  });
+  const filtered = matching.slice(0, maxOptions);
   const activeIndex = Math.min(active, filtered.length - 1);
 
   useEffect(() => {
@@ -107,14 +98,14 @@ export function SearchableSelect({
     setActive(
       Math.max(
         0,
-        options.findIndex((option) => option.id === value),
+        options.slice(0, maxOptions).findIndex((option) => option.id === value),
       ),
     );
     setOpen(true);
   }
   function choose(next: string) {
-    if (disabled || options.find((option) => option.id === next)?.disabled)
-      return;
+    const option = options.find((item) => item.id === next);
+    if (disabled || !option || option.disabled) return;
     setOpen(false);
     trigger.current?.focus();
     onChange(next);
@@ -257,7 +248,7 @@ export function SearchableSelect({
           )}
           {searchable && (
             <div className="sport-select-footer">
-              {search && !allowCustomValue
+              {search && maxOptions === undefined
                 ? `Найдено: ${filtered.length}`
                 : hint}
             </div>
