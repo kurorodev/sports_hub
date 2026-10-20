@@ -3816,3 +3816,9 @@ select:focus:not([aria-invalid="true"]),
 .map-current-location { z-index: 5; width: 48px; height: 48px; display: grid; place-items: center; pointer-events: none; border-radius: 50%; background: rgb(227 49 62 / 12%); }
 .map-current-location > svg { display: block; filter: drop-shadow(0 2px 3px rgb(91 13 22 / 35%)); }
 .map-current-location-key { color: #e3313e; fill: #e3313e; }
+
+/* Keep venue details and rating in a single map card. */
+.map-venue-rating { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-outline); }
+.map-venue-rating > .button { margin-top: 0; margin-bottom: var(--space-4); }
+.map-selection .occupancy-options { grid-template-columns: minmax(0, 1fr); }
+.map-selection .occupancy-form .button { width: 100%; }

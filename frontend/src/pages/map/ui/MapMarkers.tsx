@@ -11,7 +11,6 @@ import {
 import {
   currentOccupancy,
   occupancyPresentation,
-  VenueSummary,
 } from "../../../entities/venue";
 
 export function MapEventSummary({ event }: { event: EventCardDto }) {
@@ -46,13 +45,11 @@ export function MapMarkers({
   events,
   venues,
   now,
-  onReport,
   onSelect,
 }: {
   events: EventCardDto[];
   venues: VenueMapItem[];
   now: number;
-  onReport: (id: string) => void;
   onSelect: (kind: "event" | "venue", id: string) => void;
 }) {
   return (
@@ -75,9 +72,7 @@ export function MapMarkers({
                 {participantCount(event.confirmedCount, event.maxParticipants)}
               </>
             }
-          >
-            <MapEventSummary event={event} />
-          </GeoMarker>
+          />
         ))}
       {venues.map((venue) => {
         const presentation =
@@ -94,16 +89,7 @@ export function MapMarkers({
               </>
             }
             onSelect={() => onSelect("venue", venue.id)}
-          >
-            <VenueSummary venue={venue} now={now} />
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => onReport(venue.id)}
-            >
-              Оценить загруженность
-            </button>
-          </GeoMarker>
+          />
         );
       })}
     </>

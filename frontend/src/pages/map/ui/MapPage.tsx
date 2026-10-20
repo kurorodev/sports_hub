@@ -4,7 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useMapParams } from "./use-map-params";
-import { MapPin, ArrowUpRight, ChevronDown, X, Navigation2 } from "lucide-react";
+import {
+  MapPin,
+  ArrowUpRight,
+  ChevronDown,
+  X,
+  Navigation2,
+} from "lucide-react";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
@@ -38,8 +44,8 @@ export function MapPage() {
   const sports = useQuery(sportsQuery);
   const [bbox, setBbox] = useState("");
   const [params, setParams] = useMapParams();
-  const [datesOpen, setDatesOpen] = useState(
-    () => Boolean(params.get("from") || params.get("to")),
+  const [datesOpen, setDatesOpen] = useState(() =>
+    Boolean(params.get("from") || params.get("to")),
   );
   const dateFilters = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -111,6 +117,7 @@ export function MapPage() {
     setParams((current) => writeMapView(current, { ...point, zoom: 16 }));
   }
   function select(kind: "event" | "venue", id: string, point?: Point) {
+    setReporting(null);
     selectionTrigger.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -127,6 +134,7 @@ export function MapPage() {
     });
   }
   function closeSelection() {
+    setReporting(null);
     setParams(
       (current) => {
         const next = new URLSearchParams(current);
@@ -150,15 +158,20 @@ export function MapPage() {
   }, [selectionKey]);
   const [creating, setCreating] = useState(false);
   const [reporting, setReporting] = useState<string | null>(null);
+  useEffect(() => {
+    if (reporting && reporting !== selectedVenueId) setReporting(null);
+  }, [reporting, selectedVenueId]);
   const [notice, setNotice] = useState("");
   const [now, setNow] = useState(Date.now);
   const panel = useRef<HTMLDivElement>(null);
+  const reportPanel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 15_000);
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
-    if (creating || reporting) panel.current?.focus();
+    if (creating) panel.current?.focus();
+    else if (reporting) reportPanel.current?.focus();
   }, [creating, reporting]);
   const events = useQuery({
     ...mapEventsQuery(
@@ -185,7 +198,6 @@ export function MapPage() {
   const eventItems =
     showEvents && !needsLocation ? (events.data?.items ?? []) : [];
   const venueItems = showVenues ? (venues.data?.items ?? []) : [];
-  const selectedVenue = venueItems.find((venue) => venue.id === reporting);
   const selectedEvent = eventItems.find(
     (event) => event.id === selectedEventId,
   );
@@ -193,6 +205,7 @@ export function MapPage() {
     (venue) => venue.id === selectedVenueId,
   );
   function report(id: string) {
+    select("venue", id, venueItems.find((venue) => venue.id === id)?.location);
     setReporting(id);
     setCreating(false);
     setNotice("");
@@ -358,7 +371,6 @@ export function MapPage() {
             events={eventItems}
             venues={venueItems}
             now={now}
-            onReport={report}
             onSelect={select}
           />
         </GeoMap>
@@ -386,12 +398,65 @@ export function MapPage() {
             ) : selectedMapVenue ? (
               <>
                 <VenueSummary venue={selectedMapVenue} now={now} />
-                <button
-                  className="button primary"
-                  onClick={() => report(selectedMapVenue.id)}
-                >
-                  Оценить загруженность
-                </button>
+                {reporting === selectedMapVenue.id ? (
+                  <div
+                    className="map-venue-rating"
+                    ref={reportPanel}
+                    tabIndex={-1}
+                  >
+                    <button
+                      type="button"
+                      className="button secondary"
+                      onClick={() => {
+                        setReporting(null);
+                        selectionPanel.current?.focus({ preventScroll: true });
+                      }}
+                    >
+                      Закрыть форму
+                    </button>
+                    {session.isPending ? (
+                      <p role="status">Проверяем сессию…</p>
+                    ) : session.isError ? (
+                      <ErrorState
+                        error={session.error}
+                        retry={() => void session.refetch()}
+                      />
+                    ) : !session.data ? (
+                      <p>
+                        Войдите, чтобы оценить загруженность.{" "}
+                        <Link
+                          className="button primary"
+                          to="/login?next=map"
+                          state={{
+                            mapReturn: `/map${params.size ? `?${params}` : ""}`,
+                          }}
+                        >
+                          Войти и вернуться к карте
+                        </Link>
+                      </p>
+                    ) : (
+                      <ReportOccupancyForm
+                        key={`${session.data.user.id}:${reporting}`}
+                        venueId={reporting}
+                        session={session.data}
+                        onSuccess={() => {
+                          setReporting(null);
+                          setNotice("Оценка загруженности сохранена");
+                          selectionPanel.current?.focus({
+                            preventScroll: true,
+                          });
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    className="button primary"
+                    onClick={() => report(selectedMapVenue.id)}
+                  >
+                    Оценить загруженность
+                  </button>
+                )}
               </>
             ) : events.isFetching || venues.isFetching || !bbox ? (
               <p role="status">Ищем выбранный объект…</p>
@@ -437,7 +502,7 @@ export function MapPage() {
           </p>
         )}
       </div>
-      {(creating || reporting) && (
+      {creating && (
         <div ref={panel} tabIndex={-1} className="map-action-panel">
           <button
             className="button secondary"
@@ -458,8 +523,7 @@ export function MapPage() {
             />
           ) : !session.data ? (
             <p>
-              Войдите, чтобы{" "}
-              {creating ? "добавить площадку" : "оценить загруженность"}.{" "}
+              Войдите, чтобы добавить площадку.{" "}
               <Link
                 className="button primary"
                 to="/login?next=map"
@@ -468,7 +532,7 @@ export function MapPage() {
                 Войти и вернуться к карте
               </Link>
             </p>
-          ) : creating ? (
+          ) : (
             <CreateVenueForm
               key={session.data.user.id}
               session={session.data}
@@ -488,19 +552,6 @@ export function MapPage() {
                 );
               }}
             />
-          ) : (
-            <>
-              <h2>{selectedVenue?.name ?? "Оценить загруженность площадки"}</h2>
-              <ReportOccupancyForm
-                key={`${session.data.user.id}:${reporting}`}
-                venueId={reporting!}
-                session={session.data}
-                onSuccess={() => {
-                  setReporting(null);
-                  setNotice("Оценка загруженности сохранена");
-                }}
-              />
-            </>
           )}
         </div>
       )}
