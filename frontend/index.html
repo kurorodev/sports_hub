@@ -6,7 +6,7 @@
     <script>
       try {
         const settings = JSON.parse(localStorage.getItem("sport.interface.v1") || "{}");
-        const theme = settings?.theme === "dark" || (settings?.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+        const theme = settings?.theme === "dark" ? "dark" : "light";
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
         document.documentElement.lang = settings?.locale === "en" ? "en" : "ru";

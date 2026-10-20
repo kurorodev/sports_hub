@@ -8,15 +8,7 @@ function readPreferences(value: string | null): InterfacePreferences {
     const saved = value ? JSON.parse(value) : {};
     return {
       locale: saved?.locale === "en" ? "en" : "ru",
-      theme:
-        saved?.theme === "dark"
-          ? "dark"
-          : saved?.theme === "light"
-            ? "light"
-            : typeof matchMedia === "function" &&
-                matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light",
+      theme: saved?.theme === "dark" ? "dark" : "light",
     };
   } catch {
     return { locale: "ru", theme: "light" };

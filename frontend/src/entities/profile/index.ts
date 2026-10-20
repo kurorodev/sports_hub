@@ -10,6 +10,5 @@ export {
   sportRoleLabels,
   levelLabels,
   timeLabels,
-  rankLabels,
 } from "./ui/presentation";
 export { ProfileSummary } from "./ui/ProfileSummary";

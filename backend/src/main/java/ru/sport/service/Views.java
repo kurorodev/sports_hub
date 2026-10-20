@@ -2,7 +2,6 @@ package ru.sport.service;
 
 import java.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.sport.api.*;
 import ru.sport.domain.*;
@@ -14,12 +13,12 @@ public class Views {
     private final Store db;
     private final Access access;
     private final ObjectMapper mapper;
-    private final int active,experienced,elite;
-    public Views(Store db,Access access,ObjectMapper mapper,
-        @Value("${app.rating.active-threshold}") int active,
-        @Value("${app.rating.experienced-threshold}") int experienced,
-        @Value("${app.rating.elite-threshold}") int elite) {
-        this.db=db;this.access=access;this.mapper=mapper;this.active=active;this.experienced=experienced;this.elite=elite;
+    public Views(Store db,Access access,ObjectMapper mapper) {
+        this.db=db;this.access=access;this.mapper=mapper;
+    }
+    public static List<Api.SportsRole> sportsRoles(UserEntity user) {
+        return user.admin?List.of():user.sportsRoles.stream()
+            .filter(role -> role==Api.SportsRole.ATHLETE || role==Api.SportsRole.SPORTS_ORGANIZER).sorted().toList();
     }
     public static Map<String,Object> fields(Object... pairs) {
         Map<String,Object> values=new LinkedHashMap<>();
@@ -27,29 +26,22 @@ public class Views {
         return values;
     }
     private <T> T dto(Class<T> type,Map<String,Object> fields) { return mapper.convertValue(fields,type); }
-    public int points(UUID user) { return Math.max(0,Math.toIntExact(db.sum(LedgerEntity.class,"points","e.userId=:user",Map.of("user",user)))); }
-    public Api.Rank rank(int points) { return points>=elite?Api.Rank.ELITE:points>=experienced?Api.Rank.EXPERIENCED:points>=active?Api.Rank.ACTIVE:Api.Rank.ROOKIE; }
     public Api.PublicUser user(UUID id) { return user(db.get(UserEntity.class,id)); }
     public Api.PublicUser user(UserEntity u) {
         return user(u,false);
     }
     private Api.PublicUser user(UserEntity u,boolean organizer) {
-        int points=points(u.id);
-        return new Api.PublicUser(u.id,u.nickname,u.displayName,AvatarImages.forUser(u,organizer),u.admin?List.of():u.sportsRoles.stream().sorted().toList(),rank(points),points);
+        return new Api.PublicUser(u.id,u.nickname,u.displayName,AvatarImages.forUser(u,organizer),sportsRoles(u),Api.Rank.ROOKIE,0);
     }
     public Api.UserProfile profile(UserEntity u) {
-        int points=points(u.id);
         boolean organizer=db.count(OrganizationEntity.class,"e.createdBy=:user and e.status=:status",Map.of("user",u.id,"status",Api.OrganizationStatus.APPROVED))>0;
         return dto(Api.UserProfile.class,fields("id",u.id,"nickname",u.nickname,"displayName",u.displayName,"avatarUrl",AvatarImages.forUser(u,organizer),
-            "sportsRoles",u.admin?List.of():u.sportsRoles.stream().sorted().toList(),"rank",rank(points),"ratingPoints",points,
+            "sportsRoles",sportsRoles(u),"rank",Api.Rank.ROOKIE,"ratingPoints",0,
             "firstName",u.firstName,"lastName",u.lastName,"bio",u.bio,"city",u.city,"preferredTime",u.admin?null:u.preferredTime,
             "sportsPreferences",u.admin?List.of():u.sportsPreferences.stream().map(p -> new Api.SportsPreference(p.sportId,p.level)).toList(),"createdAt",u.createdAt));
     }
-    public Api.Rating rating(UserEntity u) {
-        int points=points(u.id);
-        int count=(int)db.count(ParticipationEntity.class,"e.userId=:user and e.status='VERIFIED'",Map.of("user",u.id));
-        return new Api.Rating(u.id,points,rank(points),count,"v1");
-    }
+    /** Legacy wire fields stay neutral after retirement of gamification. */
+    public Api.Rating rating(UserEntity u) { return new Api.Rating(u.id,0,Api.Rank.ROOKIE,0,"disabled"); }
     public Api.Sport sport(SportEntity s) { return new Api.Sport(s.id,s.name,s.isCustom,s.registryCode,s.imageData==null?null:"/api/v1/sports/"+s.id+"/image?v="+s.updatedAt.toEpochMilli()); }
     public Api.Organization organization(OrganizationEntity o) {
         return dto(Api.Organization.class,fields("id",o.id,"name",o.name,"description",o.description,"avatarUrl",o.avatarUrl,

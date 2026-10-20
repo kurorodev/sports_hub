@@ -1,9 +1,6 @@
-export const sportRoles = [
-  "ATHLETE",
-  "COACH",
-  "REFEREE",
-  "SPORTS_ORGANIZER",
-] as const;
+import { sportRoles, type SportRole } from "../../../shared/model/sports-roles";
+export { sportRoles };
+export type { SportRole };
 export const experienceLevels = [
   "BEGINNER",
   "AMATEUR",
@@ -11,7 +8,6 @@ export const experienceLevels = [
   "PROFESSIONAL",
 ] as const;
 export const preferredTimes = ["MORNING", "DAY", "EVENING", "ANY"] as const;
-export type SportRole = (typeof sportRoles)[number];
 export type ExperienceLevel = (typeof experienceLevels)[number];
 export type PreferredTime = (typeof preferredTimes)[number];
 export interface Profile {
@@ -26,8 +22,6 @@ export interface Profile {
   roles: SportRole[];
   preferences: { sportId: string; level: ExperienceLevel }[];
   preferredTime: PreferredTime | null;
-  rank: "ROOKIE" | "ACTIVE" | "EXPERIENCED" | "ELITE";
-  points: number;
   memberSince: string;
 }
 export type ProfileChanges = Pick<

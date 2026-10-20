@@ -1,3 +1,4 @@
+import { activeSportsRoles } from "../shared/model/sports-roles";
 import { sportOverrides, resetMockSports } from "./sports";
 import registry from "./generated/sports-registry.json";
 import { savedProfile, refreshMockUser, mockAvatar } from "./profiles";
@@ -100,7 +101,9 @@ function allAccounts(): DemoAccount[] {
       return {
         ...account,
         label: profile?.displayName ?? account.label,
-        sportsRoles: profile?.sportsRoles ?? account.sportsRoles,
+        sportsRoles: activeSportsRoles(
+          profile?.sportsRoles ?? account.sportsRoles,
+        ),
       };
     },
   );

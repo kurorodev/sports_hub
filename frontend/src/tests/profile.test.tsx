@@ -1,5 +1,6 @@
 import {
   act,
+  within,
   render,
   screen,
   waitFor,
@@ -48,6 +49,22 @@ const ownPage = () => (
 );
 
 describe("profile HTTP and UI", () => {
+  it("shows only active roles and no gamification in the profile", async () => {
+    const session = await login();
+    mount(ownPage(), "/profile", session);
+    await screen.findByRole("heading", { name: session.user.displayName });
+    expect(document.querySelector(".profile-rating")).toBeNull();
+    expect(screen.queryByText(/очков|Ранг и очки/)).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Редактировать профиль" }),
+    );
+    const roles = screen.getByRole("group", { name: "Спортивные роли" });
+    expect(within(roles).getAllByRole("checkbox")).toHaveLength(2);
+    expect(within(roles).getByLabelText("Спортсмен")).toBeVisible();
+    expect(within(roles).getByLabelText("Организатор спорта")).toBeVisible();
+    expect(within(roles).queryByLabelText("Тренер")).not.toBeInTheDocument();
+    expect(within(roles).queryByLabelText("Судья")).not.toBeInTheDocument();
+  });
   it("lets a user choose a character and persists it in their public profile", async () => {
     const session = await login();
     mount(ownPage(), "/profile?edit=1", session);
@@ -97,7 +114,7 @@ describe("profile HTTP and UI", () => {
         displayName: "Александр Новый",
         nickname: "alex-new",
         bio: "Люблю бег",
-        sportsRoles: ["REFEREE"],
+        sportsRoles: ["SPORTS_ORGANIZER"],
         sportsPreferences: [{ sportId: mockId("running"), level: "AMATEUR" }],
         preferredTime: "EVENING",
       }),

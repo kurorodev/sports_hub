@@ -50,13 +50,13 @@ abstract class ConcurrentApiScenarios extends ApiTestSupport {
         assertThat(results.stream().map(r->r.getResponse().getStatus()).sorted().toList()).containsExactly(201,409);
         assertThat(getJson(owner,"/events/"+event+"/team").path("confirmedCount").asInt()).isEqualTo(1);
     }
-    @Test void concurrentVerificationCreatesOneLedgerEntry() throws Exception {
+    @Test void concurrentVerificationCannotAwardPoints() throws Exception {
         var owner=login("coach");var referee=login("referee");var athlete=login("athlete-b");
         String path="/competitions/"+DemoSeed.id("competition-3")+"/participations/"+DemoSeed.id("competition-reg-3")+"/verify";
         var results=race(owner,referee,path,Map.of(),Map.of());
-        assertThat(results.stream().map(r->r.getResponse().getStatus()).toList()).containsOnly(200);
-        assertThat(json(results.get(0)).path("id")).isEqualTo(json(results.get(1)).path("id"));
-        assertThat(getJson(athlete,"/users/"+athlete.id()+"/rating").path("points").asInt()).isEqualTo(30);
+        assertThat(results.stream().map(r->r.getResponse().getStatus()).toList()).containsOnly(410);
+        assertThat(getJson(athlete,"/users/"+athlete.id()+"/rating").path("points").asInt()).isZero();
+        assertThat(getJson(athlete,"/users/"+athlete.id()+"/rating-history").path("total").asInt()).isZero();
     }
     @Test void concurrentDirectCreationReturnsSameConversation() throws Exception {
         var a=login("athlete-c");var b=login("referee");

@@ -2,14 +2,9 @@ import { localeTag } from "../../../shared/i18n/preferences";
 import { tr } from "../../../shared/i18n/translate";
 import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Avatar } from "../../../shared/ui/Avatar";
-import { MapPin, Clock3, Trophy, CalendarDays } from "lucide-react";
+import { MapPin, Clock3, CalendarDays } from "lucide-react";
 import type { Profile } from "../model";
-import {
-  sportRoleLabels,
-  levelLabels,
-  timeLabels,
-  rankLabels,
-} from "./presentation";
+import { sportRoleLabels, levelLabels, timeLabels } from "./presentation";
 export function ProfileSummary({
   profile,
   sports,
@@ -126,19 +121,6 @@ export function ProfileSummary({
               </p>
             )}
           </section>
-          <div className="profile-rating">
-            <Trophy size={24} />
-            <div>
-              <strong>
-                {tr(rankLabels[profile.rank])} · {profile.points} {tr("очков")}
-              </strong>
-              <p>
-                {tr(
-                  "Ранг и очки рассчитывает сервер по подтверждённому участию.",
-                )}
-              </p>
-            </div>
-          </div>{" "}
         </>
       )}
     </div>

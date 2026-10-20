@@ -35,14 +35,14 @@ class QuestionnaireTest extends ApiTestSupport {
         assertThat(getJson(user,"/me/questionnaire").path("status").asText()).isEqualTo("PENDING");
         call(user,"POST","/me/questionnaire/skip",null,200);
         assertThat(getJson(user,"/me/questionnaire").path("status").asText()).isEqualTo("SKIPPED");
-        call(user,"PATCH","/me/profile",Map.of("bio","Люблю тренировки с друзьями","sportsRoles",List.of("COACH")),200);
+        call(user,"PATCH","/me/profile",Map.of("bio","Люблю тренировки с друзьями","sportsRoles",List.of("SPORTS_ORGANIZER")),200);
         var saved=json(call(user,"POST","/me/questionnaire",answers(sport(user)),200));
         assertThat(saved.path("status").asText()).isEqualTo("COMPLETED");
         assertThat(saved.path("completedAt").asText()).isNotBlank();
         var profile=getJson(user,"/me/profile");
         assertThat(profile.path("city").asText()).isEqualTo("Самара");
         assertThat(profile.path("bio").asText()).isEqualTo("Люблю тренировки с друзьями");
-        assertThat(profile.path("sportsRoles").toString()).contains("COACH");
+        assertThat(profile.path("sportsRoles").toString()).contains("SPORTS_ORGANIZER");
         assertThat(getJson(user,"/users/"+user.id()).toString()).doesNotContain("questionnaire","recommendationTimeZone");
         call(user,"POST","/me/questionnaire/skip",null,200);
         assertThat(getJson(user,"/me/questionnaire")).isEqualTo(saved);

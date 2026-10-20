@@ -29,8 +29,8 @@ public class DemoSeed implements ApplicationRunner {
         var a=user("athlete-a","Алексей Спортов",false,Api.SportsRole.ATHLETE);
         var b=user("athlete-b","Мария Беговая",false,Api.SportsRole.ATHLETE);
         var c=user("athlete-c","Ирина Новая",false,Api.SportsRole.ATHLETE);
-        var coach=user("coach","Денис Тренеров",false,Api.SportsRole.COACH,Api.SportsRole.SPORTS_ORGANIZER);
-        var referee=user("referee","Ольга Судейская",false,Api.SportsRole.REFEREE);
+        var coach=user("coach","Денис Тренеров",false,Api.SportsRole.SPORTS_ORGANIZER);
+        user("referee","Ольга Судейская",false,Api.SportsRole.ATHLETE);
         var approved=user("org-approved","Представитель клуба «Темп»",false,Api.SportsRole.SPORTS_ORGANIZER);
         var pending=user("org-pending","Представитель «Новый старт»",false,Api.SportsRole.SPORTS_ORGANIZER);
         var rejected=user("org-rejected","Представитель «Вектор»",false,Api.SportsRole.SPORTS_ORGANIZER);
@@ -61,11 +61,7 @@ public class DemoSeed implements ApplicationRunner {
         var draft=event("event-draft","Черновик тренировки",coach,null,running,Api.JoinMode.OPEN,Api.EventKind.ACTIVITY,null,7);draft.status=Api.EventStatus.DRAFT;
         for(int i=1;i<=3;i++) {
             var competition=event("competition-"+i,"Завершённое соревнование №"+i,coach,null,running,Api.JoinMode.OPEN,Api.EventKind.COMPETITION,20,-i);
-            var reg=registration("competition-reg-"+i,competition,b,Api.RegistrationStatus.CONFIRMED);
-            var staff=new EventStaffEntity();staff.eventId=competition.id;staff.userId=referee.id;staff.assignedBy=coach.id;save(staff,"competition-referee-"+i);
-            var p=new ParticipationEntity();p.registrationId=reg.id;p.userId=b.id;p.eventId=competition.id;p.status=i<3?"VERIFIED":"PENDING_VERIFICATION";
-            if(i<3){p.verifiedBy=referee.id;p.verifiedAt=clock.instant();}save(p,"competition-participation-"+i);
-            if(i<3){var l=new LedgerEntity();l.userId=b.id;l.eventId=competition.id;l.registrationId=reg.id;l.participationId=p.id;l.points=10;l.reason="VERIFIED_COMPETITION_PARTICIPATION";l.verifiedBy=referee.id;l.idempotencyKey="verification:"+reg.id;save(l,"competition-ledger-"+i);}
+            registration("competition-reg-"+i,competition,b,Api.RegistrationStatus.CONFIRMED);
         }
         var direct=new ConversationEntity();direct.type=Api.ConversationType.DIRECT;
         boolean ordered=a.id.toString().compareTo(b.id.toString())<0;direct.userLowId=ordered?a.id:b.id;direct.userHighId=ordered?b.id:a.id;direct.directKey=direct.userLowId+":"+direct.userHighId;save(direct,"conversation-direct");
