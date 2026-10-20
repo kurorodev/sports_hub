@@ -1,7 +1,7 @@
 import { useCurrentLocation } from "../../../shared/lib/current-location-context";
 import { DistanceFilter } from "../../../shared/ui/DistanceFilter";
 import { registrationPresentation } from "../../../entities/registration";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowDown,
@@ -21,11 +21,48 @@ import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
 import { Select } from "../../../shared/ui/Select";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { canonicalCityName, russianCities } from "../../../shared/lib/cities";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
+  const searchTerm = params.get("q") ?? "";
+  const [search, setSearch] = useState({
+    applied: searchTerm,
+    value: searchTerm,
+  });
+  const [isComposing, setIsComposing] = useState(false);
+  // Restore URL navigation without replacing the input or moving its caret while typing.
+  if (search.applied !== searchTerm) {
+    setSearch({
+      applied: searchTerm,
+      value: search.value.trim() === searchTerm ? search.value : searchTerm,
+    });
+  }
+  useEffect(() => {
+    const value = search.value.trim();
+    if (isComposing || value === searchTerm) return;
+    const timeout = window.setTimeout(
+      () => {
+        setParams(
+          (current) => {
+            const next = new URLSearchParams(current);
+            if (value) next.set("q", value);
+            else next.delete("q");
+            next.delete("page");
+            return next;
+          },
+          { replace: true },
+        );
+      },
+      value ? 300 : 0,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [search.value, searchTerm, isComposing, setParams]);
+  const resetFilters = () => {
+    setSearch({ applied: "", value: "" });
+    setParams({});
+  };
   const { position } = useCurrentLocation();
   const needsLocation = params.has("radiusMeters") && !position;
   const requestedCity = params.get("city") ?? "";
@@ -33,7 +70,10 @@ export function CatalogPage() {
   const filters = new URLSearchParams(params);
   if (city) filters.set("city", city);
   else filters.delete("city");
-  const query = useQuery(eventsQuery(filters, position));
+  const query = useQuery({
+    ...eventsQuery(filters, position),
+    placeholderData: keepPreviousData,
+  });
   const sports = useQuery(sportsQuery);
   const cities = city
     ? [city, ...russianCities.filter((name) => name !== city)]
@@ -141,17 +181,21 @@ export function CatalogPage() {
           className="search-bar"
           onSubmit={(event) => {
             event.preventDefault();
-            const data = new FormData(event.currentTarget);
-            setFilter("q", String(data.get("q") ?? "").trim());
+            if (!isComposing) setFilter("q", search.value.trim());
           }}
         >
           <label className="search-field">
             <Search size={20} />
             <span className="sr-only">Поиск активностей</span>
             <input
-              key={params.get("q") ?? ""}
               name="q"
-              defaultValue={params.get("q") ?? ""}
+              value={search.value}
+              onChange={(event) => {
+                const value = event.target.value;
+                setSearch((current) => ({ ...current, value }));
+              }}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
               placeholder="Название или описание встречи"
             />
           </label>
@@ -321,10 +365,7 @@ export function CatalogPage() {
                       Показать прошедшие
                     </label>
                     {params.size > 0 && (
-                      <button
-                        className="reset-button"
-                        onClick={() => setParams({})}
-                      >
+                      <button className="reset-button" onClick={resetFilters}>
                         <X size={15} />
                         Сбросить всё
                       </button>
@@ -334,15 +375,17 @@ export function CatalogPage() {
               </div>
             </details>
           </div>
-          <div className="results">
+          <div className="results" aria-busy={query.isFetching}>
             <div className="results-toolbar">
               <p aria-live="polite">
-                {query.data ? (
+                {needsLocation ? (
+                  "Укажите геопозицию для поиска рядом"
+                ) : query.isFetching ? (
+                  "Ищем активности…"
+                ) : query.data ? (
                   <>
                     Найдено активностей: <strong>{query.data.total}</strong>
                   </>
-                ) : needsLocation ? (
-                  "Укажите геопозицию для поиска рядом"
                 ) : (
                   "Ищем активности…"
                 )}
@@ -371,7 +414,7 @@ export function CatalogPage() {
                 retry={() => void query.refetch()}
               />
             ) : query.data.items.length === 0 ? (
-              <EmptyState reset={() => setParams({})} />
+              <EmptyState reset={resetFilters} />
             ) : (
               <>
                 <div className="event-grid">
@@ -392,7 +435,7 @@ export function CatalogPage() {
                 <nav className="pagination" aria-label="Страницы каталога">
                   <button
                     className="button secondary"
-                    disabled={query.data.page <= 0}
+                    disabled={query.isPlaceholderData || query.data.page <= 0}
                     onClick={() =>
                       setFilter("page", String(query.data.page - 1))
                     }
@@ -406,8 +449,9 @@ export function CatalogPage() {
                   <button
                     className="button secondary"
                     disabled={
+                      query.isPlaceholderData ||
                       (query.data.page + 1) * query.data.size >=
-                      query.data.total
+                        query.data.total
                     }
                     onClick={() =>
                       setFilter("page", String(query.data.page + 1))

@@ -38,6 +38,7 @@ import { signupSchema } from "../shared/api/signup-schema";
 import { getComments, saveComment, hideComment } from "./comments";
 import { mapHandlers } from "./maps";
 import { supportHandlers } from "./support";
+import { matchesEventSearch } from "./event-search";
 
 function json(body: unknown, init?: ResponseInit) {
   if (body && typeof body === "object" && "code" in body)
@@ -1003,9 +1004,11 @@ export const handlers = [
         event.status === "PUBLISHED" &&
         withinDistance(event.location, p) &&
         (!q ||
-          `${event.title} ${event.description} ${event.customSportName ?? ""}`
-            .toLocaleLowerCase("ru")
-            .includes(q)) &&
+          matchesEventSearch(q, [
+            event.title,
+            event.description,
+            event.customSportName,
+          ])) &&
         (!p.get("sportId") || event.sport.id === p.get("sportId")) &&
         (!p.get("sport") ||
           `${event.sport.name} ${event.customSportName ?? ""}`
