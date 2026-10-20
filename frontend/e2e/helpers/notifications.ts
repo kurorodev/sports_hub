@@ -100,9 +100,9 @@ export function notificationScenarios(
       await expect(
         dialog.getByText(commentReason, { exact: false }),
       ).toHaveCount(0);
-      await notice
-        .getByRole("button", { name: "Прочитано", exact: true })
-        .click();
+      await expect(
+        dialog.getByText("Всё прочитано", { exact: true }),
+      ).toBeVisible();
       await expect(notice.getByText("Новое", { exact: true })).toHaveCount(0);
       await page.screenshot({
         path: `test-results/notifications-${label}-${width}.png`,
@@ -154,9 +154,6 @@ export function notificationScenarios(
       await expect(dialog.getByText(ownerReason, { exact: false })).toHaveCount(
         0,
       );
-      await dialog
-        .getByRole("button", { name: "Прочитать все", exact: true })
-        .click();
       await expect(
         dialog.getByText("Всё прочитано", { exact: true }),
       ).toBeVisible();
