@@ -21,22 +21,36 @@ import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
 import { Select } from "../../../shared/ui/Select";
+import { useEffect } from "react";
+import { canonicalCityName, russianCities } from "../../../shared/lib/cities";
 
 export function CatalogPage() {
   const [params, setParams] = useSearchParams();
   const { position } = useCurrentLocation();
   const needsLocation = params.has("radiusMeters") && !position;
-  const query = useQuery(eventsQuery(params, position));
+  const requestedCity = params.get("city") ?? "";
+  const city = canonicalCityName(requestedCity) ?? "";
+  const filters = new URLSearchParams(params);
+  if (city) filters.set("city", city);
+  else filters.delete("city");
+  const query = useQuery(eventsQuery(filters, position));
   const sports = useQuery(sportsQuery);
-  const city = params.get("city") ?? "";
-  const cities = [
-    ...new Set(
-      [
-        city,
-        ...(query.data?.items.map((event) => event.location.city) ?? []),
-      ].filter(Boolean),
-    ),
-  ].sort((a, b) => a.localeCompare(b, "ru"));
+  const cities = city
+    ? [city, ...russianCities.filter((name) => name !== city)]
+    : russianCities;
+  useEffect(() => {
+    if (requestedCity === city) return;
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (city) next.set("city", city);
+        else next.delete("city");
+        next.delete("page");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [requestedCity, city, setParams]);
   const sportOptions = [
     { id: "", name: "Все виды спорта" },
     ...(sports.data ?? []).filter((sport) =>
@@ -152,12 +166,13 @@ export function CatalogPage() {
                 { id: "", name: "Все города" },
                 ...cities.map((name) => ({ id: name, name })),
               ]}
-              allowCustomValue
+              matchFromStart
+              maxOptions={3}
               searchLabel="Поиск города"
               searchPlaceholder="Введите город…"
               listLabel="Города"
               placeholder="Все города"
-              hint="Введите любой город и выберите его или нажмите Enter"
+              hint="Начните вводить название и выберите город из подсказок"
             />
           </div>
           <button className="button primary" type="submit">
