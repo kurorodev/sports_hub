@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useMapParams } from "./use-map-params";
-import { MapPin, ArrowUpRight, ChevronDown, X } from "lucide-react";
+import { MapPin, ArrowUpRight, ChevronDown, X, Navigation2 } from "lucide-react";
 import { ActivityViewSwitch } from "../../../shared/ui/ActivityViewSwitch";
 import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
@@ -53,7 +53,8 @@ export function MapPage() {
     return () => document.removeEventListener("pointerdown", outside);
   }, [datesOpen]);
   const view = readMapView(params);
-  const { position } = useCurrentLocation();
+  const location = useCurrentLocation();
+  const { position } = location;
   const radius = params.get("radiusMeters") ?? "";
   const needsLocation = Boolean(radius) && !position;
   const radiusZoom = (value: string) => {
@@ -318,6 +319,16 @@ export function MapPage() {
         <ErrorState error={sports.error} retry={() => void sports.refetch()} />
       )}
       <div className="map-legend" aria-label="Обозначения карты">
+        {position && (
+          <span>
+            <Navigation2
+              className="map-current-location-key"
+              size={18}
+              aria-hidden="true"
+            />{" "}
+            Вы здесь
+          </span>
+        )}
         <span>
           <MapPin size={16} /> Мероприятие
         </span>
@@ -337,6 +348,7 @@ export function MapPage() {
       </p>
       <div className="map-explorer">
         <GeoMap
+          location={location}
           center={view ?? (radius && position ? position : undefined)}
           zoom={view?.zoom ?? (radius ? radiusZoom(radius) : 17)}
           onBounds={setBbox}

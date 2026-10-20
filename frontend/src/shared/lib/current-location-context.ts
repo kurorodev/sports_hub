@@ -1,14 +1,15 @@
 import { createContext, useContext } from "react";
 import type { Point } from "./map";
 
-export const CurrentLocationContext = createContext<{
+export interface CurrentLocationState {
   position: Point | null;
   accuracy: number | null;
   status: "idle" | "locating" | "ready" | "error";
   error: string;
   request: () => void;
   stop: () => void;
-}>({
+}
+export const CurrentLocationContext = createContext<CurrentLocationState>({
   position: null,
   accuracy: null,
   status: "idle",

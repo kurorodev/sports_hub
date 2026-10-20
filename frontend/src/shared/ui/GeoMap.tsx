@@ -22,6 +22,8 @@ import {
 import { GeoMapContext } from "../lib/geo-map-context";
 import type { MapView } from "../lib/activity-navigation";
 import { GeoMarker } from "./GeoMarker";
+import { CurrentLocationMarker } from "./CurrentLocationMarker";
+import type { CurrentLocationState } from "../lib/current-location-context";
 
 // Explicit asset URL keeps the SDK worker available after Vite bundling.
 setWorkerUrl(mapWorkerUrl);
@@ -37,6 +39,7 @@ export function GeoMap({
   onView,
   locate = true,
   tileErrorMessage,
+  location,
 }: {
   center?: Point;
   point?: Point;
@@ -48,6 +51,7 @@ export function GeoMap({
   onView?: (view: MapView) => void;
   locate?: boolean;
   tileErrorMessage?: string;
+  location?: CurrentLocationState;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const callbacks = useRef({ onPoint, onBounds, onView });
@@ -57,6 +61,9 @@ export function GeoMap({
   const [tileError, setTileError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [message, setMessage] = useState("");
+  const [locatedPosition, setLocatedPosition] = useState<Point | null>(null);
+  const currentPosition = location ? location.position : locatedPosition;
+  const awaitingLocation = useRef(false);
   const activeMap = useRef<LibreMap | null>(null);
   useLayoutEffect(() => {
     callbacks.current = { onPoint, onBounds, onView };
@@ -184,6 +191,15 @@ export function GeoMap({
     )
       map.jumpTo({ center: [longitude, latitude], zoom });
   }, [map, latitude, longitude, zoom]);
+  useEffect(() => {
+    if (!map || !currentPosition || !awaitingLocation.current) return;
+    awaitingLocation.current = false;
+    map.jumpTo({ center: toMapCoordinates(currentPosition), zoom: 14 });
+  }, [map, currentPosition]);
+  useEffect(() => {
+    if (location?.status === "idle" || location?.status === "error")
+      awaitingLocation.current = false;
+  }, [location?.status]);
   return (
     <div className={`geo-map ${compact ? "compact" : ""}`}>
       <div
@@ -194,6 +210,7 @@ export function GeoMap({
       />
       {map && !failed && (
         <GeoMapContext.Provider value={map}>
+          {currentPosition && <CurrentLocationMarker point={currentPosition} />}
           {point && (
             <GeoMarker
               point={point}
@@ -221,7 +238,20 @@ export function GeoMap({
         <div className="map-location-control">
           <button
             type="button"
+            disabled={location?.status === "locating"}
             onClick={() => {
+              if (location) {
+                if (location.position) {
+                  map.jumpTo({
+                    center: toMapCoordinates(location.position),
+                    zoom: 14,
+                  });
+                } else {
+                  awaitingLocation.current = true;
+                  location.request();
+                }
+                return;
+              }
               if (!navigator.geolocation) {
                 setMessage(
                   "Браузер не поддерживает определение местоположения",
@@ -233,6 +263,10 @@ export function GeoMap({
               navigator.geolocation.getCurrentPosition(
                 (position) => {
                   if (activeMap.current !== current) return;
+                  setLocatedPosition({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  });
                   current.jumpTo({
                     center: [
                       position.coords.longitude,
@@ -243,18 +277,24 @@ export function GeoMap({
                   setMessage("");
                 },
                 () => {
-                  if (activeMap.current === current)
+                  if (activeMap.current === current) {
+                    setLocatedPosition(null);
                     setMessage(
                       "Не удалось определить местоположение. Найдите адрес или переместите карту.",
                     );
+                  }
                 },
                 { timeout: 10_000 },
               );
             }}
           >
-            Моё местоположение
+            {location?.status === "locating"
+              ? "Определяем местоположение…"
+              : "Моё местоположение"}
           </button>
-          {message && <p role="status">{message}</p>}
+          {(location?.error || message) && (
+            <p role="status">{location?.error || message}</p>
+          )}
         </div>
       )}
       {(tileError || failed) && (
