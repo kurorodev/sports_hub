@@ -51,7 +51,7 @@ function StoriesFeed({
     ? Date.parse(query.data.asOf) + Math.max(0, now - query.dataUpdatedAt)
     : now;
   const items = (query.data?.items ?? []).filter(
-    (story) => Date.parse(story.expiresAt) > serverNow,
+    (story) => story.imageUrl && Date.parse(story.expiresAt) > serverNow,
   );
   const index = items.findIndex((story) => story.id === selected);
   const active = items[index];
@@ -141,13 +141,13 @@ function StoriesFeed({
             <span>{tr("Добавить")}</span>
           </button>
         )}
-        {items.map((story) => (
+        {items.map((story, storyIndex) => (
           <button
             className={`story-bubble${story.readAt ? " is-viewed" : ""}`}
             type="button"
             key={story.id}
             onClick={() => setSelected(story.id)}
-            aria-label={`${story.title}. ${story.readAt ? tr("Просмотрено") : tr("Не просмотрено")}`}
+            aria-label={`${tr("Сторис {0} из {1}", [storyIndex + 1, items.length])}. ${story.readAt ? tr("Просмотрено") : tr("Не просмотрено")}`}
           >
             <span className="story-bubble-ring">
               {media.images[story.id] ? (
@@ -156,7 +156,6 @@ function StoriesFeed({
                 <img src="/images/brand/stechenie-mark-on-light.png" alt="" />
               )}
             </span>
-            <span>{story.title}</span>
           </button>
         ))}
       </div>

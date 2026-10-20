@@ -1,14 +1,10 @@
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { ImagePlus, X } from "lucide-react";
 import { publishStory } from "../../../entities/story";
 import { ApiError, errorMessage } from "../../../shared/api/client";
-import { storyCreateSchema } from "../../../shared/api/story-schema";
-import type { StoryCreate } from "../../../shared/api/types";
+import { appName } from "../../../shared/config/branding";
 import { Dialog } from "../../../shared/ui/Dialog";
-import { Textarea } from "../../../shared/ui/Textarea";
 import { readImage } from "../../../shared/lib/read-image";
 import { tr } from "../../../shared/i18n/translate";
 
@@ -20,15 +16,9 @@ export function StoryEditor({
   onPublished: () => Promise<void>;
 }) {
   const titleId = useId();
-  const titleFieldId = useId();
-  const textId = useId();
   const [image, setImage] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const form = useForm<StoryCreate>({
-    resolver: zodResolver(storyCreateSchema),
-    defaultValues: { title: "", text: "" },
-  });
   const mutation = useMutation({
     mutationFn: publishStory,
     onSuccess: async () => {
@@ -64,7 +54,6 @@ export function StoryEditor({
     >
       <header className="story-editor-heading">
         <div>
-          <span className="eyebrow muted">{tr("Новости Стечения")}</span>
           <h2 id={titleId}>{tr("Новая сторис")}</h2>
         </div>
         <button
@@ -77,51 +66,15 @@ export function StoryEditor({
           <X size={22} />
         </button>
       </header>
-      <p className="field-hint">
-        {tr("Будет видна всем пользователям 24 часа. Можно удалить раньше.")}
-      </p>
       <form
         className="story-editor-form"
-        onSubmit={form.handleSubmit((values) =>
-          mutation.mutate({ ...values, imageData: image }),
-        )}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!image || busy || uploadError) return;
+          // The existing API requires a title and text even for photo stories.
+          mutation.mutate({ title: appName, text: "", imageData: image });
+        }}
       >
-        <div className="form-field">
-          <label htmlFor={titleFieldId}>{tr("Заголовок")}</label>
-          <input
-            id={titleFieldId}
-            {...form.register("title")}
-            required
-            minLength={3}
-            maxLength={80}
-            placeholder={tr("Например, встречаемся на городском забеге")}
-            disabled={busy}
-            aria-invalid={Boolean(form.formState.errors.title)}
-            aria-describedby={
-              form.formState.errors.title ? `${titleFieldId}-error` : undefined
-            }
-          />
-          {form.formState.errors.title && (
-            <p className="field-error" id={`${titleFieldId}-error`}>
-              {tr(
-                form.formState.errors.title.message ??
-                  "Проверьте введённые данные.",
-              )}
-            </p>
-          )}
-        </div>
-        <div className="form-field">
-          <label htmlFor={textId}>{tr("Текст")}</label>
-          <Textarea
-            id={textId}
-            {...form.register("text")}
-            maxLength={1000}
-            rows={4}
-            placeholder={tr("Что нового? Расскажите самое важное…")}
-            disabled={busy}
-            aria-invalid={Boolean(form.formState.errors.text)}
-          />
-        </div>
         {image && (
           <div className="story-editor-preview">
             <img src={image} alt={tr("Предпросмотр изображения сторис")} />
@@ -158,7 +111,7 @@ export function StoryEditor({
         </label>
         <p className="field-hint">
           {tr(
-            "Изображение необязательно. PNG или JPEG до 2 МБ, не более 4096×4096 пикселей.",
+            "PNG или JPEG до 2 МБ, не более 4096×4096 пикселей. Для сторис лучше фото 9:16.",
           )}
         </p>
         {(uploadError || mutation.isError) && (
@@ -168,18 +121,6 @@ export function StoryEditor({
                 ? mutation.error.body?.message || errorMessage(mutation.error)
                 : errorMessage(mutation.error))}
           </p>
-        )}
-        {uploadError && (
-          <button
-            className="reset-button"
-            type="button"
-            onClick={() => {
-              setImage(null);
-              setUploadError("");
-            }}
-          >
-            {tr("Продолжить без изображения")}
-          </button>
         )}
         <div className="story-editor-actions">
           <button
@@ -193,7 +134,7 @@ export function StoryEditor({
           <button
             className="button primary"
             type="submit"
-            disabled={busy || Boolean(uploadError)}
+            disabled={busy || !image || Boolean(uploadError)}
           >
             {mutation.isPending
               ? tr("Публикуем…")

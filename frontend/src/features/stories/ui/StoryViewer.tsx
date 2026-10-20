@@ -14,7 +14,6 @@ import type { Story } from "../../../shared/api/types";
 import { ApiError, errorMessage } from "../../../shared/api/client";
 import { Dialog } from "../../../shared/ui/Dialog";
 import { tr } from "../../../shared/i18n/translate";
-import { appName } from "../../../shared/config/branding";
 
 type StoryViewerProps = {
   story: Story;
@@ -156,6 +155,9 @@ function StorySlide({
         }
       }}
     >
+      <h2 id={titleId} className="sr-only">
+        {tr("Сторис {0} из {1}", [index + 1, count])}
+      </h2>
       <div
         className="story-progress"
         role="group"
@@ -172,21 +174,6 @@ function StorySlide({
         ))}
       </div>
       <header className="story-viewer-heading">
-        <img
-          src="/images/brand/stechenie-mark-on-dark.png"
-          alt=""
-          width="32"
-          height="32"
-        />
-        <div>
-          <strong>{appName}</strong>
-          <span>
-            {new Date(story.createdAt).toLocaleTimeString(undefined, {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        </div>
         <button
           type="button"
           className="story-icon-button"
@@ -220,7 +207,7 @@ function StorySlide({
         </button>
       </header>
       <div
-        className={`story-content${story.imageUrl ? " has-image" : ""}`}
+        className="story-content"
         onPointerDown={(event) => {
           if (
             !event.isPrimary ||
@@ -275,7 +262,7 @@ function StorySlide({
             className="story-image"
             draggable={false}
             src={imageUrl}
-            alt={story.title}
+            alt={tr("Фото сторис")}
             onLoad={() => setReady(true)}
             onError={() => setImageError(true)}
           />
@@ -309,10 +296,6 @@ function StorySlide({
             </button>
           </div>
         )}
-        <div className="story-copy">
-          <h2 id={titleId}>{story.title}</h2>
-          {story.text && <p>{story.text}</p>}
-        </div>
       </div>
       <footer className="story-viewer-footer">
         <button
@@ -324,9 +307,6 @@ function StorySlide({
         >
           <ChevronLeft size={26} />
         </button>
-        <span>
-          {index + 1} / {count}
-        </span>
         <button
           className="story-icon-button"
           type="button"
