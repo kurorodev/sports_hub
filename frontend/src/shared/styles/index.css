@@ -258,13 +258,13 @@ button:disabled {
   object-fit: cover;
 }
 .site-header .brand {
-  width: 140px;
+  width: 156px;
   min-width: 0;
 }
 .site-header .brand-logo {
   width: 100%;
   max-width: 100%;
-  height: 36px;
+  height: 40px;
   object-fit: contain;
 }
 .brand-dot {
@@ -1185,10 +1185,10 @@ input[type="radio"] {
     padding-inline: 16px;
   }
   .site-header .brand {
-    width: 120px;
+    width: 132px;
   }
   .site-header .brand-logo {
-    height: 30px;
+    height: 33px;
   }
   .header-account {
     max-width: 190px;
@@ -3680,10 +3680,10 @@ input[type="radio"] {
 }
 @media (max-width: 374px) {
   .site-header .brand {
-    width: 104px;
+    width: 112px;
   }
   .site-header .brand-logo {
-    height: 26px;
+    height: 28px;
   }
   .header-inner {
     column-gap: var(--space-2);
