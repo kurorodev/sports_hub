@@ -9,9 +9,9 @@ import {
   X,
   LoaderCircle,
 } from "lucide-react";
-import { deleteStory, viewStory } from "../../../entities/story";
+import { viewStory } from "../../../entities/story";
 import type { Story } from "../../../shared/api/types";
-import { ApiError, errorMessage } from "../../../shared/api/client";
+import { ApiError } from "../../../shared/api/client";
 import { Dialog } from "../../../shared/ui/Dialog";
 import { tr } from "../../../shared/i18n/translate";
 
@@ -27,6 +27,9 @@ type StoryViewerProps = {
   onClose: () => void;
   onViewed: (story: Story) => void;
   onRemoved: () => Promise<void>;
+  onDelete: () => void;
+  deleting: boolean;
+  deleteError?: string;
 };
 
 export function StoryViewer(props: StoryViewerProps) {
@@ -63,6 +66,9 @@ function StorySlide({
   onClose,
   onViewed,
   onRemoved,
+  onDelete,
+  deleting,
+  deleteError,
   titleId,
   onCloseBlocked,
 }: StoryViewerProps & {
@@ -76,7 +82,6 @@ function StorySlide({
   const [paused, setPaused] = useState(false);
   const [holding, setHolding] = useState(false);
   const [background, setBackground] = useState(document.hidden);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [progress, setProgress] = useState(0);
   const elapsed = useRef(0);
   const touch = useRef<{ x: number; y: number; at: number } | null>(null);
@@ -102,19 +107,21 @@ function StorySlide({
     },
   });
   const { mutate: markViewed } = viewed;
-  const remove = useMutation({
-    mutationFn: () => deleteStory(story.id),
-    onSuccess: onRemoved,
-  });
   useLayoutEffect(() => {
     slide.current?.focus({ preventScroll: true });
   }, []);
   useEffect(() => {
-    onCloseBlocked(remove.isPending);
+    onCloseBlocked(deleting);
     return () => onCloseBlocked(false);
-  }, [remove.isPending, onCloseBlocked]);
+  }, [deleting, onCloseBlocked]);
   const isPaused =
-    paused || holding || background || confirmDelete || imageError || !ready;
+    paused ||
+    holding ||
+    background ||
+    deleting ||
+    Boolean(deleteError) ||
+    imageError ||
+    !ready;
   useEffect(() => {
     if (ready) markViewed(story.id);
   }, [ready, story.id, markViewed]);
@@ -144,7 +151,7 @@ function StorySlide({
       tabIndex={-1}
       className="story-viewer"
       onKeyDown={(event) => {
-        if (confirmDelete || remove.isPending) return;
+        if (deleting) return;
         if (event.key === "ArrowRight") {
           event.preventDefault();
           onNext();
@@ -181,6 +188,7 @@ function StorySlide({
             paused ? tr("Продолжить сторис") : tr("Приостановить сторис")
           }
           aria-pressed={paused}
+          disabled={deleting}
           onClick={() => setPaused(!paused)}
         >
           {paused ? <Play size={20} /> : <Pause size={20} />}
@@ -190,17 +198,21 @@ function StorySlide({
             type="button"
             className="story-icon-button"
             aria-label={tr("Удалить сторис")}
-            disabled={remove.isPending}
-            onClick={() => setConfirmDelete(true)}
+            disabled={deleting}
+            onClick={onDelete}
           >
-            <Trash2 size={20} />
+            {deleting ? (
+              <LoaderCircle size={20} className="story-deleting" />
+            ) : (
+              <Trash2 size={20} />
+            )}
           </button>
         )}
         <button
           type="button"
           className="story-icon-button"
           aria-label={tr("Закрыть сторис")}
-          disabled={remove.isPending}
+          disabled={deleting}
           onClick={onClose}
         >
           <X size={24} />
@@ -230,7 +242,7 @@ function StorySlide({
           const dx = event.clientX - start.x;
           const dy = event.clientY - start.y;
           touch.current = null;
-          if (confirmDelete || remove.isPending) return;
+          if (deleting) return;
           if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
             if (dx < 0) onNext();
             else if (index > 0) onPrevious();
@@ -302,7 +314,7 @@ function StorySlide({
           className="story-icon-button"
           type="button"
           aria-label={tr("Предыдущая сторис")}
-          disabled={index === 0 || remove.isPending || confirmDelete}
+          disabled={index === 0 || deleting}
           onClick={onPrevious}
         >
           <ChevronLeft size={26} />
@@ -315,7 +327,7 @@ function StorySlide({
               ? tr("Завершить просмотр")
               : tr("Следующая сторис")
           }
-          disabled={remove.isPending || confirmDelete}
+          disabled={deleting}
           onClick={onNext}
         >
           <ChevronRight size={26} />
@@ -330,36 +342,12 @@ function StorySlide({
             </button>
           </div>
         )}
-      {confirmDelete && (
-        <div
-          className="story-delete-confirm"
-          role="group"
-          aria-label={tr("Подтверждение удаления сторис")}
-        >
-          <p>{tr("Удалить сторис для всех пользователей?")}</p>
-          {remove.isError && (
-            <p className="field-error" role="alert">
-              {errorMessage(remove.error)}
-            </p>
-          )}
-          <div>
-            <button
-              className="button secondary"
-              type="button"
-              disabled={remove.isPending}
-              onClick={() => setConfirmDelete(false)}
-            >
-              {tr("Оставить")}
-            </button>
-            <button
-              className="button danger-button"
-              type="button"
-              disabled={remove.isPending}
-              onClick={() => remove.mutate()}
-            >
-              {remove.isPending ? tr("Удаляем…") : tr("Удалить")}
-            </button>
-          </div>
+      {deleteError && (
+        <div className="story-save-error" role="alert">
+          <span>{deleteError}</span>
+          <button type="button" onClick={onDelete} disabled={deleting}>
+            {tr("Повторить")}
+          </button>
         </div>
       )}
     </div>

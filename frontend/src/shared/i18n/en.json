@@ -1006,6 +1006,7 @@
   "Продолжить сторис": "Resume story",
   "Приостановить сторис": "Pause story",
   "Удалить сторис": "Delete story",
+  "Удалить сторис {0}": "Delete story {0}",
   "Закрыть сторис": "Close stories",
   "Загружаем изображение…": "Loading image…",
   "Изображение недоступно. Сторис могла быть удалена или срок показа истёк.": "Image unavailable. The story may have been deleted or expired.",
