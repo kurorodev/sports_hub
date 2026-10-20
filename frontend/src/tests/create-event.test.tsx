@@ -19,6 +19,7 @@ import type { EventPreview, Page, Sport } from "../shared/api/types";
 import type { CreateEventInput } from "../shared/api/event-schema";
 
 import { mockId } from "../mocks/database";
+import { selectCity } from "./select-city";
 const input: CreateEventInput = {
   title: "Петанк в парке",
   description: "Играем в петанк, объясним правила и вместе потренируемся.",
@@ -72,7 +73,7 @@ async function fillForm() {
     screen.getByLabelText("Условия участия"),
     input.requirements!,
   );
-  await user.type(screen.getByLabelText("Город"), input.location.city);
+  await selectCity(user, input.location.city);
   await user.type(
     screen.getByLabelText("Место встречи"),
     input.location.address,

@@ -18,6 +18,7 @@ async function expectCentered(page: Page, selector: string) {
 }
 
 for (const viewport of [
+  { width: 320, height: 568 },
   { width: 375, height: 812 },
   { width: 1440, height: 1000 },
   { width: 844, height: 390 },
@@ -74,6 +75,9 @@ for (const viewport of [
     await publish.click();
     expect((await published).status()).toBe(201);
     await expect(editor).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Удалить сторис 1", exact: true }),
+    ).toHaveCount(0);
     await page
       .getByRole("button", {
         name: "Сторис 1 из 1. Не просмотрено",
@@ -114,7 +118,6 @@ for (const viewport of [
     await viewer
       .getByRole("button", { name: "Удалить сторис", exact: true })
       .click();
-    await viewer.getByRole("button", { name: "Удалить", exact: true }).click();
     await expect(viewer).not.toBeVisible();
     await expect(page.locator(".story-bubble:not(.story-add)")).toHaveCount(0);
   });

@@ -34,7 +34,7 @@ public class QuestionnaireService {
             if (!seen.add(sport)) throw Problem.invalid("Вид спорта указан дважды");
             preferences.add(new SportPreference(sport,answer.level()));
         }
-        user.city=answers.city().strip();
+        user.city=CityNames.required(answers.city());
         user.preferredTime=answers.preferredTime().name();
         user.recommendationTimeZone=answers.timeZone();
         user.sportsPreferences.clear();

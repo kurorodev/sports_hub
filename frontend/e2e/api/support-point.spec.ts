@@ -1,3 +1,4 @@
+import { selectCity } from "../helpers/cities";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
 test("Java support: venue pin persists and admin publishes an already closed suggestion", async ({
@@ -12,7 +13,7 @@ test("Java support: venue pin persists and admin publishes an already closed sug
   await page
     .getByLabel("Название площадки", { exact: true })
     .fill(`Площадка с точкой ${Date.now()}`);
-  await page.getByLabel("Город площадки", { exact: true }).fill("Самара");
+  await selectCity(page, "Самара", "Город площадки");
   await page
     .getByRole("combobox", { name: "Адрес площадки", exact: true })
     .fill("Парк, спортивная площадка");
@@ -25,7 +26,7 @@ test("Java support: venue pin persists and admin publishes an already closed sug
       /Поиск адресов недоступен. Заполните город|Адрес не найден. Заполните город/,
     ),
   ).toBeVisible();
-  await expect(page.getByLabel("Город площадки", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("Город площадки", { exact: true })).toHaveText(
     "Самара",
   );
   await expect(
@@ -33,7 +34,7 @@ test("Java support: venue pin persists and admin publishes an already closed sug
   ).toHaveValue("Парк, спортивная площадка");
   const text = await page.getByText(/^Точка: /).textContent();
   const match = text!.match(/Точка: ([-\d.]+), ([-\d.]+)/)!;
-  await page.getByLabel("Город площадки", { exact: true }).fill("Самара");
+  await selectCity(page, "Самара", "Город площадки");
   await page
     .getByRole("combobox", { name: "Адрес площадки", exact: true })
     .fill("Парк, спортивная площадка");

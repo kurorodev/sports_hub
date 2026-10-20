@@ -1,3 +1,4 @@
+import { selectCity } from "./cities";
 import { test, expect, type Page } from "@playwright/test";
 import { signInAs } from "./approval";
 import { setupModerationEvent, sendDiscussion } from "./moderation";
@@ -143,9 +144,7 @@ export function supportScenarios(owner: string, label: string) {
       await page
         .getByLabel("Название площадки", { exact: true })
         .fill(`Площадка ${width}`);
-      await page
-        .getByLabel("Город площадки", { exact: true })
-        .fill("Красноярск");
+      await selectCity(page, "Красноярск", "Город площадки");
       await page
         .getByLabel("Адрес площадки", { exact: true })
         .fill("Парк, у главного входа");

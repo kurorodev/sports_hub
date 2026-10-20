@@ -139,7 +139,7 @@ describe("profile use case and API boundary", () => {
       name: "а".repeat(100),
       about: "а".repeat(1000),
       firstName: "а".repeat(80),
-      city: "а".repeat(100),
+      city: "Комсомольск-на-Амуре",
       roles: [],
       preferences: [],
     };

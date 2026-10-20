@@ -1,3 +1,4 @@
+import { selectCity } from "../helpers/cities";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
 import type {
@@ -42,7 +43,7 @@ for (const width of [375, 768, 1440]) {
       await page
         .getByLabel("О себе", { exact: true })
         .fill(`Бегаю и знакомлюсь · ${width}`);
-      await page.getByLabel("Город", { exact: true }).fill("Самара");
+      await selectCity(page, "Самара");
       await page
         .getByLabel("Никнейм", { exact: true })
         .fill(otherSession.user.nickname);

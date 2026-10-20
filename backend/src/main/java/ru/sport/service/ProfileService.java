@@ -50,7 +50,7 @@ public class ProfileService {
         if(patch.has("firstName"))u.firstName=text(patch,"firstName");
         if(patch.has("lastName"))u.lastName=text(patch,"lastName");
         if(patch.has("bio"))u.bio=text(patch,"bio");
-        if(patch.has("city"))u.city=text(patch,"city");
+        if(patch.has("city"))u.city=CityNames.optional(text(patch,"city"));
         if(patch.has("preferredTime"))u.preferredTime=text(patch,"preferredTime");
         if(patch.has("avatarUrl"))u.avatarUrl=AvatarImages.normalize(text(patch,"avatarUrl"));
         if(patch.has("sportsRoles")) {

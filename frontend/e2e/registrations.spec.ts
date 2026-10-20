@@ -1,3 +1,4 @@
+import { selectCity } from "./helpers/cities";
 import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -15,11 +16,13 @@ async function createOpenEvent(page: Page, title: string) {
   await page.goto("/events/new");
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
   await page.getByLabel("Вид спорта", { exact: true }).click();
-  await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
+  await page
+    .getByRole("option", { name: "Легкая атлетика", exact: true })
+    .click();
   await page
     .getByLabel("О встрече", { exact: true })
     .fill("Вместе бежим в спокойном темпе, после можно выпить кофе.");
-  await page.getByLabel("Город", { exact: true }).fill("Москва");
+  await selectCity(page, "Москва");
   await page
     .getByLabel("Место встречи", { exact: true })
     .fill("Парк, главный вход");

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { sessionQuery } from "../../../entities/session";
-import { storiesQuery } from "../../../entities/story";
+import { deleteStory, storiesQuery } from "../../../entities/story";
 import type { Story, StoryFeed } from "../../../shared/api/types";
-import { errorMessage } from "../../../shared/api/client";
+import { ApiError, errorMessage } from "../../../shared/api/client";
 import { tr } from "../../../shared/i18n/translate";
 import { useLocale } from "../../../shared/i18n/use-preferences";
 import { StoryEditor } from "./StoryEditor";
@@ -58,10 +58,35 @@ function StoriesFeed({
   const refresh = async () => {
     await client.invalidateQueries({ queryKey: ["stories", viewerId] });
   };
-  const onRemoved = async () => {
-    setSelected(null);
-    await refresh();
+  const onRemoved = async (id: string) => {
+    setSelected((current) => (current === id ? null : current));
+    const key = storiesQuery(viewerId).queryKey;
+    const updatedAt = client.getQueryState(key)?.dataUpdatedAt;
+    client.setQueryData<StoryFeed>(
+      key,
+      (current) =>
+        current
+          ? {
+              ...current,
+              items: current.items.filter((story) => story.id !== id),
+            }
+          : current,
+      { updatedAt },
+    );
+    await client.invalidateQueries({ queryKey: ["stories"] });
   };
+  const removal = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await deleteStory(id);
+      } catch (error) {
+        // Another admin may have already removed this story.
+        if (!(error instanceof ApiError && error.status === 404)) throw error;
+      }
+    },
+    onMutate: () => client.cancelQueries({ queryKey: ["stories"] }),
+    onSuccess: (_, id) => onRemoved(id),
+  });
   const onViewed = (story: Story) => {
     const key = storiesQuery(viewerId).queryKey;
     // Updating readAt must not reset the server-clock reference used for expiration.
@@ -142,23 +167,29 @@ function StoriesFeed({
           </button>
         )}
         {items.map((story, storyIndex) => (
-          <button
-            className={`story-bubble${story.readAt ? " is-viewed" : ""}`}
-            type="button"
-            key={story.id}
-            onClick={() => setSelected(story.id)}
-            aria-label={`${tr("Сторис {0} из {1}", [storyIndex + 1, items.length])}. ${story.readAt ? tr("Просмотрено") : tr("Не просмотрено")}`}
-          >
-            <span className="story-bubble-ring">
-              {media.images[story.id] ? (
-                <img src={media.images[story.id]} alt="" />
-              ) : (
-                <img src="/images/brand/stechenie-mark-on-light.png" alt="" />
-              )}
-            </span>
-          </button>
+          <div className="story-item" key={story.id}>
+            <button
+              className={`story-bubble${story.readAt ? " is-viewed" : ""}`}
+              type="button"
+              onClick={() => setSelected(story.id)}
+              aria-label={`${tr("Сторис {0} из {1}", [storyIndex + 1, items.length])}. ${story.readAt ? tr("Просмотрено") : tr("Не просмотрено")}`}
+            >
+              <span className="story-bubble-ring">
+                {media.images[story.id] ? (
+                  <img src={media.images[story.id]} alt="" />
+                ) : (
+                  <img src="/images/brand/stechenie-mark-on-light.png" alt="" />
+                )}
+              </span>
+            </button>
+          </div>
         ))}
       </div>
+      {removal.isError && !active && (
+        <p className="field-error" role="alert">
+          {errorMessage(removal.error)}
+        </p>
+      )}
       {admin && !items.length && !query.isError && !query.isPending && (
         <p className="field-hint">
           {tr("Пока нет активных сторис. Опубликуйте первую новость для всех.")}
@@ -179,7 +210,14 @@ function StoriesFeed({
           onPrevious={() => setSelected(items[index - 1]?.id ?? null)}
           onNext={() => setSelected(items[index + 1]?.id ?? null)}
           onViewed={onViewed}
-          onRemoved={onRemoved}
+          onRemoved={() => onRemoved(active.id)}
+          onDelete={() => removal.mutate(active.id)}
+          deleting={removal.isPending}
+          deleteError={
+            removal.isError && removal.variables === active.id
+              ? errorMessage(removal.error)
+              : undefined
+          }
         />
       )}
     </section>

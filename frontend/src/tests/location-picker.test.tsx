@@ -8,6 +8,7 @@ import { LocationPicker } from "../shared/ui/LocationPicker";
 import type { Location } from "../shared/api/types";
 import { demoSuggestion } from "../mocks/maps";
 import { server } from "./setup";
+import { selectCity } from "./select-city";
 import {
   eventFormSchema,
   toEventInput,
@@ -66,7 +67,7 @@ describe("location picker", () => {
       }),
     );
     await screen.findByText(/Поиск адресов недоступен/);
-    expect(screen.getByLabelText("Город")).toHaveValue("Самара");
+    expect(screen.getByLabelText("Город")).toHaveTextContent("Самара");
     expect(screen.getByRole("combobox")).toHaveValue(
       "Парк, спортивная площадка",
     );
@@ -119,7 +120,7 @@ describe("location picker", () => {
       }),
     );
     setup();
-    await user.type(screen.getByLabelText("Город"), "Самара");
+    await selectCity(user, "Самара");
     await user.type(screen.getByRole("combobox"), "площадь");
     expect(calls).toBe(0);
     await screen.findByRole("option", { name: demoSuggestion.label });
@@ -131,7 +132,7 @@ describe("location picker", () => {
     expect(screen.getByTestId("location")).toHaveTextContent(
       '"longitude":50.101022',
     );
-    await user.type(screen.getByLabelText("Город"), " другой");
+    await selectCity(user, "Казань");
     expect(screen.getByTestId("location")).toHaveTextContent('"latitude":null');
     expect(screen.getByText(/Место не привязано к карте/)).toBeVisible();
   });
@@ -174,14 +175,13 @@ describe("location picker", () => {
         name: "Выбрать точку тестовой карты",
       }),
     );
-    fireEvent.change(screen.getByLabelText("Город"), {
-      target: { value: "Новый город" },
-    });
+    fireEvent.click(screen.getByLabelText("Город"));
+    fireEvent.click(screen.getByRole("option", { name: "Москва" }));
     await waitFor(() =>
-      expect(screen.getByLabelText("Город")).toHaveValue("Новый город"),
+      expect(screen.getByLabelText("Город")).toHaveTextContent("Москва"),
     );
     await new Promise((resolve) => setTimeout(resolve, 200));
-    expect(screen.getByLabelText("Город")).toHaveValue("Новый город");
+    expect(screen.getByLabelText("Город")).toHaveTextContent("Москва");
     expect(screen.getByTestId("location")).toHaveTextContent(
       '"latitude":53.195561',
     );

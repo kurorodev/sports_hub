@@ -6,6 +6,8 @@ import type { GeoSuggestion, Location } from "../api/types";
 import { suggestionsQuery, reverseLocation } from "../api/geo";
 import { hasPoint, unpin, type Point } from "../lib/map";
 import { FormField } from "./FormField";
+import { CitySelect } from "./CitySelect";
+import { canonicalCityName } from "../lib/cities";
 const GeoMap = lazy(() =>
   import("./GeoMap").then((module) => ({ default: module.GeoMap })),
 );
@@ -83,7 +85,7 @@ export function LocationPicker({
     invalidateReverse();
     setManualPin(false);
     onChange({
-      city: item.city,
+      city: canonicalCityName(item.city) ?? "",
       address: item.address,
       latitude: item.latitude,
       longitude: item.longitude,
@@ -92,6 +94,8 @@ export function LocationPicker({
     setOpen(false);
     setMapOpen(true);
     setActive(-1);
+    if (!canonicalCityName(item.city))
+      setReverseStatus("Выберите город из подсказок");
     addressRef.current?.focus();
   }
   async function choosePoint(point: Point) {
@@ -116,9 +120,17 @@ export function LocationPicker({
       );
       if (current !== revision.current) return;
       if (result.location) {
-        onChange({ ...result.location, ...point });
+        onChange({
+          ...result.location,
+          city: canonicalCityName(result.location.city) ?? "",
+          ...point,
+        });
         setManualPin(false);
-        setReverseStatus("Адрес точки найден");
+        setReverseStatus(
+          canonicalCityName(result.location.city)
+            ? "Адрес точки найден"
+            : "Выберите город из подсказок",
+        );
       } else
         setReverseStatus(
           "Адрес не найден. Заполните город и место встречи для выбранной точки.",
@@ -140,13 +152,10 @@ export function LocationPicker({
           label={cityLabel}
           error={errors.city}
         >
-          <input
+          <CitySelect
             id={`${idPrefix}-city`}
-            placeholder={tr("Например, Самара")}
             value={value.city}
-            onChange={(e) => edit("city", e.target.value)}
-            maxLength={120}
-            autoComplete="address-level2"
+            onChange={(city) => edit("city", city)}
             aria-invalid={Boolean(errors.city)}
             aria-describedby={
               errors.city ? `${idPrefix}-city-error` : undefined

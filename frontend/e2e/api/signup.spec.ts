@@ -1,3 +1,4 @@
+import { selectCity } from "../helpers/cities";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
 import { findModerationEvent } from "../helpers/moderation";
@@ -82,7 +83,9 @@ for (const width of [375, 768, 1440]) {
         ?.httpOnly,
     ).toBe(true);
     await expect(page).toHaveURL("/events/new");
-    await page.getByRole("button", { name: "Пропустить, заполню позже" }).click();
+    await page
+      .getByRole("button", { name: "Пропустить, заполню позже" })
+      .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator(".header-account")).toContainText(name);
     const title = `Новая встреча ${suffix}`;
@@ -90,14 +93,16 @@ for (const width of [375, 768, 1440]) {
       "Возьмите воду и удобную обувь.\n<strong>Это обычный текст</strong>";
     await page.getByLabel("Название встречи", { exact: true }).fill(title);
     await page.getByLabel("Вид спорта", { exact: true }).click();
-    await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
+    await page
+      .getByRole("option", { name: "Легкая атлетика", exact: true })
+      .click();
     await page
       .getByLabel("О встрече", { exact: true })
       .fill("Знакомимся и бежим в парке в спокойном темпе.");
     await page
       .getByLabel("Условия участия", { exact: true })
       .fill(requirements);
-    await page.getByLabel("Город", { exact: true }).fill("Красноярск");
+    await selectCity(page, "Красноярск");
     await page
       .getByLabel("Место встречи", { exact: true })
       .fill("Главный вход в парк");

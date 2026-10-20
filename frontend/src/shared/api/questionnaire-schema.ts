@@ -1,9 +1,10 @@
 import { z } from "zod";
 import type { QuestionnaireAnswers } from "./types";
+import { citySchema } from "./city-schema";
 
 export const questionnaireAnswersSchema = z
   .object({
-    city: z.string().trim().min(1).max(100),
+    city: citySchema,
     sportsPreferences: z
       .array(
         z

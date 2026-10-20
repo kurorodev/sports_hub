@@ -3460,6 +3460,7 @@ components:
           $ref: '#/components/schemas/SupportReportReason'
         venueCity:
           type: string
+          description: При сохранении выберите город из справочника городов России. Произвольные названия отклоняются.
           minLength: 1
           maxLength: 120
         venueLatitude:
@@ -4023,6 +4024,7 @@ components:
       properties:
         city:
           type: string
+          description: При сохранении выберите город из справочника городов России. Произвольные названия отклоняются.
           minLength: 1
           maxLength: 100
         sportsPreferences:
@@ -4153,6 +4155,7 @@ components:
           nullable: true
         city:
           type: string
+          description: При сохранении выберите город из справочника городов России. Произвольные названия отклоняются.
           maxLength: 100
           nullable: true
         sportsRoles:
@@ -4331,6 +4334,7 @@ components:
       properties:
         city:
           type: string
+          description: При сохранении выберите город из справочника городов России. Произвольные названия отклоняются.
           minLength: 1
           maxLength: 120
         address:
@@ -5407,6 +5411,7 @@ components:
       properties:
         city:
           type: string
+          description: При сохранении выберите город из справочника городов России. Произвольные названия отклоняются.
           minLength: 1
           maxLength: 120
         address:

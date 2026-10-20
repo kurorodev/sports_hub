@@ -1,3 +1,4 @@
+import { selectCity } from "./helpers/cities";
 import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -21,7 +22,7 @@ async function fillEvent(page: Page, title: string, sport: string) {
     .fill(
       "Знакомимся со спортом, объясняем правила и играем вместе. Всё необходимое принесёт организатор.",
     );
-  await page.getByLabel("Город", { exact: true }).fill("Красноярск");
+  await selectCity(page, "Красноярск");
   await page
     .getByLabel("Место встречи", { exact: true })
     .fill("Остров Татышев, главный вход");

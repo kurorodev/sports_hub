@@ -62,7 +62,7 @@ public class SportsMapService {
         for(var v:matches) if(distance(v.latitude,v.longitude,loc.latitude(),loc.longitude())<=30)
             throw Problem.conflict(Api.ErrorCode.CONFLICT,"Такая площадка уже есть рядом");
         var v=new VenueEntity();v.name=name;v.normalizedName=normalized;v.sportId=category;
-        v.city=loc.city().trim();v.address=loc.address().trim();v.latitude=loc.latitude();v.longitude=loc.longitude();v.createdBy=user.id;
+        v.city=CityNames.required(loc.city());v.address=loc.address().trim();v.latitude=loc.latitude();v.longitude=loc.longitude();v.createdBy=user.id;
         v.createdAt=now;v.updatedAt=now;db.add(v);db.flush();
         return items(List.of(v)).getFirst();
     }

@@ -26,6 +26,8 @@ import { Dialog } from "../../../shared/ui/Dialog";
 import { Select } from "../../../shared/ui/Select";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import { useQuestionnaireMutation } from "../api";
+import { CitySelect } from "../../../shared/ui/CitySelect";
+import { canonicalCityName } from "../../../shared/lib/cities";
 
 export function QuestionnaireDialog({
   userId,
@@ -42,7 +44,7 @@ export function QuestionnaireDialog({
   const sports = useQuery(sportsQuery);
   const [step, setStep] = useState(1);
   const [search, setSearch] = useState("");
-  const [city, setCity] = useState(initial.city ?? "");
+  const [city, setCity] = useState(canonicalCityName(initial.city ?? "") ?? "");
   const [preferences, setPreferences] = useState(
     initial.sportsPreferences.slice(0, 10),
   );
@@ -136,15 +138,11 @@ export function QuestionnaireDialog({
               <label htmlFor={`${id}-city`}>
                 В каком городе планируешь заниматься?
               </label>
-              <input
+              <CitySelect
                 id={`${id}-city`}
-                type="text"
-                autoComplete="address-level2"
-                placeholder="Например, Красноярск"
                 value={city}
-                onChange={(event) => setCity(event.target.value)}
+                onChange={setCity}
                 required
-                maxLength={100}
               />
               <div className="questionnaire-label">
                 <label htmlFor={`${id}-search`}>
