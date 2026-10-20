@@ -19,6 +19,7 @@ public class UserEntity extends BaseEntity {
     @Column(length=20) public String preferredTime;
     @Column(nullable=false,length=20) public String questionnaireStatus = "PENDING";
     public Instant questionnaireCompletedAt;
+    public Integer recommendationAge;
     @Column(nullable=false,length=64) public String recommendationTimeZone = "UTC";
     @Column(nullable=false) public boolean admin;
     @Column(unique=true,length=80) public String demoAccount;

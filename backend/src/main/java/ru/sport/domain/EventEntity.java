@@ -16,6 +16,8 @@ public class EventEntity extends BaseEntity {
     @Column(nullable=false) public Instant startsAt;
     public Instant endsAt;
     public Instant cancelledAt;
+    public Integer recommendedMinAge;
+    public Integer recommendedMaxAge;
     @Column(nullable=false,length=120) public String city;
     @Column(nullable=false,length=300) public String address;
     public Double latitude;

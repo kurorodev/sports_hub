@@ -49,6 +49,7 @@ export function CancelEvent({
         ["events"],
         ["map", "events"],
         ["my-events"],
+        ["recommendations"],
         ["registrations", event.id],
         ["notifications"],
       ].map((queryKey) => client.invalidateQueries({ queryKey })),

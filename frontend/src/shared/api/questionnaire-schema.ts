@@ -21,6 +21,7 @@ export const questionnaireAnswersSchema = z
           new Set(items.map((item) => item.sportId)).size === items.length,
       ),
     preferredTime: z.enum(["MORNING", "DAY", "EVENING", "ANY"]),
+    age: z.number().int().min(1).max(120).nullable().optional(),
     timeZone: z
       .string()
       .min(1)

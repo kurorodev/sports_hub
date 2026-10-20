@@ -54,6 +54,7 @@ export function CancelParticipation({
         ["events"],
         ["map", "events"],
         ["my-events"],
+        ["recommendations"],
         ["notifications"],
       ].map((queryKey) => client.invalidateQueries({ queryKey })),
     );

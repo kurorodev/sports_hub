@@ -1456,8 +1456,7 @@ paths:
       - Recommendations
       summary: Мне подходит — рекомендуемые мероприятия
       operationId: getEventsRecommended
-      description: 'Только PUBLISHED предстоящие; scoring v1: +50 совпавший любимый спорт, +20 подходящий уровень,
-        +20 подходящее время, +10 доступные места. Tie-break startsAt ASC, id ASC. Признаки объясняются в matchReasons. Если city не указан, используется город профиля. Время сопоставляется в часовом поясе анкеты (для старых профилей UTC).'
+      description: 'Подборка v2: будущие опубликованные мероприятия со свободными местами, без собственных встреч и уже поданных регистраций. По умолчанию только выбранные виды спорта в городе профиля; includeOtherSports/includeOtherCities расширяют выдачу явно. Учитываются уровень, часовой пояс и необязательный возраст при наличии возрастного ориентира мероприятия. Оценка 0–100 не является вероятностью. Пагинация применяется после ранжирования.'
       responses:
         '200':
           description: Успешный ответ
@@ -1467,11 +1466,19 @@ paths:
                 $ref: '#/components/schemas/PagedRecommendedEvents'
         '400':
           $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
         '401':
           $ref: '#/components/responses/401'
         '500':
           $ref: '#/components/responses/500'
       parameters:
+      - name: includeOtherCities
+        in: query
+        schema: {type: boolean, default: false}
+      - name: includeOtherSports
+        in: query
+        schema: {type: boolean, default: false}
       - name: city
         in: query
         required: false
@@ -3933,6 +3940,7 @@ components:
       - SUITABLE_LEVEL
       - PREFERRED_TIME
       - AVAILABLE_SPOTS
+      - SUITABLE_AGE
     ErrorCode:
       type: string
       enum:
@@ -4022,6 +4030,12 @@ components:
       additionalProperties: false
       required: [city, sportsPreferences, preferredTime, timeZone]
       properties:
+        age:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Необязательный возраст для подбора; не включается в публичный профиль.
         city:
           type: string
           description: При сохранении выберите город из справочника городов России. Произвольные названия отклоняются.
@@ -4045,6 +4059,12 @@ components:
       type: object
       required: [status, completedAt, city, sportsPreferences, preferredTime, timeZone]
       properties:
+        age:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Необязательный возраст для подбора; не включается в публичный профиль.
         status:
           $ref: '#/components/schemas/QuestionnaireStatus'
         completedAt:
@@ -4466,6 +4486,18 @@ components:
     EventCreate:
       type: object
       properties:
+        recommendedMinAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись.
+        recommendedMaxAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge.
         title:
           type: string
           minLength: 3
@@ -4517,6 +4549,18 @@ components:
     EventPatch:
       type: object
       properties:
+        recommendedMinAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись.
+        recommendedMaxAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge.
         title:
           type: string
           minLength: 3
@@ -4551,6 +4595,18 @@ components:
     Event:
       type: object
       properties:
+        recommendedMinAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись.
+        recommendedMaxAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge.
         customSportName:
           type: string
           nullable: true
@@ -4648,6 +4704,18 @@ components:
     EventCard:
       type: object
       properties:
+        recommendedMinAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись.
+        recommendedMaxAge:
+          type: integer
+          minimum: 1
+          maximum: 120
+          nullable: true
+          description: Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge.
         customSportName:
           type: string
           nullable: true

@@ -146,6 +146,15 @@ export function EventPage() {
             height="360"
           />
           <p className="detail-description">{event.description}</p>
+          {(event.recommendedMinAge != null ||
+            event.recommendedMaxAge != null) && (
+            <p className="field-hint">
+              {tr(
+                "Возрастной ориентир: {0}–{1} лет. Не является запретом на участие.",
+                [event.recommendedMinAge ?? 1, event.recommendedMaxAge ?? 120],
+              )}
+            </p>
+          )}
           {event.requirements?.trim() && (
             <section
               className="event-requirements"

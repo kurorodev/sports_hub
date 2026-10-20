@@ -67,7 +67,7 @@ public class Views {
             org=new Api.OrganizerSummary(Api.OrganizerType.ORGANIZATION,o.id,o.name,o.avatarUrl!=null?o.avatarUrl:AvatarImages.forUser(db.get(UserEntity.class,o.createdBy),o.status==Api.OrganizationStatus.APPROVED));
         }
         return dto(Api.Event.class,fields("id",e.id,"title",e.title,"description",e.description,"eventKind",e.eventKind,
-            "cancelledAt",e.cancelledAt,"customSportName",e.customSportName,"sport",sport(db.get(SportEntity.class,e.sportId)),"startsAt",e.startsAt,"endsAt",e.endsAt,
+            "recommendedMinAge",e.recommendedMinAge,"recommendedMaxAge",e.recommendedMaxAge,"cancelledAt",e.cancelledAt,"customSportName",e.customSportName,"sport",sport(db.get(SportEntity.class,e.sportId)),"startsAt",e.startsAt,"endsAt",e.endsAt,
             "location",new Api.Location(e.city,e.address,e.latitude,e.longitude),"skillLevel",e.skillLevel,"requirements",e.requirements,
             "joinMode",e.joinMode,"maxParticipants",e.maxParticipants,"confirmedCount",registrations(e.id,Api.RegistrationStatus.CONFIRMED),
             "pendingCount",registrations(e.id,Api.RegistrationStatus.PENDING),"spotsLeft",spots(e),"organizer",org,"status",e.status,
@@ -76,7 +76,7 @@ public class Views {
     }
     public Api.EventCard card(EventEntity e) {
         var detail=event(e);
-        return new Api.EventCard(detail.id(),detail.title(),detail.eventKind(),detail.sport(),detail.startsAt(),detail.location(),detail.skillLevel(),detail.joinMode(),detail.organizer(),detail.maxParticipants(),detail.confirmedCount(),detail.spotsLeft(),detail.viewerRegistrationStatus(),detail.customSportName());
+        return new Api.EventCard(detail.id(),detail.title(),detail.eventKind(),detail.sport(),detail.startsAt(),detail.location(),detail.skillLevel(),detail.joinMode(),detail.organizer(),detail.maxParticipants(),detail.confirmedCount(),detail.spotsLeft(),detail.viewerRegistrationStatus(),detail.customSportName(),detail.recommendedMinAge(),detail.recommendedMaxAge());
     }
     public Api.Registration registration(RegistrationEntity r) {
         return new Api.Registration(r.id,r.eventId,eventUser(r.userId,db.get(EventEntity.class,r.eventId)),r.status,r.message,r.decisionReason,r.createdAt,r.updatedAt,r.decidedAt,null);

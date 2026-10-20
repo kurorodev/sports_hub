@@ -4173,3 +4173,11 @@ select:focus:not([aria-invalid="true"]),
 }
 /* The heading receives reading focus after a step change; controls keep their focus ring. */
 .site-guide-copy h2:focus { outline: none; }
+
+.recommendations-options { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 16px; border: 1px solid var(--color-outline); border-radius: 14px; background: var(--color-surface-alt); }
+.recommendations-options label { display: inline-flex; align-items: center; gap: 10px; min-height: 32px; font-size: 13px; cursor: pointer; }
+.recommendations-options input { width: 18px; height: 18px; flex-shrink: 0; }
+.profile-recommendations > .field-hint { margin: -8px 0 0; }
+.event-age-options { padding: 16px; margin-block: 16px; border: 1px solid var(--color-outline); border-radius: 14px; }
+.event-age-options summary { cursor: pointer; font-size: 14px; font-weight: 700; }
+.event-age-options .field-hint { margin-block: 12px; }

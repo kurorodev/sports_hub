@@ -10,7 +10,8 @@ import ru.sport.service.EventService;
 @RestController @RequestMapping("/api/v1")
 public class EventController {
     private final EventService events;
-    public EventController(EventService events){this.events=events;}
+    private final ru.sport.service.RecommendationService recommendations;
+    public EventController(EventService events,ru.sport.service.RecommendationService recommendations){this.events=events;this.recommendations=recommendations;}
     @GetMapping("/sports") public List<Api.Sport> sports(@RequestParam(required=false) String q){return events.sports(q);}
     @GetMapping("/events") public PageResult<Api.EventCard> search(@RequestParam Map<String,String> filters,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return events.search(filters,page,size);}
     @PostMapping("/events") @ResponseStatus(HttpStatus.CREATED) public Api.Event create(@Valid @RequestBody Api.EventCreate request){return events.create(request);}
@@ -19,5 +20,5 @@ public class EventController {
     @PostMapping("/events/{eventId}/publish") public Api.Event publish(@PathVariable UUID eventId){return events.publish(eventId);}
     @PostMapping("/events/{eventId}/cancel") public Api.Event cancel(@PathVariable UUID eventId){return events.cancel(eventId);}
     @GetMapping("/me/events") public PageResult<Api.Event> mine(@RequestParam(required=false) Api.EventStatus status,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return events.mine(status,page,size);}
-    @GetMapping("/events/recommended") public PageResult<Api.RecommendedEvent> recommended(@RequestParam(required=false) String city,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return events.recommendations(city,page,size);}
+    @GetMapping("/events/recommended") public PageResult<Api.RecommendedEvent> recommended(@RequestParam(required=false) String city,@RequestParam(defaultValue="false") boolean includeOtherCities,@RequestParam(defaultValue="false") boolean includeOtherSports,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return recommendations.recommend(city,includeOtherCities,includeOtherSports,page,size);}
 }

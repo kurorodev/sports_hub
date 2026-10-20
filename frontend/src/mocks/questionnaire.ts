@@ -1,3 +1,4 @@
+import { rankRecommendations } from "./recommendation-ranking";
 import { http, HttpResponse } from "msw";
 import type {
   Session,
@@ -34,6 +35,7 @@ function state(session: Session): Questionnaire {
         ? "PENDING"
         : "SKIPPED"),
     completedAt: previous?.completedAt ?? null,
+    age: previous?.age ?? null,
     city: session.user.city ?? null,
     sportsPreferences: session.user.sportsPreferences,
     preferredTime: session.user.preferredTime ?? null,
@@ -60,7 +62,8 @@ export function questionnaireHandlers(
     http.post(`${api}/me/questionnaire`, async ({ request }) => {
       const user = session();
       if (!user) return failure(401, "UNAUTHENTICATED", "Войдите в аккаунт");
-      if (user.systemRoles.includes("ADMIN")) return failure(403, "FORBIDDEN", "Действие недоступно администратору");
+      if (user.systemRoles.includes("ADMIN"))
+        return failure(403, "FORBIDDEN", "Действие недоступно администратору");
       if (request.headers.get("X-CSRF-Token") !== user.csrfToken)
         return failure(403, "FORBIDDEN", "Неверный CSRF токен");
       const parsed = questionnaireAnswersSchema.safeParse(await request.json());
@@ -106,67 +109,19 @@ export function questionnaireHandlers(
       const params = new URL(request.url).searchParams;
       const city = params.get("city") ?? user.user.city;
       const questionnaire = state(user);
-      const items = getEvents(user.user.id)
-        .filter(
-          (event) =>
-            event.status === "PUBLISHED" &&
-            new Date(event.startsAt).getTime() >= Date.now() &&
-            (!city ||
-              event.location.city.toLocaleLowerCase("ru") ===
-                city.toLocaleLowerCase("ru")),
-        )
-        .map((event) => {
-          const matchReasons: RecommendedEvents["items"][number]["matchReasons"] =
-            [];
-          let score = 0;
-          const preference = user.user.sportsPreferences.find(
-            (item) => item.sportId === event.sport.id,
-          );
-          if (preference) {
-            matchReasons.push("FAVORITE_SPORT");
-            score += 50;
-          }
-          if (
-            event.skillLevel === "ANY" ||
-            preference?.level === event.skillLevel
-          ) {
-            matchReasons.push("SUITABLE_LEVEL");
-            score += 20;
-          }
-          const hour = Number(
-            new Intl.DateTimeFormat("en", {
-              timeZone: questionnaire.timeZone,
-              hour: "numeric",
-              hourCycle: "h23",
-            }).format(new Date(event.startsAt)),
-          );
-          const period =
-            hour < 6
-              ? "EVENING"
-              : hour < 12
-                ? "MORNING"
-                : hour < 18
-                  ? "DAY"
-                  : "EVENING";
-          if (
-            user.user.preferredTime === "ANY" ||
-            user.user.preferredTime === period
-          ) {
-            matchReasons.push("PREFERRED_TIME");
-            score += 20;
-          }
-          if (event.spotsLeft == null || event.spotsLeft > 0) {
-            matchReasons.push("AVAILABLE_SPOTS");
-            score += 10;
-          }
-          return { event, score, matchReasons };
-        })
-        .sort(
-          (a, b) =>
-            b.score - a.score ||
-            a.event.startsAt.localeCompare(b.event.startsAt) ||
-            a.event.id.localeCompare(b.event.id),
-        );
+      if (user.systemRoles.includes("ADMIN"))
+        return failure(403, "FORBIDDEN", "Действие недоступно администратору");
+      const items = rankRecommendations(
+        getEvents(user.user.id),
+        getSports(),
+        questionnaire,
+        {
+          city: city ?? "",
+          includeOtherCities: params.get("includeOtherCities") === "true",
+          includeOtherSports: params.get("includeOtherSports") === "true",
+          now: Date.now(),
+        },
+      );
       const page = Math.max(0, Number(params.get("page")) || 0);
       const size = Math.min(100, Math.max(1, Number(params.get("size")) || 20));
       return HttpResponse.json({

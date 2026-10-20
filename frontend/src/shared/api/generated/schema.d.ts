@@ -500,7 +500,7 @@ export interface paths {
         };
         /**
          * Мне подходит — рекомендуемые мероприятия
-         * @description Только PUBLISHED предстоящие; scoring v1: +50 совпавший любимый спорт, +20 подходящий уровень, +20 подходящее время, +10 доступные места. Tie-break startsAt ASC, id ASC. Признаки объясняются в matchReasons. Если city не указан, используется город профиля. Время сопоставляется в часовом поясе анкеты (для старых профилей UTC).
+         * @description Подборка v2: будущие опубликованные мероприятия со свободными местами, без собственных встреч и уже поданных регистраций. По умолчанию только выбранные виды спорта в городе профиля; includeOtherSports/includeOtherCities расширяют выдачу явно. Учитываются уровень, часовой пояс и необязательный возраст при наличии возрастного ориентира мероприятия. Оценка 0–100 не является вероятностью. Пагинация применяется после ранжирования.
          */
         get: operations["getEventsRecommended"];
         put?: never;
@@ -1553,7 +1553,7 @@ export interface components {
         /** @enum {string} */
         MembershipStatus: "ACTIVE" | "LEFT";
         /** @enum {string} */
-        MatchReason: "FAVORITE_SPORT" | "SUITABLE_LEVEL" | "PREFERRED_TIME" | "AVAILABLE_SPOTS";
+        MatchReason: "FAVORITE_SPORT" | "SUITABLE_LEVEL" | "PREFERRED_TIME" | "AVAILABLE_SPOTS" | "SUITABLE_AGE";
         /** @enum {string} */
         ErrorCode: "VALIDATION_ERROR" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "ALREADY_REGISTERED" | "EVENT_NOT_AVAILABLE" | "EVENT_FULL" | "INVALID_STATUS_TRANSITION" | "ORGANIZATION_NOT_APPROVED" | "NOT_EVENT_ORGANIZER" | "NOT_CONVERSATION_MEMBER" | "NOT_A_REFEREE" | "ALREADY_VERIFIED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "SERVICE_UNAVAILABLE";
         ErrorField: {
@@ -1586,6 +1586,8 @@ export interface components {
         /** @enum {string} */
         QuestionnaireStatus: "PENDING" | "SKIPPED" | "COMPLETED";
         QuestionnaireAnswers: {
+            /** @description Необязательный возраст для подбора; не включается в публичный профиль. */
+            age?: number | null;
             /** @description При сохранении выберите город из справочника городов России. Произвольные названия отклоняются. */
             city: string;
             sportsPreferences: components["schemas"]["SportsPreference"][];
@@ -1595,6 +1597,8 @@ export interface components {
             timeZone: string;
         };
         Questionnaire: {
+            /** @description Необязательный возраст для подбора; не включается в публичный профиль. */
+            age?: number | null;
             status: components["schemas"]["QuestionnaireStatus"];
             /** Format: date-time */
             completedAt: string | null;
@@ -1763,6 +1767,10 @@ export interface components {
             reason?: string | null;
         };
         EventCreate: {
+            /** @description Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись. */
+            recommendedMinAge?: number | null;
+            /** @description Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge. */
+            recommendedMaxAge?: number | null;
             title: string;
             description: string;
             eventKind?: components["schemas"]["EventKind"];
@@ -1782,6 +1790,10 @@ export interface components {
         };
         /** @description Изменить организатора, вид спорта или режим записи существующего события нельзя через PATCH. */
         EventPatch: {
+            /** @description Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись. */
+            recommendedMinAge?: number | null;
+            /** @description Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge. */
+            recommendedMaxAge?: number | null;
             title?: string;
             description?: string;
             /** Format: date-time */
@@ -1794,6 +1806,10 @@ export interface components {
             maxParticipants?: number | null;
         };
         Event: {
+            /** @description Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись. */
+            recommendedMinAge?: number | null;
+            /** @description Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge. */
+            recommendedMaxAge?: number | null;
             /** @description Название активности внутри категории Другое, не отдельный вид спорта. */
             customSportName?: string | null;
             /**
@@ -1835,6 +1851,10 @@ export interface components {
             updatedAt: string;
         };
         EventCard: {
+            /** @description Нижняя граница рекомендуемого возраста; используется только в подборке, не запрещает запись. */
+            recommendedMinAge?: number | null;
+            /** @description Верхняя граница рекомендуемого возраста; не меньше recommendedMinAge. */
+            recommendedMaxAge?: number | null;
             /** @description Название активности внутри категории Другое, не отдельный вид спорта. */
             customSportName?: string | null;
             /** Format: uuid */
@@ -3724,6 +3744,8 @@ export interface operations {
     getEventsRecommended: {
         parameters: {
             query?: {
+                includeOtherCities?: boolean;
+                includeOtherSports?: boolean;
                 city?: string;
                 page?: number;
                 size?: number;
@@ -3745,6 +3767,7 @@ export interface operations {
             };
             400: components["responses"]["400"];
             401: components["responses"]["401"];
+            403: components["responses"]["403"];
             500: components["responses"]["500"];
         };
     };

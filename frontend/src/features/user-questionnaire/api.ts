@@ -20,12 +20,29 @@ export const questionnaireQuery = (userId: string) =>
       request<Questionnaire>("/me/questionnaire", { signal }),
   });
 
-export const recommendationsQuery = (userId: string) =>
+export const recommendationsQuery = (
+  userId: string,
+  page = 0,
+  includeOtherCities = false,
+  includeOtherSports = false,
+) =>
   queryOptions({
-    queryKey: ["recommendations", userId],
+    queryKey: [
+      "recommendations",
+      userId,
+      page,
+      includeOtherCities,
+      includeOtherSports,
+    ],
     retry: false,
+    staleTime: 0,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
     queryFn: ({ signal }) =>
-      request<RecommendedEvents>("/events/recommended?size=6", { signal }),
+      request<RecommendedEvents>(
+        `/events/recommended?size=6&page=${page}&includeOtherCities=${includeOtherCities}&includeOtherSports=${includeOtherSports}`,
+        { signal },
+      ),
   });
 
 export function useQuestionnaireMutation(userId: string, onSaved?: () => void) {

@@ -37,6 +37,7 @@ public class QuestionnaireService {
         user.city=CityNames.required(answers.city());
         user.preferredTime=answers.preferredTime().name();
         user.recommendationTimeZone=answers.timeZone();
+        user.recommendationAge=answers.age();
         user.sportsPreferences.clear();
         user.sportsPreferences.addAll(preferences);
         user.questionnaireStatus="COMPLETED";
@@ -62,6 +63,6 @@ public class QuestionnaireService {
         return new Api.Questionnaire(Api.QuestionnaireStatus.valueOf(user.questionnaireStatus),
             user.questionnaireCompletedAt,user.city,
             user.sportsPreferences.stream().map(p -> new Api.SportsPreference(p.sportId,p.level)).toList(),
-            user.preferredTime,user.recommendationTimeZone);
+            user.preferredTime,user.recommendationTimeZone,user.recommendationAge);
     }
 }

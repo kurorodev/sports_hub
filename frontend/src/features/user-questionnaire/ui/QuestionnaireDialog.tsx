@@ -1,3 +1,4 @@
+import { tr } from "../../../shared/i18n/translate";
 import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -43,6 +44,9 @@ export function QuestionnaireDialog({
   const id = useId();
   const sports = useQuery(sportsQuery);
   const [step, setStep] = useState(1);
+  const [age, setAge] = useState(
+    initial.age == null ? "" : String(initial.age),
+  );
   const [search, setSearch] = useState("");
   const [city, setCity] = useState(canonicalCityName(initial.city ?? "") ?? "");
   const [preferences, setPreferences] = useState(
@@ -121,6 +125,7 @@ export function QuestionnaireDialog({
             return;
           }
           mutation.mutate({
+            age: age === "" ? null : Number(age),
             city: city.trim(),
             sportsPreferences: preferences,
             preferredTime: time,
@@ -228,6 +233,25 @@ export function QuestionnaireDialog({
             </>
           ) : (
             <>
+              <label htmlFor={`${id}-age`}>
+                {tr("Возраст, лет — необязательно")}
+              </label>
+              <input
+                id={`${id}-age`}
+                type="number"
+                min={1}
+                max={120}
+                step={1}
+                inputMode="numeric"
+                value={age}
+                onChange={(event) => setAge(event.target.value)}
+                aria-describedby={`${id}-age-hint`}
+              />
+              <p id={`${id}-age-hint`} className="field-hint">
+                {tr(
+                  "Возраст виден только вам и помогает учитывать возрастной ориентир встречи. Любимый спорт важнее предположений о возрасте.",
+                )}
+              </p>
               <h3>Твой уровень в выбранных видах спорта</h3>
               {preferences.map((item) => (
                 <div className="questionnaire-level" key={item.sportId}>

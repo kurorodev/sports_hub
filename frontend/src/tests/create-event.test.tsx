@@ -220,6 +220,41 @@ describe("S1 mock API", () => {
 });
 
 describe("S1 creation UI", () => {
+  it("validates optional age guidance and publishes the corrected range", async () => {
+    await signIn();
+    mount();
+    const user = await fillForm();
+    await user.click(screen.getByText("Возрастной ориентир — необязательно"));
+    fireEvent.change(screen.getByLabelText("Рекомендуемый возраст от"), {
+      target: { value: "70" },
+    });
+    fireEvent.change(screen.getByLabelText("Рекомендуемый возраст до"), {
+      target: { value: "20" },
+    });
+    await user.click(
+      screen.getByRole("button", { name: "Опубликовать встречу" }),
+    );
+    expect(
+      await screen.findByText(
+        "Минимальный возраст не может превышать максимальный",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Рекомендуемый возраст от"), {
+      target: { value: "55" },
+    });
+    fireEvent.change(screen.getByLabelText("Рекомендуемый возраст до"), {
+      target: { value: "75" },
+    });
+    await user.click(
+      screen.getByRole("button", { name: "Опубликовать встречу" }),
+    );
+    expect(
+      await screen.findByText(
+        "Возрастной ориентир: 55–75 лет. Не является запретом на участие.",
+      ),
+    ).toBeInTheDocument();
+  }, 15000);
+
   it("asks a guest to sign in and preserves the creation destination", async () => {
     mount();
     expect(

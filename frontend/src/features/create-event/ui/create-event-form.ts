@@ -23,6 +23,16 @@ export const eventFormSchema = eventFieldsSchema
     timezoneOffset: z.enum(timezoneOffsets as [string, ...string[]]),
   })
   .superRefine((values, context) => {
+    if (
+      values.recommendedMinAge != null &&
+      values.recommendedMaxAge != null &&
+      values.recommendedMinAge > values.recommendedMaxAge
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["recommendedMaxAge"],
+        message: "Минимальный возраст не может превышать максимальный",
+      });
     if (values.sportChoice === customSportValue) {
       const result = sportNameSchema.safeParse(values.customSportName);
       if (!result.success)
@@ -55,6 +65,12 @@ export function toEventInput(
     title: values.title,
     description: values.description,
     requirements: values.requirements?.trim() || null,
+    ...(values.recommendedMinAge != null
+      ? { recommendedMinAge: values.recommendedMinAge }
+      : {}),
+    ...(values.recommendedMaxAge != null
+      ? { recommendedMaxAge: values.recommendedMaxAge }
+      : {}),
     location: values.location,
     skillLevel: values.skillLevel,
     eventKind: values.eventKind,
@@ -84,6 +100,8 @@ export const serverFieldNames: Record<
   title: "title",
   description: "description",
   requirements: "requirements",
+  recommendedMinAge: "recommendedMinAge",
+  recommendedMaxAge: "recommendedMaxAge",
   "sport.sportId": "sportChoice",
   "sport.customName": "customSportName",
   sport: "sportChoice",

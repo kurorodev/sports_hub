@@ -46,6 +46,8 @@ export function CreateEventForm({
       title: "",
       description: "",
       requirements: "",
+      recommendedMinAge: null,
+      recommendedMaxAge: null,
       sportChoice: "",
       customSportName: "",
       date: "",
@@ -393,6 +395,56 @@ export function CreateEventForm({
                 />
               </FormField>
             </div>
+            <details className="event-age-options">
+              <summary>{tr("Возрастной ориентир — необязательно")}</summary>
+              <p className="field-hint">
+                {tr(
+                  "Для кого подходит встреча. Помогает подборке, но не запрещает запись. Оставьте пустым, если возраст не важен.",
+                )}
+              </p>
+              <div className="form-row">
+                <FormField
+                  id="event-min-age"
+                  label={tr("Рекомендуемый возраст от")}
+                  error={errors.recommendedMinAge?.message}
+                >
+                  <input
+                    {...accessibility(
+                      "event-min-age",
+                      errors.recommendedMinAge?.message,
+                    )}
+                    type="number"
+                    min={1}
+                    max={120}
+                    step={1}
+                    {...form.register("recommendedMinAge", {
+                      setValueAs: (value) =>
+                        value == null || value === "" ? null : Number(value),
+                    })}
+                  />
+                </FormField>
+                <FormField
+                  id="event-max-age"
+                  label={tr("Рекомендуемый возраст до")}
+                  error={errors.recommendedMaxAge?.message}
+                >
+                  <input
+                    {...accessibility(
+                      "event-max-age",
+                      errors.recommendedMaxAge?.message,
+                    )}
+                    type="number"
+                    min={1}
+                    max={120}
+                    step={1}
+                    {...form.register("recommendedMaxAge", {
+                      setValueAs: (value) =>
+                        value == null || value === "" ? null : Number(value),
+                    })}
+                  />
+                </FormField>
+              </div>
+            </details>
             <FormField
               id="event-join"
               label={tr("Как присоединиться")}

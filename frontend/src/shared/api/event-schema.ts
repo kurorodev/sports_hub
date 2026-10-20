@@ -33,6 +33,20 @@ export const eventFieldsSchema = z.object({
     .max(2000, "Условия — до 2000 символов")
     .nullable()
     .optional(),
+  recommendedMinAge: z
+    .number()
+    .int("Нужно целое число")
+    .min(1, "Возраст — от 1 года")
+    .max(120, "Возраст — до 120 лет")
+    .nullable()
+    .optional(),
+  recommendedMaxAge: z
+    .number()
+    .int("Нужно целое число")
+    .min(1, "Возраст — от 1 года")
+    .max(120, "Возраст — до 120 лет")
+    .nullable()
+    .optional(),
   joinMode: z.enum(["OPEN", "APPROVAL"]),
   maxParticipants: z
     .number({ error: "Укажите число участников" })
@@ -65,6 +79,16 @@ export const eventDraftSchema = eventFieldsSchema
   .strict() satisfies z.ZodType<EventCreate>;
 export const createEventSchema = eventDraftSchema.superRefine(
   (value, context) => {
+    if (
+      value.recommendedMinAge != null &&
+      value.recommendedMaxAge != null &&
+      value.recommendedMinAge > value.recommendedMaxAge
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["recommendedMaxAge"],
+        message: "Минимальный возраст не может превышать максимальный",
+      });
     if (Date.parse(value.startsAt) <= Date.now())
       context.addIssue({
         code: "custom",

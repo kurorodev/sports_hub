@@ -642,6 +642,7 @@ docker compose -p sport -f compose.yaml -f compose.web.yaml logs --tail=150 back
 - [Поддержка](backend/docs/support.md)
 - [Административная панель](backend/docs/admin-panel.md)
 - [Анкета и рекомендации](backend/docs/questionnaire.md)
+- [Правила подбора мероприятий и учёт возраста](backend/docs/recommendations.md)
 - [Сторис администрации](backend/docs/stories.md)
 
 Основная ветка для получения актуального приложения — **`master`**. Настоящий запуск — `real` с Java и PostgreSQL; `mock` служит отдельной локальной демонстрацией интерфейса.

@@ -81,7 +81,7 @@ class QuestionnaireTest extends ApiTestSupport {
         var items=getJson(user,"/events/recommended").path("items");
         var match=java.util.stream.StreamSupport.stream(items.spliterator(),false).filter(item -> item.path("event").path("id").asText().equals(eventId)).findFirst().orElseThrow();
         assertThat(match.path("matchReasons").toString()).contains("FAVORITE_SPORT","PREFERRED_TIME","SUITABLE_LEVEL");
-        assertThat(match.path("score").asInt()).isEqualTo(100);
+        assertThat(match.path("score").asInt()).isEqualTo(90);
         call(login("admin"),"POST","/admin/events/"+eventId+"/unpublish",Map.of("reason","Проверка модерации"),200);
         assertThat(getJson(user,"/events/recommended").path("items").toString()).doesNotContain(eventId);
         var changed=answers(event.sportId.toString());changed.put("city","Казань");

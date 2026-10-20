@@ -30,6 +30,7 @@ public class EventService {
         if(r.sport().customName()!=null)e.customSportName=r.sport().customName().strip().replaceAll("\\s+"," ");
         e.eventKind=r.eventKind()==null?Api.EventKind.ACTIVITY:r.eventKind();e.startsAt=r.startsAt();e.endsAt=r.endsAt();
         e.skillLevel=r.skillLevel()==null?Api.EventSkillLevel.ANY:r.skillLevel();e.requirements=r.requirements();e.joinMode=r.joinMode();
+        e.recommendedMinAge=r.recommendedMinAge();e.recommendedMaxAge=r.recommendedMaxAge();
         e.maxParticipants=r.maxParticipants();location(e,r.location());
         validateTime(e);e.status=Boolean.FALSE.equals(r.publishNow())?Api.EventStatus.DRAFT:Api.EventStatus.PUBLISHED;
         e.createdAt=clock.instant();e.updatedAt=e.createdAt;db.add(e);if(e.status==Api.EventStatus.PUBLISHED)publishedNotification(e);db.flush();return view.event(e);
@@ -43,6 +44,7 @@ public class EventService {
     }
     private void location(EventEntity e,Api.Location l) { e.city=CityNames.required(l.city());e.address=l.address().strip();e.latitude=l.latitude();e.longitude=l.longitude(); }
     private void validateTime(EventEntity e) {
+        if(e.recommendedMinAge!=null && e.recommendedMaxAge!=null && e.recommendedMinAge>e.recommendedMaxAge)throw Problem.invalid("Минимальный возраст не может превышать максимальный");
         if(!e.startsAt.isAfter(clock.instant()))throw Problem.invalid("Дата начала должна быть в будущем");
         if(e.endsAt!=null && !e.endsAt.isAfter(e.startsAt))throw Problem.invalid("Дата окончания должна быть позже начала");
         if(e.eventKind==Api.EventKind.COMPETITION && e.endsAt==null)throw Problem.invalid("Для соревнования укажите endsAt");
@@ -66,6 +68,8 @@ public class EventService {
         if(e.status!=Api.EventStatus.DRAFT && e.status!=Api.EventStatus.PUBLISHED)throw Problem.transition();
         if(!e.startsAt.isAfter(clock.instant()))throw Problem.transition();
         var oldTime=e.startsAt;var oldPlace=Arrays.asList(e.city,e.address,e.latitude,e.longitude);
+        if(patch.has("recommendedMinAge"))e.recommendedMinAge=patch.path("recommendedMinAge").isNull()?null:patch.path("recommendedMinAge").asInt();
+        if(patch.has("recommendedMaxAge"))e.recommendedMaxAge=patch.path("recommendedMaxAge").isNull()?null:patch.path("recommendedMaxAge").asInt();
         if(patch.has("title"))e.title=patch.path("title").asText().strip();
         if(patch.has("description"))e.description=patch.path("description").asText().strip();
         if(patch.has("startsAt"))e.startsAt=OffsetDateTime.parse(patch.path("startsAt").asText()).toInstant();
@@ -151,23 +155,6 @@ public class EventService {
     public PageResult<Api.Event> details(String condition,Map<String,?> p,String order,int page,int size) {
         int offset=PageResult.offset(page,size);
         return PageResult.of(db.list(EventEntity.class,condition,p,order,offset,size).stream().map(view::event).toList(),page,size,db.count(EventEntity.class,condition,p));
-    }
-    public PageResult<Api.RecommendedEvent> recommendations(String city,int page,int size) {
-        var u=access.user();int offset=PageResult.offset(page,size);
-        String preferredCity=city==null?u.city:city;
-        Map<String,String> f=preferredCity==null?Map.of():Map.of("city",preferredCity);var query=filters(f);
-        List<Api.RecommendedEvent> ranked=db.list(EventEntity.class,query.where,query.params).stream().map(e -> {
-            var reasons=new ArrayList<Api.MatchReason>();int score=0;
-            var preference=u.sportsPreferences.stream().filter(p -> p.sportId.equals(e.sportId)).findFirst();
-            if(preference.isPresent()){score+=50;reasons.add(Api.MatchReason.FAVORITE_SPORT);}
-            if(e.skillLevel==Api.EventSkillLevel.ANY || preference.map(p -> p.level.name().equals(e.skillLevel.name())).orElse(false)) {score+=20;reasons.add(Api.MatchReason.SUITABLE_LEVEL);}
-            int hour=e.startsAt.atZone(ZoneId.of(u.recommendationTimeZone)).getHour();
-            String time=hour<6?"EVENING":hour<12?"MORNING":hour<18?"DAY":"EVENING";
-            if(u.preferredTime!=null && (u.preferredTime.equals("ANY") || u.preferredTime.equals(time))){score+=20;reasons.add(Api.MatchReason.PREFERRED_TIME);}
-            Integer spots=view.spots(e);if(spots==null || spots>0){score+=10;reasons.add(Api.MatchReason.AVAILABLE_SPOTS);}
-            return new Api.RecommendedEvent(view.card(e),score,reasons);
-        }).sorted(Comparator.comparingInt((Api.RecommendedEvent r) -> r.score()).reversed().thenComparing(r -> r.event().startsAt()).thenComparing(r -> r.event().id().toString())).toList();
-        return PageResult.of(ranked.stream().skip(offset).limit(size).toList(),page,size,ranked.size());
     }
     private String sort(String value) {
         if(value==null)return "e.startsAt asc,e.id asc";
