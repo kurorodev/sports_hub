@@ -21,9 +21,8 @@ public class ProfileService {
     public Api.UserProfile get(UUID id) { return view.profile(db.get(UserEntity.class,id)); }
     public Api.Rating rating(UUID id) { return view.rating(db.get(UserEntity.class,id)); }
     public PageResult<Api.RatingLedgerEntry> history(UUID id,int page,int size) {
-        db.get(UserEntity.class,id); int offset=PageResult.offset(page,size);
-        var params=Map.of("user",id);
-        return PageResult.of(db.list(LedgerEntity.class,"e.userId=:user",params,"e.createdAt desc,e.id desc",offset,size).stream().map(view::ledger).toList(),page,size,db.count(LedgerEntity.class,"e.userId=:user",params));
+        db.get(UserEntity.class,id);PageResult.offset(page,size);
+        return PageResult.of(List.of(),page,size,0);
     }
     @Transactional public Api.UserProfile patch(JsonNode patch) {
         validator.validate("ProfilePatch",patch);

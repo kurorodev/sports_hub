@@ -1125,7 +1125,7 @@ paths:
       - Profiles
       summary: Обновить свой профиль
       operationId: patchMeProfile
-      description: ratingPoints/rank/системные роли редактировать нельзя.
+      description: Допустимы только ATHLETE и SPORTS_ORGANIZER. Геймификация отключена; ratingPoints/rank/системные роли редактировать нельзя.
       responses:
         '200':
           description: Успешный ответ
@@ -1187,7 +1187,8 @@ paths:
     get:
       tags:
       - Ratings
-      summary: Рейтинг и ранг пользователя
+      summary: Устаревший рейтинг (геймификация отключена, нейтральные значения)
+      deprecated: true
       operationId: getUsersUseridRating
       description: ''
       responses:
@@ -1209,7 +1210,8 @@ paths:
     get:
       tags:
       - Ratings
-      summary: История начислений
+      summary: Устаревшая история начислений (геймификация отключена, пустой список)
+      deprecated: true
       operationId: getUsersUseridRatingHistory
       description: ''
       responses:
@@ -2392,12 +2394,14 @@ paths:
       x-phase: P1
   /competitions/{eventId}/referees:
     post:
+      deprecated: true
       tags:
       - Ratings
-      summary: Назначить судью соревнования
+      summary: Назначение судьи отключено (410)
       operationId: postCompetitionsEventidReferees
-      description: Назначает только автор соревнования; судья должен иметь спортивную роль REFEREE.
+      description: Судейство отменено. Аутентифицированный запрос возвращает 410 без изменений данных.
       responses:
+        '410': {description: Судейство и начисление очков отключены.}
         '201':
           description: Успешный ответ
           content:
@@ -2444,13 +2448,14 @@ paths:
       x-phase: P2
   /competitions/{eventId}/participations/{registrationId}/verify:
     post:
+      deprecated: true
       tags:
       - Ratings
-      summary: Подтвердить фактическое участие в соревновании
+      summary: Подтверждение участия для рейтинга отключено (410)
       operationId: postCompetitionsEventidParticipationsRegistrationidVerify
-      description: 'Только после endsAt у события COMPETITION. Автор или назначенный судья, подтвержденная запись
-        CONFIRMED. Повторный запрос безопасен: тот же ledger, повторных баллов нет.'
+      description: Геймификация отменена. Аутентифицированный запрос возвращает 410 без начислений и изменения участия.
       responses:
+        '410': {description: Судейство и начисление очков отключены.}
         '200':
           description: Успешный ответ
           content:
@@ -3666,6 +3671,7 @@ components:
       - ADMIN
       description: Системные контуры; ORGANIZATION доступен представителю только после одобрения.
     SportsRole:
+      description: COACH и REFEREE оставлены только для чтения старых данных; выбрать их нельзя.
       type: string
       enum:
       - ATHLETE
@@ -3828,6 +3834,8 @@ components:
         rank: &id013
           $ref: '#/components/schemas/Rank'
         ratingPoints: &id014
+          deprecated: true
+          description: Устаревшее поле совместимости. Всегда 0; начисления отключены.
           type: integer
           minimum: 0
       required:
@@ -3981,7 +3989,8 @@ components:
         sportsRoles:
           type: array
           items:
-            $ref: '#/components/schemas/SportsRole'
+            type: string
+            enum: [ATHLETE, SPORTS_ORGANIZER]
           uniqueItems: true
         sportsPreferences:
           type: array

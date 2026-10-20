@@ -25,7 +25,7 @@ class ExtensionsTest extends ApiTestSupport {
     }
     @Test void profileIsEditablePublicAndRatingReadOnly() throws Exception {
         var a=login("athlete-a");var b=login("athlete-b");
-        call(a,"PATCH","/me/profile",Map.of("displayName","Новое имя","sportsRoles",List.of("ATHLETE","COACH"),"bio","Люблю спорт"),200);
+        call(a,"PATCH","/me/profile",Map.of("displayName","Новое имя","sportsRoles",List.of("ATHLETE","SPORTS_ORGANIZER"),"bio","Люблю спорт"),200);
         var publicProfile=getJson(b,"/users/"+a.id());assertThat(publicProfile.path("displayName").asText()).isEqualTo("Новое имя");assertThat(publicProfile.toString()).doesNotContain("demoAccount","admin","csrfToken");
         call(a,"PATCH","/me/profile",Map.of("ratingPoints",100000),400);
         call(a,"PATCH","/me/profile",Map.of("systemRoles",List.of("ADMIN")),400);
@@ -66,24 +66,27 @@ class ExtensionsTest extends ApiTestSupport {
         assertThat(getJson(a,"/conversations").path("items").toString()).doesNotContain(id);
         var pending=login("org-pending");call(pending,"POST","/conversations",Map.of("type","COMMUNITY","organizationId",DemoSeed.id("club-pending").toString(),"title","Запрещённая группа"),403);
     }
-    @Test void competitionVerificationIsAuthorizedIdempotentAndChangesRank() throws Exception {
-        var referee=login("referee");var b=login("athlete-b");var outsider=login("athlete-a");var admin=login("admin");
-        String event=DemoSeed.id("competition-3").toString(),registration=DemoSeed.id("competition-reg-3").toString();String path="/competitions/"+event+"/participations/"+registration+"/verify";
-        assertThat(getJson(b,"/users/"+b.id()+"/rating").path("points").asInt()).isEqualTo(20);
-        call(outsider,"POST",path,Map.of(),403);call(admin,"POST",path,Map.of(),403);
-        var ledger=json(call(referee,"POST",path,Map.of("note","Участие подтверждено"),200));
-        assertThat(json(call(referee,"POST",path,Map.of(),200)).path("id")).isEqualTo(ledger.path("id"));
-        var rating=getJson(b,"/users/"+b.id()+"/rating");assertThat(rating.path("points").asInt()).isEqualTo(30);assertThat(rating.path("rank").asText()).isEqualTo("ACTIVE");
-        assertThat(getJson(b,"/users/"+b.id()+"/rating-history").path("total").asInt()).isEqualTo(3);
-        assertThat(getJson(b,"/me/profile").path("ratingPoints").asInt()).isEqualTo(30);
+    @Test void competitionGamificationIsRetiredForAllRoles() throws Exception {
+        var referee=login("referee");var athlete=login("athlete-b");var owner=login("coach");var admin=login("admin");
+        String event=DemoSeed.id("competition-3").toString(),registration=DemoSeed.id("competition-reg-3").toString();
+        for(var actor:List.of(referee,athlete,owner,admin)) {
+            call(actor,"POST","/competitions/"+event+"/participations/"+registration+"/verify",Map.of(),410);
+            call(actor,"POST","/competitions/"+event+"/referees",Map.of("userId",referee.id()),410);
+        }
+        var rating=getJson(athlete,"/users/"+athlete.id()+"/rating");
+        assertThat(rating.path("points").asInt()).isZero();assertThat(rating.path("rank").asText()).isEqualTo("ROOKIE");
+        assertThat(rating.path("rulesVersion").asText()).isEqualTo("disabled");
+        assertThat(getJson(athlete,"/users/"+athlete.id()+"/rating-history").path("total").asInt()).isZero();
+        assertThat(getJson(athlete,"/me/profile").path("ratingPoints").asInt()).isZero();
+        for(String retired:List.of("COACH","REFEREE"))call(athlete,"PATCH","/me/profile",Map.of("sportsRoles",List.of(retired)),400);
     }
-    @Test void unfinishedCompetitionCannotAwardPointsAndSportsRoleAloneGrantsNothing() throws Exception {
+    @Test void retiredCompetitionEndpointsDoNotAffectOrdinaryEvents() throws Exception {
         var owner=login("coach");var a=login("athlete-a");var referee=login("referee");
         String event=createEvent(owner,"OPEN",10);
         String reg=json(call(a,"POST","/events/"+event+"/registrations",Map.of(),201)).path("id").asText();
-        call(owner,"POST","/competitions/"+event+"/participations/"+reg+"/verify",Map.of(),409);
-        call(referee,"POST","/competitions/"+event+"/participations/"+reg+"/verify",Map.of(),403);
-        call(owner,"POST","/competitions/"+DemoSeed.id("competition-3")+"/referees",Map.of("userId",a.id()),422);
+        call(owner,"POST","/competitions/"+event+"/participations/"+reg+"/verify",Map.of(),410);
+        call(referee,"POST","/competitions/"+event+"/participations/"+reg+"/verify",Map.of(),410);
+        call(owner,"POST","/competitions/"+DemoSeed.id("competition-3")+"/referees",Map.of("userId",a.id()),410);
     }
     @Test void loginCsrfSurvivesSequentialReadsWritesAndLogout() throws Exception {
         var a=login("athlete-a");

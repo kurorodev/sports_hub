@@ -15,7 +15,7 @@ public class SessionService {
     private void requireDemo(){if(!demo)throw Problem.notFound();}
     public List<Api.DemoAccount> accounts() {
         requireDemo();return db.list(UserEntity.class,"e.demoAccount is not null and e.passwordHash is null",Map.of(),"e.demoAccount asc",0,Integer.MAX_VALUE).stream()
-            .map(u -> new Api.DemoAccount(u.demoAccount,u.displayName,roles(u),u.sportsRoles.stream().sorted().toList())).toList();
+            .map(u -> new Api.DemoAccount(u.demoAccount,u.displayName,roles(u),Views.sportsRoles(u))).toList();
     }
     public UUID login(String account) {
         requireDemo();return db.first(UserEntity.class,"e.demoAccount=:account and e.passwordHash is null",Map.of("account",account)).orElseThrow(Problem::notFound).id;

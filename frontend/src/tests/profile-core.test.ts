@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
-import { readProfile, profilePatch } from "../entities/profile/api/mappers";
+import {
+  readProfile,
+  profilePatch,
+  profilePatchSchema,
+} from "../entities/profile/api/mappers";
 import { createHttpProfileRepository } from "../entities/profile/api/http-profile-repository";
 import { ownProfileQuery } from "../entities/profile";
 import {
@@ -24,6 +28,21 @@ const repository = (result: Profile = profile()): ProfileRepository => ({
 });
 
 describe("profile use case and API boundary", () => {
+  it("reads legacy roles without displaying or accepting them for editing", () => {
+    const old = readProfile({
+      ...wire(),
+      sportsRoles: ["COACH", "REFEREE", "ATHLETE"],
+      rank: "ELITE",
+      ratingPoints: 9999,
+    });
+    expect(old.roles).toEqual(["ATHLETE"]);
+    expect(old).not.toHaveProperty("points");
+    expect(old).not.toHaveProperty("rank");
+    for (const role of ["COACH", "REFEREE"])
+      expect(
+        profilePatchSchema.safeParse({ sportsRoles: [role] }).success,
+      ).toBe(false);
+  });
   it("accepts the server uniform and reset default while rejecting a different chosen character", async () => {
     const base = profile();
     const draft = {
@@ -63,9 +82,10 @@ describe("profile use case and API boundary", () => {
       ...profile(),
       ...changes,
       roles: [...changes.roles].reverse(),
-      points: 30,
     });
-    expect((await updateProfile(repo, profile().id, draft)).points).toBe(30);
+    const updated = await updateProfile(repo, profile().id, draft);
+    expect(updated).not.toHaveProperty("points");
+    expect(updated).not.toHaveProperty("rank");
     const patch = profilePatch(changes);
     expect(patch).toMatchObject({
       displayName: "Новое имя",

@@ -1,3 +1,4 @@
+import { activeSportsRoles } from "../shared/model/sports-roles";
 import { z } from "zod";
 import type { UserProfileDto, PublicUser } from "../shared/api/types";
 import { profileSchema } from "../entities/profile/api/mappers";
@@ -26,7 +27,15 @@ function read(): UserProfileDto[] {
     : z.array(profileSchema).parse(JSON.parse(saved));
 }
 export function savedProfile(id: string) {
-  return read().find((item) => item.id === id);
+  const profile = read().find((item) => item.id === id);
+  return profile
+    ? {
+        ...profile,
+        sportsRoles: activeSportsRoles(profile.sportsRoles),
+        rank: "ROOKIE" as const,
+        ratingPoints: 0,
+      }
+    : undefined;
 }
 export function saveProfile(profile: UserProfileDto) {
   memory = [
@@ -45,11 +54,17 @@ export function refreshMockUser(user: PublicUser): PublicUser {
         nickname: profile.nickname,
         displayName: profile.displayName,
         avatarUrl: mockAvatar({ ...user, avatarUrl: profile.avatarUrl }),
-        sportsRoles: [...profile.sportsRoles],
-        rank: profile.rank,
-        ratingPoints: profile.ratingPoints,
+        sportsRoles: activeSportsRoles(profile.sportsRoles),
+        rank: "ROOKIE",
+        ratingPoints: 0,
       }
-    : { ...user, avatarUrl: mockAvatar(user) };
+    : {
+        ...user,
+        sportsRoles: activeSportsRoles(user.sportsRoles),
+        rank: "ROOKIE",
+        ratingPoints: 0,
+        avatarUrl: mockAvatar(user),
+      };
 }
 export function resetMockProfiles() {
   memory = [];

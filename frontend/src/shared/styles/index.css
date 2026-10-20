@@ -2919,22 +2919,6 @@ input[type="radio"] {
 .profile-preferences span {
   color: var(--color-ink-muted);
 }
-.profile-rating {
-  display: flex;
-  align-items: start;
-  gap: var(--space-4);
-  margin-top: var(--space-8);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--color-outline);
-}
-.profile-rating svg {
-  flex-shrink: 0;
-}
-.profile-rating p {
-  color: var(--color-ink-muted);
-  font-size: 13px;
-  margin-top: var(--space-2);
-}
 .profile-public-link {
   text-align: center;
   margin-top: var(--space-6);
@@ -3589,9 +3573,6 @@ input[type="radio"] {
 .login-panel form > .signup-fields {
   gap: var(--space-5);
   margin-bottom: var(--space-5);
-}
-.profile-rating > div {
-  min-width: 0;
 }
 .profile-toolbar > .eyebrow {
   flex-shrink: 0;

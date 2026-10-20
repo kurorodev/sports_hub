@@ -5,12 +5,9 @@ import {
   type SportRole,
   type ExperienceLevel,
   type PreferredTime,
-  type Profile,
 } from "../model";
 export const sportRoleLabels: Record<SportRole, string> = {
   ATHLETE: "Спортсмен",
-  COACH: "Тренер",
-  REFEREE: "Судья",
   SPORTS_ORGANIZER: "Организатор спорта",
 };
 export const levelLabels: Record<ExperienceLevel, string> = {
@@ -24,12 +21,6 @@ export const timeLabels: Record<PreferredTime, string> = {
   DAY: "Днём",
   EVENING: "Вечером",
   ANY: "Любое время",
-};
-export const rankLabels: Record<Profile["rank"], string> = {
-  ROOKIE: "Новичок",
-  ACTIVE: "Активный",
-  EXPERIENCED: "Опытный",
-  ELITE: "Элита",
 };
 const messages: Record<ProfileFailureCode, string> = {
   network: "Нет связи с сервером. Проверьте подключение и повторите попытку.",

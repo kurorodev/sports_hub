@@ -1,3 +1,4 @@
+import { activeSportsRoles } from "../../../shared/model/sports-roles";
 import { z } from "zod";
 import type {
   UserProfileDto,
@@ -25,7 +26,9 @@ export const profileSchema = z.object({
   bio: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
-  sportsRoles: z.array(z.enum(sportRoles)),
+  sportsRoles: z.array(
+    z.enum(["ATHLETE", "COACH", "REFEREE", "SPORTS_ORGANIZER"]),
+  ),
   sportsPreferences: z.array(preferenceSchema),
   preferredTime: z.enum(preferredTimes).nullable().optional(),
   rank: z.enum(["ROOKIE", "ACTIVE", "EXPERIENCED", "ELITE"]),
@@ -34,7 +37,10 @@ export const profileSchema = z.object({
 }) satisfies z.ZodType<UserProfileDto>;
 export const profilePatchSchema = z
   .object({
-    nickname: z.string().regex(/^[A-Za-z0-9_-]{3,40}$/).optional(),
+    nickname: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{3,40}$/)
+      .optional(),
     displayName: z
       .string()
       .min(1)
@@ -78,11 +84,9 @@ export function readProfile(value: unknown): Profile {
     city: dto.city ?? null,
     avatarUrl:
       dto.avatarUrl && safeAvatarUrl(dto.avatarUrl) ? dto.avatarUrl : null,
-    roles: [...dto.sportsRoles],
+    roles: activeSportsRoles(dto.sportsRoles),
     preferences: dto.sportsPreferences.map((item) => ({ ...item })),
     preferredTime: dto.preferredTime ?? null,
-    rank: dto.rank,
-    points: dto.ratingPoints,
     memberSince: dto.createdAt,
   };
 }
