@@ -94,7 +94,7 @@ public class EventService {
         for(String key:f.keySet())if(!allowed.contains(key))throw Problem.invalid("Неизвестный фильтр: "+key);
         StringBuilder where=new StringBuilder("e.status=:published");var p=new HashMap<String,Object>();p.put("published",Api.EventStatus.PUBLISHED);
         if(!bool(f,"includePast",false)) { where.append(" and e.startsAt>=:now");p.put("now",clock.instant()); }
-        if(has(f,"q")) { where.append(" and (lower(e.title) like :q or lower(e.description) like :q or lower(e.customSportName) like :q)");p.put("q",like(f.get("q"))); }
+        if(has(f,"q"))where.append(" and ").append(EventTextSearch.condition(f.get("q"),p));
         if(has(f,"sportId")) { where.append(" and e.sportId=:sportId");p.put("sportId",catalog.resolve(uuid(f.get("sportId"))).id); }
         if(has(f,"sport")) { where.append(" and (e.sportId in (select s.id from SportEntity s where lower(s.name) like :sport) or lower(e.customSportName) like :sport)");p.put("sport",like(f.get("sport"))); }
         if(has(f,"city")) { where.append(" and lower(e.city)=:city");p.put("city",f.get("city").strip().toLowerCase(Locale.ROOT)); }
