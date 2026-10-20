@@ -3707,7 +3707,8 @@ input[type="radio"] {
 
 /* One dropdown menu across forms, filters and cabinets. The native field only carries form events. */
 .native-select > .sport-select { width: 100%; }
-.native-select > select.select-native-input {
+.native-select > select.select-native-input,
+.city-select > input.select-native-input {
   position: absolute;
   width: 1px;
   height: 1px;

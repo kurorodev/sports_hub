@@ -1,3 +1,4 @@
+import { selectCity } from "../helpers/cities";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "../helpers/approval";
 import type { Session, Sport } from "../../src/shared/api/types";
@@ -94,13 +95,9 @@ for (const width of [375, 1440]) {
     await expect(cards).toContainText(names.near);
     await radius.selectOption("500");
     await expect(cards).toHaveCount(2);
-    await page
-      .getByRole("combobox", { name: "Город", exact: true })
-      .selectOption("Москва");
+    await selectCity(page, "Москва");
     await expect(cards).toHaveCount(0);
-    await page
-      .getByRole("combobox", { name: "Город", exact: true })
-      .selectOption("Самара");
+    await selectCity(page, "Самара");
     await expect(cards).toHaveCount(2);
     expect(page.url()).not.toContain("originLatitude");
     await page.screenshot({

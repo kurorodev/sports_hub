@@ -9,6 +9,7 @@ import {
   type ProfileRepository,
 } from "../../../entities/profile/model";
 import { avatarCharacter } from "../../../shared/model/avatars";
+import { canonicalCityName } from "../../../shared/model/cities";
 const text = (value: string) => value.trim() || null;
 export function normalizeProfile(draft: ProfileDraft): ProfileChanges {
   const result: ProfileChanges = {
@@ -18,7 +19,7 @@ export function normalizeProfile(draft: ProfileDraft): ProfileChanges {
     firstName: text(draft.firstName),
     lastName: text(draft.lastName),
     about: text(draft.about),
-    city: text(draft.city),
+    city: canonicalCityName(draft.city) ?? text(draft.city),
     avatarUrl: text(draft.avatarUrl),
     roles: [...draft.roles],
     preferences: draft.preferences.map((item) => ({ ...item })),
@@ -31,7 +32,7 @@ export function normalizeProfile(draft: ProfileDraft): ProfileChanges {
     (result.firstName?.length ?? 0) > 80 ||
     (result.lastName?.length ?? 0) > 80 ||
     (result.about?.length ?? 0) > 1000 ||
-    (result.city?.length ?? 0) > 100 ||
+    (result.city !== null && !canonicalCityName(result.city)) ||
     (result.avatarUrl !== null && !safeAvatarUrl(result.avatarUrl)) ||
     result.roles.some((role) => !sportRoles.includes(role)) ||
     new Set(result.roles).size !== result.roles.length ||

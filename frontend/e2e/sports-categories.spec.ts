@@ -1,3 +1,4 @@
+import { selectCity } from "./helpers/cities";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "./helpers/approval";
 
@@ -15,7 +16,9 @@ for (const width of [375, 768, 1440]) {
     await expect(
       page.getByRole("option", { name: "Другое", exact: true }),
     ).toHaveCount(1);
-    await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
+    await page
+      .getByRole("option", { name: "Легкая атлетика", exact: true })
+      .click();
     await expect(
       page.getByRole("heading", { name: "Утро. Парк. Лёгкий бег." }),
     ).toBeVisible();
@@ -37,7 +40,7 @@ for (const width of [375, 768, 1440]) {
     await page
       .getByLabel("О встрече", { exact: true })
       .fill("Встречаемся в парке, объясняем правила и играем вместе.");
-    await page.getByLabel("Город", { exact: true }).fill("Самара");
+    await selectCity(page, "Самара");
     await page
       .getByLabel("Место встречи", { exact: true })
       .fill("Главный вход в парк");

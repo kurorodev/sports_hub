@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { z } from "zod";
+import { citySchema } from "../shared/api/city-schema";
 import type { Session } from "../shared/api/types";
 import type { SupportTicket, SupportMessage } from "../entities/support/model";
 import {
@@ -46,7 +47,7 @@ const createSchema = z
     description: z.string().trim().min(10).max(5000),
     commentId: z.string().uuid().optional(),
     reportReason: z.enum(reportReasons).optional(),
-    venueCity: z.string().trim().min(1).max(120).optional(),
+    venueCity: citySchema.optional(),
     venueAddress: z.string().trim().min(1).max(300).optional(),
     venueLatitude: z.number().min(-90).max(90).nullish(),
     venueLongitude: z.number().min(-180).max(180).nullish(),

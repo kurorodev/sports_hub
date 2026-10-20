@@ -2,7 +2,7 @@ import { tr } from "../../../shared/i18n/translate";
 import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { Select } from "../../../shared/ui/Select";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +29,8 @@ import { useUpdateProfile } from "./use-update-profile";
 import { AvatarPicker } from "./AvatarPicker";
 import { avatarCharacter } from "../../../shared/model/avatars";
 import { sessionQuery } from "../../../entities/session";
+import { CitySelect } from "../../../shared/ui/CitySelect";
+import { optionalCitySchema } from "../../../shared/api/city-schema";
 const schema = z.object({
   handle: handleSchema,
   name: z
@@ -39,7 +41,7 @@ const schema = z.object({
   firstName: z.string().trim().max(80, "До 80 символов"),
   lastName: z.string().trim().max(80, "До 80 символов"),
   about: z.string().trim().max(1000, "Описание — до 1000 символов"),
-  city: z.string().trim().max(100, "Город — до 100 символов"),
+  city: optionalCitySchema,
   avatarUrl: z
     .string()
     .trim()
@@ -90,7 +92,6 @@ export function ProfileForm({
     ["handle", "Никнейм", 41, "Например, @alex_sport"],
     ["firstName", "Имя (необязательно)", 80, "Например, Алексей"],
     ["lastName", "Фамилия (необязательно)", 80, "Например, Иванов"],
-    ["city", "Город", 100, "Например, Самара"],
   ] as const;
   return (
     <form
@@ -170,9 +171,7 @@ export function ProfileForm({
                     ? "given-name"
                     : field === "lastName"
                       ? "family-name"
-                      : field === "city"
-                        ? "address-level2"
-                        : "off"
+                      : "off"
                 }
                 aria-invalid={Boolean(errors[field])}
                 aria-describedby={
@@ -181,6 +180,28 @@ export function ProfileForm({
               />
             </FormField>
           ))}
+          <FormField
+            id="profile-city"
+            label={tr("Город")}
+            error={errors.city?.message}
+          >
+            <Controller
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <CitySelect
+                  id="profile-city"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  aria-invalid={Boolean(errors.city)}
+                  aria-describedby={
+                    errors.city ? "profile-city-error" : undefined
+                  }
+                />
+              )}
+            />
+          </FormField>
         </div>
         <FormField
           id="profile-about"

@@ -84,7 +84,7 @@ class QuestionnaireTest extends ApiTestSupport {
         assertThat(match.path("score").asInt()).isEqualTo(100);
         call(login("admin"),"POST","/admin/events/"+eventId+"/unpublish",Map.of("reason","Проверка модерации"),200);
         assertThat(getJson(user,"/events/recommended").path("items").toString()).doesNotContain(eventId);
-        var changed=answers(event.sportId.toString());changed.put("city","Другой город");
+        var changed=answers(event.sportId.toString());changed.put("city","Казань");
         call(user,"POST","/me/questionnaire",changed,200);
         assertThat(getJson(user,"/events/recommended").path("items")).isEmpty();
     }

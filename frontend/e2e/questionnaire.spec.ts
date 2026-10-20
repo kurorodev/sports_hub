@@ -1,3 +1,4 @@
+import { selectCity } from "./helpers/cities";
 import { test, expect, type Page } from "@playwright/test";
 
 async function register(page: Page, next = "") {
@@ -16,7 +17,7 @@ async function register(page: Page, next = "") {
 }
 async function fillPreferences(page: Page, city = "Москва") {
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("В каком городе планируешь заниматься?").fill(city);
+  await selectCity(dialog, city, "В каком городе планируешь заниматься?");
   await dialog
     .getByLabel("Какие виды спорта тебе интересны?")
     .fill("Баскетбол");
@@ -76,16 +77,17 @@ for (const width of [375, 1440]) {
       page
         .getByRole("dialog")
         .getByLabel("В каком городе планируешь заниматься?"),
-    ).toHaveValue("Москва");
+    ).toHaveText("Москва");
     await expect(
       page
         .getByRole("dialog")
         .getByRole("button", { name: "Убрать Баскетбол" }),
     ).toBeVisible();
-    await page
-      .getByRole("dialog")
-      .getByLabel("В каком городе планируешь заниматься?")
-      .fill("Казань");
+    await selectCity(
+      page.getByRole("dialog"),
+      "Казань",
+      "В каком городе планируешь заниматься?",
+    );
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "Продолжить" })
@@ -122,13 +124,21 @@ test("skip survives reload and allows filling in profile", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("registration keeps the destination after skipping onboarding", async ({ page }) => {
+test("registration keeps the destination after skipping onboarding", async ({
+  page,
+}) => {
   await register(page, "create-event");
   await expect(page).toHaveURL("/events/new");
-  await page.getByRole("button", { name: "Пропустить анкету", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Пропустить анкету", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByLabel("Название встречи", { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel("Название встречи", { exact: true }),
+  ).toBeVisible();
   await page.reload();
-  await expect(page.getByLabel("Название встречи", { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel("Название встречи", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

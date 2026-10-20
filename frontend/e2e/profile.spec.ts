@@ -1,3 +1,4 @@
+import { selectCity } from "./helpers/cities";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "./helpers/approval";
 import type { UserProfileDto } from "../src/shared/api/types";
@@ -25,7 +26,7 @@ for (const width of [320, 375, 768, 1024, 1440]) {
     await page
       .getByLabel("Никнейм", { exact: true })
       .fill(`alex-profile-${width}`);
-    await page.getByLabel("Город", { exact: true }).fill("Самара");
+    await selectCity(page, "Самара");
     await page
       .getByLabel("О себе", { exact: true })
       .fill("Люблю бег и новые знакомства. <b>Без спешки</b>.");

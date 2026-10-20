@@ -1,3 +1,4 @@
+import { selectCity } from "../helpers/cities";
 import { test, expect, type Page } from "@playwright/test";
 
 async function signIn(page: Page, accountId: string) {
@@ -37,7 +38,7 @@ for (const width of [375, 768, 1440]) {
     await page
       .getByLabel("О встрече", { exact: true })
       .fill("Встречаемся у входа в парк и вместе бежим в спокойном темпе.");
-    await page.getByLabel("Город", { exact: true }).fill("Красноярск");
+    await selectCity(page, "Красноярск");
     await page
       .getByLabel("Место встречи", { exact: true })
       .fill("Парк, главный вход");

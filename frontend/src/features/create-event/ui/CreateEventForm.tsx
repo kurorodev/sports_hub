@@ -469,16 +469,6 @@ export function CreateEventForm({
               )}
             </p>
           </div>
-          <div className="create-aside-note">
-            <span className="eyebrow muted">
-              {tr("Твоя идея — чей-то план на вечер")}
-            </span>
-            <p>
-              {tr("Не нашёл свой спорт?")}
-              <br />
-              <strong>{tr("Добавь его сам.")}</strong>
-            </p>
-          </div>
         </aside>
       </div>
     </section>

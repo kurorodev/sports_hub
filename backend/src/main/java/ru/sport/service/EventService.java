@@ -41,7 +41,7 @@ public class EventService {
         if(name.length()<2 || name.length()>80)throw Problem.invalid("Название спорта: от 2 до 80 символов");
         return catalog.other();
     }
-    private void location(EventEntity e,Api.Location l) { e.city=l.city().strip();e.address=l.address().strip();e.latitude=l.latitude();e.longitude=l.longitude(); }
+    private void location(EventEntity e,Api.Location l) { e.city=CityNames.required(l.city());e.address=l.address().strip();e.latitude=l.latitude();e.longitude=l.longitude(); }
     private void validateTime(EventEntity e) {
         if(!e.startsAt.isAfter(clock.instant()))throw Problem.invalid("Дата начала должна быть в будущем");
         if(e.endsAt!=null && !e.endsAt.isAfter(e.startsAt))throw Problem.invalid("Дата окончания должна быть позже начала");
@@ -73,7 +73,7 @@ public class EventService {
         if(patch.has("requirements"))e.requirements=ProfileService.text(patch,"requirements");
         if(patch.has("skillLevel"))e.skillLevel=Api.EventSkillLevel.valueOf(patch.path("skillLevel").asText());
         if(patch.has("location")) {
-            var l=patch.path("location");e.city=l.path("city").asText().strip();e.address=l.path("address").asText().strip();
+            var l=patch.path("location");e.city=CityNames.required(l.path("city").asText());e.address=l.path("address").asText().strip();
             e.latitude=l.path("latitude").isMissingNode()||l.path("latitude").isNull()?null:l.path("latitude").asDouble();
             e.longitude=l.path("longitude").isMissingNode()||l.path("longitude").isNull()?null:l.path("longitude").asDouble();
         }
@@ -109,7 +109,7 @@ public class EventService {
         if(has(f,"q"))where.append(" and ").append(EventTextSearch.condition(f.get("q"),p));
         if(has(f,"sportId")) { where.append(" and e.sportId=:sportId");p.put("sportId",catalog.resolve(uuid(f.get("sportId"))).id); }
         if(has(f,"sport")) { where.append(" and (e.sportId in (select s.id from SportEntity s where lower(s.name) like :sport) or lower(e.customSportName) like :sport)");p.put("sport",like(f.get("sport"))); }
-        if(has(f,"city")) { where.append(" and lower(e.city)=:city");p.put("city",f.get("city").strip().toLowerCase(Locale.ROOT)); }
+        if(has(f,"city")) { where.append(" and lower(e.city)=:city");p.put("city",CityNames.required(f.get("city")).toLowerCase(Locale.ROOT)); }
         Instant from=has(f,"from")?instant(f.get("from")):null,to=has(f,"to")?instant(f.get("to")):null;
         if(from!=null && to!=null && from.isAfter(to))throw Problem.invalid("from должен быть раньше to");
         if(from!=null){where.append(" and e.startsAt>=:from");p.put("from",from);}

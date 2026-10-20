@@ -69,7 +69,7 @@ public class SupportService {
         if(input.category()==SupportApi.Category.VENUE_SUGGESTION) {
             if(input.venueCity()==null || input.venueCity().isBlank() || input.venueAddress()==null || input.venueAddress().isBlank())throw Problem.invalid("Укажите город и адрес площадки");
             if((input.venueLatitude()==null)!=(input.venueLongitude()==null))throw Problem.invalid("Укажите обе координаты площадки");
-            t.venueCity=input.venueCity();t.venueAddress=input.venueAddress();t.venueLatitude=input.venueLatitude();t.venueLongitude=input.venueLongitude();
+            t.venueCity=CityNames.required(input.venueCity());t.venueAddress=input.venueAddress();t.venueLatitude=input.venueLatitude();t.venueLongitude=input.venueLongitude();
         } else if(input.venueCity()!=null || input.venueAddress()!=null || input.venueLatitude()!=null || input.venueLongitude()!=null)throw Problem.invalid("Место указывается только для предложения площадки");
         t.createdAt=clock.instant();t.updatedAt=t.createdAt;db.add(t);
         notifyAdmins(t,user.id,Api.NotificationType.SUPPORT_NEW,t.category==SupportApi.Category.COMMENT_REPORT?"Новая жалоба на комментарий":"Новое обращение в поддержку","support-new:"+t.id);

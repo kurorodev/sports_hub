@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EventCreate } from "./types";
+import { citySchema } from "./city-schema";
 
 /** UI/mock validation aligned with EventCreate in the generated contract. Java validates independently. */
 export const eventFieldsSchema = z.object({
@@ -14,7 +15,7 @@ export const eventFieldsSchema = z.object({
     .min(10, "Расскажите о встрече: минимум 10 символов")
     .max(5000, "Описание — до 5000 символов"),
   location: z.object({
-    city: z.string().trim().min(1, "Укажите город").max(120),
+    city: citySchema,
     address: z.string().trim().min(1, "Укажите место встречи").max(300),
     latitude: z.number().min(-90).max(90).nullable().optional(),
     longitude: z.number().min(-180).max(180).nullable().optional(),

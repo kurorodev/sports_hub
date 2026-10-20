@@ -1,3 +1,4 @@
+import { selectCity } from "../helpers/cities";
 import { test, expect, type Page } from "@playwright/test";
 import { setupMapEvent } from "../helpers/maps";
 import { signInAs } from "../helpers/approval";
@@ -10,7 +11,7 @@ async function login(page: Page) {
   await expect(page).toHaveURL("/");
 }
 async function manualPoint(page: Page) {
-  await page.getByLabel("Город", { exact: true }).fill("Самара");
+  await selectCity(page, "Самара");
   const address = page.getByRole("combobox", {
     name: /Место встречи|Адрес площадки/,
   });
@@ -21,7 +22,7 @@ async function manualPoint(page: Page) {
   await expect(
     page.getByText(/Поиск адресов недоступен. Заполните город/),
   ).toBeVisible();
-  await expect(page.getByLabel("Город", { exact: true })).toHaveValue("Самара");
+  await expect(page.getByLabel("Город", { exact: true })).toHaveText("Самара");
   await expect(address).toHaveValue("площадь Куйбышева · точка для проверки");
   await page.getByRole("button", { name: "Подтвердить адрес точки" }).click();
 }
@@ -39,7 +40,9 @@ test("Java map: disabled geocoder keeps event creation with a pin working", asyn
   const title = `Встреча с точкой Java ${Date.now()}`;
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
   await page.getByLabel("Вид спорта", { exact: true }).click();
-  await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
+  await page
+    .getByRole("option", { name: "Легкая атлетика", exact: true })
+    .click();
   await page
     .getByLabel("О встрече", { exact: true })
     .fill("Знакомимся и занимаемся вместе на выбранной точке карты.");

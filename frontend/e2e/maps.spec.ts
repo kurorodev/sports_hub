@@ -1,3 +1,4 @@
+import { selectCity } from "./helpers/cities";
 import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -14,7 +15,7 @@ async function login(page: Page) {
   await expect(page).toHaveURL("/");
 }
 async function selectLocation(page: Page) {
-  await page.getByLabel("Город", { exact: true }).fill("Самара");
+  await selectCity(page, "Самара");
   await page
     .getByRole("combobox", { name: /Место встречи|Адрес площадки/ })
     .fill("площадь Куйбышева");

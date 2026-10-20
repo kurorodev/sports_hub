@@ -1,3 +1,4 @@
+import { selectCity } from "./cities";
 import { expect, type Page } from "@playwright/test";
 export async function signInAs(page: Page, accountId: string) {
   await page.goto("/login");
@@ -9,13 +10,15 @@ export async function createApproval(page: Page, title: string) {
   await page.goto("/events/new");
   await page.getByLabel("Название встречи", { exact: true }).fill(title);
   await page.getByLabel("Вид спорта", { exact: true }).click();
-  await page.getByRole("option", { name: "Легкая атлетика", exact: true }).click();
+  await page
+    .getByRole("option", { name: "Легкая атлетика", exact: true })
+    .click();
   await page
     .getByLabel("О встрече", { exact: true })
     .fill(
       "Собираемся у входа в парк. Пробежка в спокойном темпе для новичков.",
     );
-  await page.getByLabel("Город", { exact: true }).fill("Москва");
+  await selectCity(page, "Москва");
   await page
     .getByLabel("Место встречи", { exact: true })
     .fill("Парк, главный вход");

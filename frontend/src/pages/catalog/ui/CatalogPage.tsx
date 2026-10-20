@@ -23,7 +23,8 @@ import { DateRangeFields } from "../../../shared/ui/DateRangeFields";
 import { SearchableSelect } from "../../../shared/ui/SearchableSelect";
 import { Select } from "../../../shared/ui/Select";
 import { useEffect, useState } from "react";
-import { canonicalCityName, russianCities } from "../../../shared/lib/cities";
+import { canonicalCityName } from "../../../shared/lib/cities";
+import { CitySelect } from "../../../shared/ui/CitySelect";
 import { Stories } from "../../../features/stories";
 
 export function CatalogPage() {
@@ -80,9 +81,6 @@ export function CatalogPage() {
     placeholderData: keepPreviousData,
   });
   const sports = useQuery(sportsQuery);
-  const cities = city
-    ? [city, ...russianCities.filter((name) => name !== city)]
-    : russianCities;
   useEffect(() => {
     if (requestedCity === city) return;
     setParams(
@@ -195,24 +193,13 @@ export function CatalogPage() {
           </label>
           <div className="city-field">
             <MapPin size={19} />
-            <SearchableSelect
+            <CitySelect
               id="catalog-city"
               aria-label={tr("Город")}
               value={city}
               onChange={(value) => setFilter("city", value)}
-              options={[
-                { id: "", name: tr("Все города") },
-                ...cities.map((name) => ({ id: name, name })),
-              ]}
-              matchFromStart
               maxOptions={3}
-              searchLabel={tr("Поиск города")}
-              searchPlaceholder={tr("Введите город…")}
-              listLabel={tr("Города")}
-              placeholder={tr("Все города")}
-              hint={tr(
-                "Начните вводить название и выберите город из подсказок",
-              )}
+              emptyLabel="Все города"
             />
           </div>
           <button className="button primary" type="submit">

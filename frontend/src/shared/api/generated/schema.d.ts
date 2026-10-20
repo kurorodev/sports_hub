@@ -1393,6 +1393,7 @@ export interface components {
             /** Format: uuid */
             commentId?: string;
             reportReason?: components["schemas"]["SupportReportReason"];
+            /** @description При сохранении выберите город из справочника городов России. Произвольные названия отклоняются. */
             venueCity?: string;
             /** Format: double */
             venueLatitude?: number | null;
@@ -1585,6 +1586,7 @@ export interface components {
         /** @enum {string} */
         QuestionnaireStatus: "PENDING" | "SKIPPED" | "COMPLETED";
         QuestionnaireAnswers: {
+            /** @description При сохранении выберите город из справочника городов России. Произвольные названия отклоняются. */
             city: string;
             sportsPreferences: components["schemas"]["SportsPreference"][];
             /** @enum {string} */
@@ -1640,6 +1642,7 @@ export interface components {
             bio?: string | null;
             /** Format: uri-reference */
             avatarUrl?: string | null;
+            /** @description При сохранении выберите город из справочника городов России. Произвольные названия отклоняются. */
             city?: string | null;
             sportsRoles?: ("ATHLETE" | "SPORTS_ORGANIZER")[];
             sportsPreferences?: components["schemas"]["SportsPreference"][];
@@ -1710,6 +1713,7 @@ export interface components {
             customName: string;
         };
         Location: {
+            /** @description При сохранении выберите город из справочника городов России. Произвольные названия отклоняются. */
             city: string;
             address: string;
             /** Format: double */
@@ -2095,6 +2099,7 @@ export interface components {
             location: components["schemas"]["Location"] | null;
         };
         VenueLocation: {
+            /** @description При сохранении выберите город из справочника городов России. Произвольные названия отклоняются. */
             city: string;
             address: string;
             /** Format: double */

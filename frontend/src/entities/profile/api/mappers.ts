@@ -1,5 +1,6 @@
 import { activeSportsRoles } from "../../../shared/model/sports-roles";
 import { z } from "zod";
+import { optionalCitySchema } from "../../../shared/api/city-schema";
 import type {
   UserProfileDto,
   ProfilePatchDto,
@@ -50,7 +51,7 @@ export const profilePatchSchema = z
     firstName: z.string().max(80).nullable().optional(),
     lastName: z.string().max(80).nullable().optional(),
     bio: z.string().max(1000).nullable().optional(),
-    city: z.string().max(100).nullable().optional(),
+    city: optionalCitySchema.nullable().optional(),
     avatarUrl: z.string().refine(safeAvatarUrl).nullable().optional(),
     sportsRoles: z
       .array(z.enum(sportRoles))

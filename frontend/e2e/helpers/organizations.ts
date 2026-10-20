@@ -1,3 +1,4 @@
+import { selectCity } from "./cities";
 import { expect, type Page } from "@playwright/test";
 import type { OrganizationDto } from "../../src/shared/api/types";
 
@@ -54,7 +55,7 @@ export async function publishOrganizationEvent(page: Page, title: string) {
     .fill(
       "Встречаемся у входа в парк. Пробежка клуба для новичков в спокойном темпе.",
     );
-  await page.getByLabel("Город", { exact: true }).fill("Москва");
+  await selectCity(page, "Москва");
   await page
     .getByLabel("Место встречи", { exact: true })
     .fill("Парк, главный вход");
