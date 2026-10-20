@@ -142,13 +142,14 @@ public class EventService {
     }
     public PageResult<Api.RecommendedEvent> recommendations(String city,int page,int size) {
         var u=access.user();int offset=PageResult.offset(page,size);
-        Map<String,String> f=city==null?Map.of():Map.of("city",city);var query=filters(f);
+        String preferredCity=city==null?u.city:city;
+        Map<String,String> f=preferredCity==null?Map.of():Map.of("city",preferredCity);var query=filters(f);
         List<Api.RecommendedEvent> ranked=db.list(EventEntity.class,query.where,query.params).stream().map(e -> {
             var reasons=new ArrayList<Api.MatchReason>();int score=0;
             var preference=u.sportsPreferences.stream().filter(p -> p.sportId.equals(e.sportId)).findFirst();
             if(preference.isPresent()){score+=50;reasons.add(Api.MatchReason.FAVORITE_SPORT);}
             if(e.skillLevel==Api.EventSkillLevel.ANY || preference.map(p -> p.level.name().equals(e.skillLevel.name())).orElse(false)) {score+=20;reasons.add(Api.MatchReason.SUITABLE_LEVEL);}
-            int hour=e.startsAt.atZone(ZoneOffset.UTC).getHour();
+            int hour=e.startsAt.atZone(ZoneId.of(u.recommendationTimeZone)).getHour();
             String time=hour<6?"EVENING":hour<12?"MORNING":hour<18?"DAY":"EVENING";
             if(u.preferredTime!=null && (u.preferredTime.equals("ANY") || u.preferredTime.equals(time))){score+=20;reasons.add(Api.MatchReason.PREFERRED_TIME);}
             Integer spots=view.spots(e);if(spots==null || spots>0){score+=10;reasons.add(Api.MatchReason.AVAILABLE_SPOTS);}

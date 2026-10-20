@@ -42,6 +42,9 @@ export type PagedCommentsDto = Schemas["PagedComments"];
 
 export type UserProfileDto = Schemas["UserProfile"];
 export type ProfilePatchDto = Schemas["ProfilePatch"];
+export type Questionnaire = Schemas["Questionnaire"];
+export type QuestionnaireAnswers = Schemas["QuestionnaireAnswers"];
+export type RecommendedEvents = Schemas["PagedRecommendedEvents"];
 
 export type AuthRegistrationRequest =
   components["schemas"]["AuthRegistrationRequest"];

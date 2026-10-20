@@ -82,6 +82,8 @@ for (const width of [375, 768, 1440]) {
         ?.httpOnly,
     ).toBe(true);
     await expect(page).toHaveURL("/events/new");
+    await page.getByRole("button", { name: "Пропустить, заполню позже" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator(".header-account")).toContainText(name);
     const title = `Новая встреча ${suffix}`;
     const requirements =

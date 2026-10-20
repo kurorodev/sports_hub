@@ -15,6 +15,8 @@ async function newUser(page: Page) {
     .getByRole("button", { name: "Создать аккаунт", exact: true })
     .click();
   await expect(page).toHaveURL("/profile");
+  await page.getByRole("button", { name: "Пропустить, заполню позже" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   return nickname;
 }
 async function returnUser(page: Page, nickname: string) {

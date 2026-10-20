@@ -1,4 +1,5 @@
 import { NotificationBell } from "../features/notifications";
+import { QuestionnaireOnboarding } from "../features/user-questionnaire";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, UserRound, Headset } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
@@ -101,6 +102,12 @@ export function Layout() {
           <span>Спортивные встречи · 2026</span>
         </div>
       </footer>
+      {session.data && !session.isError && (
+        <QuestionnaireOnboarding
+          key={session.data.user.id}
+          userId={session.data.user.id}
+        />
+      )}
     </>
   );
 }

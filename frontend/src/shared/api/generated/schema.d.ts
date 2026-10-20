@@ -331,6 +331,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/questionnaire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Статус анкеты и текущие предпочтения пользователя */
+        get: operations["getMyQuestionnaire"];
+        put?: never;
+        /**
+         * Сохранить анкету и сформировать рекомендации
+         * @description Обновляет город, любимые виды спорта, уровень и время в профиле. Данные других полей профиля сохраняются. Повторная отправка заменяет ответы атомарно.
+         */
+        post: operations["saveMyQuestionnaire"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/questionnaire/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Пропустить анкету; сохранённые ответы не удаляются */
+        post: operations["skipMyQuestionnaire"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/profile": {
         parameters: {
             query?: never;
@@ -456,7 +494,7 @@ export interface paths {
         };
         /**
          * Мне подходит — рекомендуемые мероприятия
-         * @description Только PUBLISHED предстоящие; scoring v1: +50 совпавший любимый спорт, +20 подходящий уровень, +20 подходящее время, +10 доступные места. Tie-break startsAt ASC, id ASC. Признаки объясняются в matchReasons.
+         * @description Только PUBLISHED предстоящие; scoring v1: +50 совпавший любимый спорт, +20 подходящий уровень, +20 подходящее время, +10 доступные места. Tie-break startsAt ASC, id ASC. Признаки объясняются в matchReasons. Если city не указан, используется город профиля. Время сопоставляется в часовом поясе анкеты (для старых профилей UTC).
          */
         get: operations["getEventsRecommended"];
         put?: never;
@@ -1346,6 +1384,26 @@ export interface components {
             sportsRoles: components["schemas"]["SportsRole"][];
             rank: components["schemas"]["Rank"];
             ratingPoints: number;
+        };
+        /** @enum {string} */
+        QuestionnaireStatus: "PENDING" | "SKIPPED" | "COMPLETED";
+        QuestionnaireAnswers: {
+            city: string;
+            sportsPreferences: components["schemas"]["SportsPreference"][];
+            /** @enum {string} */
+            preferredTime: "MORNING" | "DAY" | "EVENING" | "ANY";
+            /** @description Часовой пояс IANA для сопоставления удобного времени с началом мероприятия */
+            timeZone: string;
+        };
+        Questionnaire: {
+            status: components["schemas"]["QuestionnaireStatus"];
+            /** Format: date-time */
+            completedAt: string | null;
+            city: string | null;
+            sportsPreferences: components["schemas"]["SportsPreference"][];
+            /** @enum {string|null} */
+            preferredTime: "MORNING" | "DAY" | "EVENING" | "ANY" | null;
+            timeZone: string;
         };
         SportsPreference: {
             /** Format: uuid */
@@ -3089,6 +3147,81 @@ export interface operations {
                 };
             };
             500: components["responses"]["500"];
+        };
+    };
+    getMyQuestionnaire: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Анкета текущего пользователя */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Questionnaire"];
+                };
+            };
+            401: components["responses"]["401"];
+        };
+    };
+    saveMyQuestionnaire: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionnaireAnswers"];
+            };
+        };
+        responses: {
+            /** @description Сохранённые ответы */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Questionnaire"];
+                };
+            };
+            400: components["responses"]["400"];
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
+            404: components["responses"]["404"];
+        };
+    };
+    skipMyQuestionnaire: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Текущее состояние анкеты */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Questionnaire"];
+                };
+            };
+            401: components["responses"]["401"];
+            403: components["responses"]["403"];
         };
     };
     getMeProfile: {

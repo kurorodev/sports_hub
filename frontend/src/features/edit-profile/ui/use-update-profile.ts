@@ -36,6 +36,8 @@ export function useUpdateProfile(onSaved: (profile: Profile) => void) {
           ["comments"],
           ["organizations"],
           ["moderation"],
+          ["questionnaire", profile.id],
+          ["recommendations", profile.id],
         ].map((queryKey) => client.invalidateQueries({ queryKey })),
       ]);
     },

@@ -22,6 +22,7 @@ import {
 } from "../../../entities/profile";
 import { ProfileFailure } from "../../../entities/profile/model";
 import { ProfileForm } from "../../../features/edit-profile";
+import { ProfileRecommendations } from "../../../features/user-questionnaire";
 import { ErrorState, NotFound, Skeletons } from "../../../shared/ui/Feedback";
 import { isUuid } from "../../../shared/lib/identifiers";
 import { errorMessage } from "../../../shared/api/client";
@@ -189,6 +190,9 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
                 Посмотреть публичный профиль
               </Link>
             </p>
+          )}
+          {own && (
+            <ProfileRecommendations key={profile.id} userId={profile.id} />
           )}
         </>
       )}
