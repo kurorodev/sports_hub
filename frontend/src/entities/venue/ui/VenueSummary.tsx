@@ -1,3 +1,4 @@
+import { VenueWeekPreview } from "./VenueWeekPreview";
 import { tr } from "../../../shared/i18n/translate";
 import { useLocale } from "../../../shared/i18n/use-preferences";
 import type { VenueMapItem } from "../../../shared/api/types";
@@ -33,6 +34,7 @@ export function VenueSummary({
         {tr("Свежих оценок: ")}
         {level === "UNKNOWN" ? 0 : venue.occupancy.reportsCount}
       </p>
+      <VenueWeekPreview />
     </>
   );
 }
