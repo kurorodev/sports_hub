@@ -503,8 +503,15 @@ button:disabled {
 }
 .catalog-layout {
   display: grid;
-  grid-template-columns: 208px minmax(0, 1fr);
-  gap: var(--space-8);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+.filters-panel {
+  min-width: 0;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
 }
 .filters-panel summary {
   display: flex;
@@ -513,8 +520,12 @@ button:disabled {
   font-size: 15px;
   font-weight: 800;
   min-height: 44px;
+  border-radius: var(--radius-control);
   list-style: none;
 }
+.filters-chevron { margin-left: auto; color: var(--color-ink-muted); }
+.filters-panel details[open] > summary .filters-chevron { transform: rotate(180deg); }
+.filters-panel summary:focus-visible { outline: none; color: var(--color-ink-muted); }
 .filters-panel summary::-webkit-details-marker {
   display: none;
 }
@@ -527,9 +538,15 @@ button:disabled {
 }
 .filter-fields {
   display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: end;
   gap: var(--space-5);
   margin-top: var(--space-4);
+  margin-bottom: var(--space-3);
 }
+.filter-extras { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-5); }
+.filter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-6); }
+.filter-actions .checkbox-field { font-size: 12px; font-weight: 650; }
 .filter-fields > label {
   display: grid;
   gap: var(--space-2);
@@ -588,7 +605,7 @@ button:disabled {
 
 .filter-fields .checkbox-field {
   display: flex;
-  align-items: start;
+  align-items: center;
   gap: 10px;
   cursor: pointer;
   min-height: 44px;
@@ -1098,7 +1115,6 @@ input[type="radio"] {
   background: var(--color-surface);
 }
 .distance-filter legend { padding-inline: 6px; font-size: 14px; font-weight: 750; }
-.filter-fields > .distance-filter { grid-column: 1 / -1; }
 .distance-filter legend svg { vertical-align: middle; margin-right: 6px; }
 .distance-filter label { display: grid; gap: var(--space-2); font-size: 13px; }
 .distance-filter :is(select, .sport-select-trigger) { width: 100%; min-width: 0; min-height: 44px; padding: 8px var(--space-3); border: 1px solid var(--color-outline); border-radius: var(--radius-control); background: var(--color-surface); }
@@ -1148,28 +1164,12 @@ input[type="radio"] {
     right: 16px;
     top: 24px;
   }
-  .catalog-layout {
-    grid-template-columns: 1fr;
-    gap: var(--space-5);
-  }
-.filters-panel {
-    border: 1px solid var(--color-outline);
-    padding: 8px 16px;
-    border-radius: var(--radius-control);
-  }
   .filter-fields {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-bottom: var(--space-3);
   }
   .filter-note {
     display: none;
-  }
-  .filters-panel summary::after {
-    content: "Развернуть / свернуть";
-    margin-left: auto;
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--color-ink-muted);
   }
   .how-section {
     grid-template-columns: 1fr;
@@ -1273,9 +1273,6 @@ input[type="radio"] {
   }
   .filter-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .filters-panel summary::after {
-    font-size: 9px;
   }
   .results-toolbar {
     font-size: 11px;
@@ -3703,6 +3700,16 @@ input[type="radio"] {
 .distance-filter legend svg { margin-right: 0; }
 .map-toolbar > .distance-filter { flex-basis: 100%; }
 @media (min-width: 768px) {
+  .filter-extras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filter-extras > .filter-actions { flex-direction: column; align-items: flex-start; padding-top: var(--space-2); }
+  .filter-extras > .distance-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+  .filter-extras > .distance-filter > .field-hint,
+  .filter-extras > .distance-filter > .field-error,
+  .filter-extras > .distance-filter > [role="status"],
+  .filter-extras > .distance-filter > .reset-button { grid-column: 1 / -1; }
   .map-toolbar > .distance-filter { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
   .map-toolbar > .distance-filter > .field-error,
   .map-toolbar > .distance-filter > [role="status"],
@@ -3734,6 +3741,7 @@ input[type="radio"] {
 }
 .native-select .sport-select-trigger > span { font-weight: 400; }
 .city-field .native-select { min-width: 0; max-width: 190px; width: 100%; }
+.city-field > .sport-select { width: 190px; max-width: 100%; min-width: 0; }
 .city-field .sport-select-menu { min-width: min(240px, calc(100vw - 64px)); right: 0; left: auto; }
 .sport-select-trigger:disabled { cursor: not-allowed; }
 

@@ -6,6 +6,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowDown,
   ArrowUpRight,
+  ChevronDown,
   Plus,
   MapPin,
   Search,
@@ -27,6 +28,15 @@ export function CatalogPage() {
   const needsLocation = params.has("radiusMeters") && !position;
   const query = useQuery(eventsQuery(params, position));
   const sports = useQuery(sportsQuery);
+  const city = params.get("city") ?? "";
+  const cities = [
+    ...new Set(
+      [
+        city,
+        ...(query.data?.items.map((event) => event.location.city) ?? []),
+      ].filter(Boolean),
+    ),
+  ].sort((a, b) => a.localeCompare(b, "ru"));
   const sportOptions = [
     { id: "", name: "Все виды спорта" },
     ...(sports.data ?? []).filter((sport) =>
@@ -131,19 +141,25 @@ export function CatalogPage() {
               placeholder="Название или описание встречи"
             />
           </label>
-          <label className="city-field">
+          <div className="city-field">
             <MapPin size={19} />
-            <span className="sr-only">Город</span>
-            <Select
-              value={params.get("city") ?? ""}
-              onChange={(event) => setFilter("city", event.target.value)}
-            >
-              <option value="">Все города</option>
-              <option>Москва</option>
-              <option>Санкт-Петербург</option>
-              <option>Самара</option>
-            </Select>
-          </label>
+            <SearchableSelect
+              id="catalog-city"
+              aria-label="Город"
+              value={city}
+              onChange={(value) => setFilter("city", value)}
+              options={[
+                { id: "", name: "Все города" },
+                ...cities.map((name) => ({ id: name, name })),
+              ]}
+              allowCustomValue
+              searchLabel="Поиск города"
+              searchPlaceholder="Введите город…"
+              listLabel="Города"
+              placeholder="Все города"
+              hint="Введите любой город и выберите его или нажмите Enter"
+            />
+          </div>
           <button className="button primary" type="submit">
             Найти
             <Search size={18} />
@@ -186,20 +202,21 @@ export function CatalogPage() {
           </div>
         )}
         <div className="catalog-layout">
-          <aside className="filters-panel">
-            <details open>
+          <div className="filters-panel">
+            <details>
               <summary>
                 <SlidersHorizontal size={18} />
                 Фильтры
                 {activeCount > 0 && (
                   <span className="filter-count">{activeCount}</span>
                 )}
+                <ChevronDown
+                  className="filters-chevron"
+                  size={18}
+                  aria-hidden="true"
+                />
               </summary>
               <div className="filter-fields">
-                <DistanceFilter
-                  value={params.get("radiusMeters") ?? ""}
-                  onChange={(value) => setFilter("radiusMeters", value)}
-                />
                 <div className="form-field">
                   <label htmlFor="catalog-sport">Вид спорта</label>
                   <SearchableSelect
@@ -256,46 +273,52 @@ export function CatalogPage() {
                     <option value="APPROVAL">По заявке</option>
                   </Select>
                 </label>
-                <label className="checkbox-field">
-                  <input
-                    type="checkbox"
-                    checked={params.get("hasSpots") === "true"}
-                    onChange={(event) =>
-                      setFilter("hasSpots", event.target.checked ? "true" : "")
-                    }
+                <div className="filter-extras">
+                  <DistanceFilter
+                    value={params.get("radiusMeters") ?? ""}
+                    onChange={(value) => setFilter("radiusMeters", value)}
                   />
-                  Только со свободными местами
-                </label>
-                <label className="checkbox-field">
-                  <input
-                    type="checkbox"
-                    checked={params.get("includePast") === "true"}
-                    onChange={(event) =>
-                      setFilter(
-                        "includePast",
-                        event.target.checked ? "true" : "",
-                      )
-                    }
-                  />
-                  Показать прошедшие
-                </label>
-                {params.size > 0 && (
-                  <button
-                    className="reset-button"
-                    onClick={() => setParams({})}
-                  >
-                    <X size={15} />
-                    Сбросить всё
-                  </button>
-                )}
+                  <div className="filter-actions">
+                    <label className="checkbox-field">
+                      <input
+                        type="checkbox"
+                        checked={params.get("hasSpots") === "true"}
+                        onChange={(event) =>
+                          setFilter(
+                            "hasSpots",
+                            event.target.checked ? "true" : "",
+                          )
+                        }
+                      />
+                      Только со свободными местами
+                    </label>
+                    <label className="checkbox-field">
+                      <input
+                        type="checkbox"
+                        checked={params.get("includePast") === "true"}
+                        onChange={(event) =>
+                          setFilter(
+                            "includePast",
+                            event.target.checked ? "true" : "",
+                          )
+                        }
+                      />
+                      Показать прошедшие
+                    </label>
+                    {params.size > 0 && (
+                      <button
+                        className="reset-button"
+                        onClick={() => setParams({})}
+                      >
+                        <X size={15} />
+                        Сбросить всё
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </details>
-            <p className="filter-note">
-              Не нужен повод.
-              <br />
-              <strong>Нужна компания.</strong>
-            </p>
-          </aside>
+          </div>
           <div className="results">
             <div className="results-toolbar">
               <p aria-live="polite">

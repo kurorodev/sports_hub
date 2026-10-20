@@ -16,6 +16,7 @@ export function SearchableSelect({
   ref,
   disabled = false,
   searchable = true,
+  allowCustomValue = false,
   placeholder = "Выберите вид спорта",
   searchLabel = "Поиск вида спорта",
   searchPlaceholder = "Найти вид спорта…",
@@ -43,6 +44,7 @@ export function SearchableSelect({
   onBlur?: () => void;
   disabled?: boolean;
   searchable?: boolean;
+  allowCustomValue?: boolean;
   placeholder?: string;
   searchLabel?: string;
   searchPlaceholder?: string;
@@ -63,6 +65,18 @@ export function SearchableSelect({
       .replaceAll("ё", "е")
       .includes(search.trim().toLocaleLowerCase("ru").replaceAll("ё", "е")),
   );
+  const enteredValue = search.trim().replace(/\s+/g, " ");
+  if (
+    allowCustomValue &&
+    enteredValue &&
+    !options.some(
+      (option) =>
+        option.id.localeCompare(enteredValue, "ru", { sensitivity: "base" }) ===
+        0,
+    )
+  ) {
+    filtered.push({ id: enteredValue, name: `Использовать «${enteredValue}»` });
+  }
   const activeIndex = Math.min(active, filtered.length - 1);
 
   useEffect(() => {
@@ -243,7 +257,9 @@ export function SearchableSelect({
           )}
           {searchable && (
             <div className="sport-select-footer">
-              {search ? `Найдено: ${filtered.length}` : hint}
+              {search && !allowCustomValue
+                ? `Найдено: ${filtered.length}`
+                : hint}
             </div>
           )}
         </div>
