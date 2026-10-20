@@ -1,3 +1,6 @@
+import { localeTag } from "../../../shared/i18n/preferences";
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useEffect, useId, useRef, useState } from "react";
 import { Bell, Check, CheckCheck, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,6 +17,7 @@ import { ApiError, errorMessage } from "../../../shared/api/client";
 import { relativeTime } from "../../../shared/lib/relative-time";
 
 export function NotificationBell({ viewerId }: { viewerId: string }) {
+  useLocale();
   const repository = useNotificationRepository();
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -84,8 +88,10 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
         className="notification-bell"
         aria-label={
           query.isError
-            ? "Уведомления: не удалось обновить"
-            : `Уведомления${count ? `: ${count} непрочитанных` : ""}`
+            ? tr("Уведомления: не удалось обновить")
+            : tr("Уведомления{0}", [
+                count ? tr(": {0} непрочитанных", [count]) : "",
+              ])
         }
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -127,12 +133,12 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
         >
           <div className="notification-heading">
             <div>
-              <h2 id={titleId}>Уведомления</h2>
-              <p>За последние 30 дней</p>
+              <h2 id={titleId}>{tr("Уведомления")}</h2>
+              <p>{tr("За последние 30 дней")}</p>
             </div>
             <button
               className="button secondary icon-button"
-              aria-label="Закрыть уведомления"
+              aria-label={tr("Закрыть уведомления")}
               onClick={close}
             >
               <X size={20} />
@@ -140,47 +146,54 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
           </div>
           {first && (
             <div className="notification-toolbar">
-              <span>{count ? `Непрочитанных: ${count}` : "Всё прочитано"}</span>
+              <span>
+                {count
+                  ? tr("Непрочитанных: {0}", [count])
+                  : tr("Всё прочитано")}
+              </span>
               <button
                 className="button secondary"
                 disabled={!count || pending || accessLost}
                 onClick={() => readAll.mutate(first.asOf)}
               >
                 <CheckCheck size={17} />
-                Прочитать все
+                {tr("Прочитать все")}
               </button>
             </div>
           )}
           <div
             className="notification-scroll"
             role="region"
-            aria-label="Список уведомлений"
+            aria-label={tr("Список уведомлений")}
             tabIndex={0}
           >
-            {query.isPending && <p role="status">Загружаем уведомления…</p>}
+            {query.isPending && (
+              <p role="status">{tr("Загружаем уведомления…")}</p>
+            )}
             {query.isError && (
               <div role="alert" className="notification-error">
-                <p>{errorMessage(query.error)}</p>
+                <p>{tr(errorMessage(query.error))}</p>
                 <button
                   className="button secondary"
                   onClick={() => void query.refetch()}
                 >
-                  Повторить загрузку
+                  {tr("Повторить загрузку")}
                 </button>
               </div>
             )}
             {(read.isError || readAll.isError) && (
               <p role="alert" className="field-error">
-                {errorMessage(read.error ?? readAll.error)}
+                {tr(errorMessage(read.error ?? readAll.error))}
               </p>
             )}
             {first && !items.length && (
               <div className="notification-empty">
                 <Bell size={32} aria-hidden="true" />
-                <h3>Пока тихо</h3>
+                <h3>{tr("Пока тихо")}</h3>
                 <p>
-                  Здесь появятся решения по заявкам, изменения встреч и
-                  напоминания.
+                  {tr(
+                    "Здесь появятся решения по заявкам, изменения встреч и напоминания.",
+                  )}
                 </p>
               </div>
             )}
@@ -193,28 +206,28 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
                   <div className="notification-item-heading">
                     <h3>{item.title}</h3>
                     {!item.readAt && (
-                      <span className="notification-unread">Новое</span>
+                      <span className="notification-unread">{tr("Новое")}</span>
                     )}
                   </div>
                   <p>{item.text}</p>
                   {item.type === "COMMENT_HIDDEN" && item.commentText && (
                     <blockquote
                       className="notification-comment"
-                      aria-label="Скрытый комментарий"
+                      aria-label={tr("Скрытый комментарий")}
                     >
-                      <strong>Ваш комментарий</strong>
+                      <strong>{tr("Ваш комментарий")}</strong>
                       <p>{item.commentText}</p>
                     </blockquote>
                   )}
                   {item.reason && (
                     <p className="notification-reason">
-                      <strong>Причина: </strong>
+                      <strong>{tr("Причина: ")}</strong>
                       {item.reason}
                     </p>
                   )}
                   <time
                     dateTime={item.createdAt}
-                    title={new Date(item.createdAt).toLocaleString("ru-RU")}
+                    title={new Date(item.createdAt).toLocaleString(localeTag())}
                   >
                     {relativeTime(item.createdAt, now)}
                   </time>
@@ -228,7 +241,7 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
                           if (!pending) read.mutate({ item, follow: true });
                         }}
                       >
-                        Открыть
+                        {tr("Открыть")}
                       </Link>
                     )}
                     {!item.readAt && (
@@ -238,7 +251,7 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
                         onClick={() => read.mutate({ item, follow: false })}
                       >
                         <Check size={16} />
-                        Прочитано
+                        {tr("Прочитано")}
                       </button>
                     )}
                   </div>
@@ -251,7 +264,9 @@ export function NotificationBell({ viewerId }: { viewerId: string }) {
                 disabled={query.isFetching || pending}
                 onClick={() => void query.fetchNextPage()}
               >
-                {query.isFetchingNextPage ? "Загружаем…" : "Показать ещё"}
+                {query.isFetchingNextPage
+                  ? tr("Загружаем…")
+                  : tr("Показать ещё")}
               </button>
             )}
           </div>

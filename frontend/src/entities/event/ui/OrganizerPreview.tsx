@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -11,14 +13,15 @@ import {
 } from "../api/organizer-preview";
 
 export function OrganizerPreview({ organizer }: { organizer: Organizer }) {
+  useLocale();
   const href =
     organizer.type === "USER"
       ? `/users/${organizer.id}`
       : `/organizations/${organizer.id}`;
   return (
     <HoverCard
-      label={`Организатор: ${organizer.name}`}
-      triggerLabel={`Краткая информация: ${organizer.name}`}
+      label={tr("Организатор: {0}", [organizer.name])}
+      triggerLabel={tr("Краткая информация: {0}", [organizer.name])}
       trigger={
         <Link className="person-link" to={href}>
           <Avatar
@@ -48,6 +51,7 @@ function OrganizerDetails({
   organizer: Organizer;
   href: string;
 }) {
+  useLocale();
   const query = useQuery(organizerPreviewQuery(organizer));
   const [copyState, setCopyState] = useState<
     "idle" | "pending" | "copied" | "error"
@@ -55,21 +59,23 @@ function OrganizerDetails({
   if (query.isPending || query.isFetching)
     return (
       <p className="organizer-preview-loading" role="status">
-        Загружаем организатора…
+        {tr("Загружаем организатора…")}
       </p>
     );
   if (query.isError)
     return (
       <div className="organizer-preview-error">
-        <p role="alert">Не удалось загрузить информацию об организаторе.</p>
+        <p role="alert">
+          {tr("Не удалось загрузить информацию об организаторе.")}
+        </p>
         <button
           className="button secondary"
           type="button"
           onClick={() => void query.refetch()}
         >
-          Повторить
+          {tr("Повторить")}
         </button>
-        <Link to={href}>Открыть страницу организатора</Link>
+        <Link to={href}>{tr("Открыть страницу организатора")}</Link>
       </div>
     );
   const { name, about, city, contact } = query.data;
@@ -77,7 +83,9 @@ function OrganizerDetails({
   return (
     <>
       <span className="eyebrow muted">
-        {organizer.type === "USER" ? "Организатор встречи" : "Организация"}
+        {organizer.type === "USER"
+          ? tr("Организатор встречи")
+          : tr("Организация")}
       </span>
       <h3 className="organizer-preview-name">{name}</h3>
       <Avatar
@@ -94,18 +102,18 @@ function OrganizerDetails({
         </p>
       )}
       <p className="organizer-preview-about">
-        {about?.trim() || "Организатор пока не добавил описание."}
+        {about?.trim() || tr("Организатор пока не добавил описание.")}
       </p>
       {organizer.type === "ORGANIZATION" && (
         <p className="organizer-preview-contact">
-          Представитель:{" "}
+          {tr("Представитель:")}{" "}
           <Link to={`/users/${contact.id}`}>{contact.displayName}</Link>
         </p>
       )}
       <button
         type="button"
         className="organizer-preview-copy"
-        aria-label={`Скопировать ${handle}`}
+        aria-label={tr("Скопировать {0}", [handle])}
         disabled={copyState === "pending"}
         onClick={async (event) => {
           const container =
@@ -129,17 +137,17 @@ function OrganizerDetails({
       </button>
       <p className="organizer-preview-copy-status" role="status">
         {copyState === "copied"
-          ? "Никнейм скопирован"
+          ? tr("Никнейм скопирован")
           : copyState === "pending"
-            ? "Копируем…"
+            ? tr("Копируем…")
             : copyState === "error"
-              ? "Не удалось скопировать. Выделите никнейм вручную."
-              : "Нажмите на @никнейм, чтобы скопировать для обсуждения."}
+              ? tr("Не удалось скопировать. Выделите никнейм вручную.")
+              : tr("Нажмите на @никнейм, чтобы скопировать для обсуждения.")}
       </p>
       {copyState === "error" && (
         <input
           className="organizer-preview-manual-copy"
-          aria-label="Никнейм для ручного копирования"
+          aria-label={tr("Никнейм для ручного копирования")}
           readOnly
           value={handle}
           onFocus={(event) => event.currentTarget.select()}
@@ -147,8 +155,8 @@ function OrganizerDetails({
       )}
       <Link className="organizer-preview-profile" to={href}>
         {organizer.type === "USER"
-          ? "Открыть профиль"
-          : "Открыть страницу организации"}
+          ? tr("Открыть профиль")
+          : tr("Открыть страницу организации")}
       </Link>
     </>
   );

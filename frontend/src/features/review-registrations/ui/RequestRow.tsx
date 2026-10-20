@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -30,6 +32,7 @@ export function RequestRow({
   decisionsOpen: boolean;
   onDecided: (registration: Registration) => void;
 }) {
+  useLocale();
   const [rejecting, setRejecting] = useState(false);
   const cancelTarget = useRef<HTMLButtonElement>(null);
   const restoreFocus = useRef(false);
@@ -58,13 +61,13 @@ export function RequestRow({
   return (
     <li
       className="request-card"
-      aria-label={`Заявка: ${registration.participant.displayName}`}
+      aria-label={tr("Заявка: {0}", [registration.participant.displayName])}
     >
       <div className="request-heading">
         <h3>{registration.participant.displayName}</h3>
         <span className={`card-registration ${presentation.tone}`}>
           <Icon size={16} />
-          {presentation.organizerLabel}
+          {tr(presentation.organizerLabel)}
         </span>
       </div>
       {registration.message && (
@@ -72,7 +75,7 @@ export function RequestRow({
       )}
       {registration.decisionReason && (
         <p className="request-message">
-          <strong>Причина решения: </strong>
+          <strong>{tr("Причина решения: ")}</strong>
           {registration.decisionReason}
         </p>
       )}
@@ -87,14 +90,14 @@ export function RequestRow({
             >
               <FormField
                 id={`reason-${registration.id}`}
-                label="Причина отказа (необязательно)"
+                label={tr("Причина отказа (необязательно)")}
                 error={form.formState.errors.reason?.message}
-                hint="Заявитель увидит эту причину."
+                hint={tr("Заявитель увидит эту причину.")}
               >
                 <Textarea
                   id={`reason-${registration.id}`}
                   {...form.register("reason")}
-                  placeholder="Объясните участнику причину отказа"
+                  placeholder={tr("Объясните участнику причину отказа")}
                   maxLength={1000}
                   rows={3}
                   disabled={mutation.isPending}
@@ -113,8 +116,8 @@ export function RequestRow({
                   disabled={mutation.isPending}
                 >
                   {mutation.isPending
-                    ? "Сохраняем решение…"
-                    : "Подтвердить отказ"}
+                    ? tr("Сохраняем решение…")
+                    : tr("Подтвердить отказ")}
                 </button>
                 <button
                   className="button secondary"
@@ -126,7 +129,7 @@ export function RequestRow({
                     mutation.reset();
                   }}
                 >
-                  Отмена
+                  {tr("Отмена")}
                 </button>
               </div>
             </form>
@@ -138,7 +141,7 @@ export function RequestRow({
                 onClick={() => decide({ outcome: "accept" })}
               >
                 <Check size={18} />
-                {mutation.isPending ? "Сохраняем решение…" : "Одобрить"}
+                {mutation.isPending ? tr("Сохраняем решение…") : tr("Одобрить")}
               </button>
               <button
                 className="button secondary"
@@ -150,7 +153,7 @@ export function RequestRow({
                 }}
               >
                 <X size={18} />
-                Отклонить
+                {tr("Отклонить")}
               </button>
             </div>
           )}
@@ -158,7 +161,9 @@ export function RequestRow({
             <p className="field-error" role="alert">
               {mutation.error instanceof RegistrationFailure &&
               mutation.error.code === "full"
-                ? "Свободных мест больше нет. Заявка остаётся на рассмотрении."
+                ? tr(
+                    "Свободных мест больше нет. Заявка остаётся на рассмотрении.",
+                  )
                 : registrationErrorMessage(mutation.error)}
             </p>
           )}

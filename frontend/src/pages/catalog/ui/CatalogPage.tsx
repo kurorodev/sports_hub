@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useCurrentLocation } from "../../../shared/lib/current-location-context";
 import { DistanceFilter } from "../../../shared/ui/DistanceFilter";
 import { registrationPresentation } from "../../../entities/registration";
@@ -25,6 +27,7 @@ import { useEffect, useState } from "react";
 import { canonicalCityName, russianCities } from "../../../shared/lib/cities";
 
 export function CatalogPage() {
+  useLocale();
   const [params, setParams] = useSearchParams();
   const searchTerm = params.get("q") ?? "";
   const [search, setSearch] = useState({
@@ -129,22 +132,26 @@ export function CatalogPage() {
         <div className="hero-copy">
           <span className="eyebrow">
             <span className="live-dot" />
-            Люди. Спорт. Твой ритм.
+            {tr("Люди. Спорт. Твой ритм.")}
           </span>
           <h1>
-            Вместе —<br />
-            больше <span>спорта.</span>
+            {tr("Вместе —")}
+            <br />
+            {tr("больше ")}
+            <span>{tr("спорта.")}</span>
           </h1>
           <p>
-            Найди компанию для спорта.
+            {tr("Найди компанию для спорта.")}
             <br />
-            От первой пробежки до игры на равных.
+            {tr("От первой пробежки до игры на равных.")}
           </p>
           <a className="button primary" href="#activities">
-            Выбрать активность
+            {tr("Выбрать активность")}
             <ArrowDown size={18} />
           </a>
-          <span className="hero-note">Любой уровень. Главное — начать.</span>
+          <span className="hero-note">
+            {tr("Любой уровень. Главное — начать.")}
+          </span>
         </div>
         <div className="hero-visual" aria-hidden="true">
           <img
@@ -155,25 +162,26 @@ export function CatalogPage() {
             fetchPriority="high"
           />
           <div className="hero-sticker">
-            ТВОЙ СЛЕДУЮЩИЙ
+            {tr("ТВОЙ СЛЕДУЮЩИЙ")}
             <br />
-            <strong>«Я С ВАМИ!»</strong>
+            <strong>{tr("«Я С ВАМИ!»")}</strong>
             <ArrowUpRight size={28} />
           </div>
-          <span className="visual-note">Больше, чем просто спорт</span>
+          <span className="visual-note">{tr("Больше, чем просто спорт")}</span>
         </div>
       </section>
       <section id="activities" className="catalog-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow muted">Занимайтесь вместе</span>
+            <span className="eyebrow muted">{tr("Занимайтесь вместе")}</span>
             <h2>
-              Найди свою компанию<span className="brand-dot">.</span>
+              {tr("Найди свою компанию")}
+              <span className="brand-dot">.</span>
             </h2>
           </div>
           <Link className="button primary catalog-create" to="/events/new">
             <Plus size={18} aria-hidden="true" />
-            Создать встречу
+            {tr("Создать встречу")}
           </Link>
         </div>
         <ActivityViewSwitch view="list" params={params} />
@@ -186,7 +194,7 @@ export function CatalogPage() {
         >
           <label className="search-field">
             <Search size={20} />
-            <span className="sr-only">Поиск активностей</span>
+            <span className="sr-only">{tr("Поиск активностей")}</span>
             <input
               name="q"
               value={search.value}
@@ -196,35 +204,37 @@ export function CatalogPage() {
               }}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}
-              placeholder="Название или описание встречи"
+              placeholder={tr("Название или описание встречи")}
             />
           </label>
           <div className="city-field">
             <MapPin size={19} />
             <SearchableSelect
               id="catalog-city"
-              aria-label="Город"
+              aria-label={tr("Город")}
               value={city}
               onChange={(value) => setFilter("city", value)}
               options={[
-                { id: "", name: "Все города" },
+                { id: "", name: tr("Все города") },
                 ...cities.map((name) => ({ id: name, name })),
               ]}
               matchFromStart
               maxOptions={3}
-              searchLabel="Поиск города"
-              searchPlaceholder="Введите город…"
-              listLabel="Города"
-              placeholder="Все города"
-              hint="Начните вводить название и выберите город из подсказок"
+              searchLabel={tr("Поиск города")}
+              searchPlaceholder={tr("Введите город…")}
+              listLabel={tr("Города")}
+              placeholder={tr("Все города")}
+              hint={tr(
+                "Начните вводить название и выберите город из подсказок",
+              )}
             />
           </div>
           <button className="button primary" type="submit">
-            Найти
+            {tr("Найти")}
             <Search size={18} />
           </button>
         </form>
-        <div className="sport-tabs" aria-label="Вид спорта">
+        <div className="sport-tabs" aria-label={tr("Вид спорта")}>
           {sportOptions.map((sport) => (
             <button
               key={sport.id}
@@ -240,23 +250,23 @@ export function CatalogPage() {
                   height="28"
                 />
               )}
-              {sport.name}
+              {sport.id ? sport.name : tr(sport.name)}
             </button>
           ))}
         </div>
         {sports.isPending && (
           <p className="sports-feedback" role="status">
-            Загружаем виды спорта…
+            {tr("Загружаем виды спорта…")}
           </p>
         )}
         {sports.isError && (
           <div className="sports-feedback" role="alert">
-            <p>{errorMessage(sports.error)}</p>
+            <p>{tr(errorMessage(sports.error))}</p>
             <button
               className="reset-button"
               onClick={() => void sports.refetch()}
             >
-              Повторить загрузку видов спорта
+              {tr("Повторить загрузку видов спорта")}
             </button>
           </div>
         )}
@@ -265,7 +275,7 @@ export function CatalogPage() {
             <details>
               <summary>
                 <SlidersHorizontal size={18} />
-                Фильтры
+                {tr("Фильтры")}
                 {activeCount > 0 && (
                   <span className="filter-count">{activeCount}</span>
                 )}
@@ -277,12 +287,12 @@ export function CatalogPage() {
               </summary>
               <div className="filter-fields">
                 <div className="form-field">
-                  <label htmlFor="catalog-sport">Вид спорта</label>
+                  <label htmlFor="catalog-sport">{tr("Вид спорта")}</label>
                   <SearchableSelect
                     id="catalog-sport"
                     value={params.get("sportId") ?? ""}
                     options={[
-                      { id: "", name: "Все виды спорта" },
+                      { id: "", name: tr("Все виды спорта") },
                       ...(sports.data ?? []).map((sport) => ({
                         ...sport,
                         imageUrl: sportIcon(sport.name),
@@ -298,38 +308,38 @@ export function CatalogPage() {
                   onChange={setFilter}
                 />
                 <div className="form-field">
-                  <label htmlFor="catalog-level">Уровень</label>
+                  <label htmlFor="catalog-level">{tr("Уровень")}</label>
                   <SearchableSelect
                     id="catalog-level"
                     searchable={false}
                     value={params.get("skillLevel") ?? ""}
                     onChange={(value) => setFilter("skillLevel", value)}
                     options={[
-                      { id: "", name: "Любой" },
-                      { id: "BEGINNER", name: "Начинающий" },
-                      { id: "AMATEUR", name: "Любитель" },
-                      { id: "ADVANCED", name: "Продвинутый" },
-                      { id: "PROFESSIONAL", name: "Профессиональный" },
-                      { id: "ANY", name: "Любой уровень" },
+                      { id: "", name: tr("Любой") },
+                      { id: "BEGINNER", name: tr("Начинающий") },
+                      { id: "AMATEUR", name: tr("Любитель") },
+                      { id: "ADVANCED", name: tr("Продвинутый") },
+                      { id: "PROFESSIONAL", name: tr("Профессиональный") },
+                      { id: "ANY", name: tr("Любой уровень") },
                     ]}
-                    searchLabel="Поиск уровня"
-                    placeholder="Выберите уровень"
-                    searchPlaceholder="Найти уровень…"
-                    listLabel="Уровни подготовки"
-                    hint="Выберите уровень подготовки"
+                    searchLabel={tr("Поиск уровня")}
+                    placeholder={tr("Выберите уровень")}
+                    searchPlaceholder={tr("Найти уровень…")}
+                    listLabel={tr("Уровни подготовки")}
+                    hint={tr("Выберите уровень подготовки")}
                   />
                 </div>
                 <label>
-                  Как присоединиться
+                  {tr("Как присоединиться")}
                   <Select
                     value={params.get("joinMode") ?? ""}
                     onChange={(event) =>
                       setFilter("joinMode", event.target.value)
                     }
                   >
-                    <option value="">Все варианты</option>
-                    <option value="OPEN">Свободная запись</option>
-                    <option value="APPROVAL">По заявке</option>
+                    <option value="">{tr("Все варианты")}</option>
+                    <option value="OPEN">{tr("Свободная запись")}</option>
+                    <option value="APPROVAL">{tr("По заявке")}</option>
                   </Select>
                 </label>
                 <div className="filter-extras">
@@ -349,7 +359,7 @@ export function CatalogPage() {
                           )
                         }
                       />
-                      Только со свободными местами
+                      {tr("Только со свободными местами")}
                     </label>
                     <label className="checkbox-field">
                       <input
@@ -362,12 +372,12 @@ export function CatalogPage() {
                           )
                         }
                       />
-                      Показать прошедшие
+                      {tr("Показать прошедшие")}
                     </label>
                     {params.size > 0 && (
                       <button className="reset-button" onClick={resetFilters}>
                         <X size={15} />
-                        Сбросить всё
+                        {tr("Сбросить всё")}
                       </button>
                     )}
                   </div>
@@ -379,32 +389,38 @@ export function CatalogPage() {
             <div className="results-toolbar">
               <p aria-live="polite">
                 {needsLocation ? (
-                  "Укажите геопозицию для поиска рядом"
+                  tr("Укажите геопозицию для поиска рядом")
                 ) : query.isFetching ? (
-                  "Ищем активности…"
+                  tr("Ищем активности…")
                 ) : query.data ? (
                   <>
-                    Найдено активностей: <strong>{query.data.total}</strong>
+                    {tr("Найдено активностей: ")}
+                    <strong>{query.data.total}</strong>
                   </>
                 ) : (
-                  "Ищем активности…"
+                  tr("Ищем активности…")
                 )}
               </p>
               <label>
-                <span className="sr-only">Сортировка</span>
+                <span className="sr-only">{tr("Сортировка")}</span>
                 <Select
                   value={params.get("sort") ?? "startsAt,asc"}
                   onChange={(event) => setFilter("sort", event.target.value)}
                 >
-                  <option value="startsAt,asc">Дата: сначала ранние</option>
-                  <option value="startsAt,desc">Дата: сначала поздние</option>
+                  <option value="startsAt,asc">
+                    {tr("Дата: сначала ранние")}
+                  </option>
+                  <option value="startsAt,desc">
+                    {tr("Дата: сначала поздние")}
+                  </option>
                 </Select>
               </label>
             </div>
             {needsLocation ? (
               <p className="notice" role="status">
-                Включите геолокацию в фильтре «Рядом со мной», чтобы найти
-                мероприятия в выбранном радиусе.
+                {tr(
+                  "Включите геолокацию в фильтре «Рядом со мной», чтобы найти мероприятия в выбранном радиусе.",
+                )}
               </p>
             ) : query.isPending ? (
               <Skeletons />
@@ -432,7 +448,10 @@ export function CatalogPage() {
                     />
                   ))}
                 </div>
-                <nav className="pagination" aria-label="Страницы каталога">
+                <nav
+                  className="pagination"
+                  aria-label={tr("Страницы каталога")}
+                >
                   <button
                     className="button secondary"
                     disabled={query.isPlaceholderData || query.data.page <= 0}
@@ -440,10 +459,12 @@ export function CatalogPage() {
                       setFilter("page", String(query.data.page - 1))
                     }
                   >
-                    Назад
+                    {tr("Назад")}
                   </button>
                   <span>
-                    Страница {query.data.page + 1} из{" "}
+                    {tr("Страница ")}
+                    {query.data.page + 1}
+                    {tr(" из")}{" "}
                     {Math.max(1, Math.ceil(query.data.total / query.data.size))}
                   </span>
                   <button
@@ -457,7 +478,7 @@ export function CatalogPage() {
                       setFilter("page", String(query.data.page + 1))
                     }
                   >
-                    Далее
+                    {tr("Далее")}
                   </button>
                 </nav>
               </>
@@ -467,33 +488,33 @@ export function CatalogPage() {
       </section>
       <section className="how-section" id="how-it-works">
         <div>
-          <span className="eyebrow muted">Без сложных правил</span>
+          <span className="eyebrow muted">{tr("Без сложных правил")}</span>
           <h2>
-            Начать проще,
+            {tr("Начать проще,")}
             <br />
-            чем кажется.
+            {tr("чем кажется.")}
           </h2>
         </div>
         <ol>
           <li>
             <span>01</span>
             <div>
-              <h3>Найди свой спорт</h3>
-              <p>Выбери город, дату и комфортный уровень.</p>
+              <h3>{tr("Найди свой спорт")}</h3>
+              <p>{tr("Выбери город, дату и комфортный уровень.")}</p>
             </div>
           </li>
           <li>
             <span>02</span>
             <div>
-              <h3>Познакомься со встречей</h3>
-              <p>Посмотри место, время и условия организатора.</p>
+              <h3>{tr("Познакомься со встречей")}</h3>
+              <p>{tr("Посмотри место, время и условия организатора.")}</p>
             </div>
           </li>
           <li>
             <span>03</span>
             <div>
-              <h3>Выбери комфортный темп</h3>
-              <p>Уровень и условия есть на странице каждой встречи.</p>
+              <h3>{tr("Выбери комфортный темп")}</h3>
+              <p>{tr("Уровень и условия есть на странице каждой встречи.")}</p>
             </div>
           </li>
         </ol>

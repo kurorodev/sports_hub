@@ -1,3 +1,4 @@
+import { tr } from "../../../shared/i18n/translate";
 import { CheckCircle2, Clock, XCircle, MinusCircle } from "lucide-react";
 import {
   RegistrationFailure,
@@ -65,7 +66,9 @@ const messages: Record<RegistrationFailureCode, string> = {
 };
 
 export function registrationErrorMessage(error: unknown): string {
-  return error instanceof RegistrationFailure
-    ? messages[error.code]
-    : messages.unknown;
+  return tr(
+    error instanceof RegistrationFailure
+      ? messages[error.code]
+      : messages.unknown,
+  );
 }

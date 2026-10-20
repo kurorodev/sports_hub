@@ -1,3 +1,6 @@
+import { localeTag } from "../../../shared/i18n/preferences";
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { MentionText } from "../../../shared/ui/MentionText";
 import { Avatar } from "../../../shared/ui/Avatar";
 import { Link } from "react-router-dom";
@@ -13,7 +16,8 @@ export function CommentCard({
   organizerUserId?: string;
   action?: ReactNode;
 }) {
-  const date = new Intl.DateTimeFormat("ru-RU", {
+  useLocale();
+  const date = new Intl.DateTimeFormat(localeTag(), {
     day: "numeric",
     month: "long",
     hour: "2-digit",
@@ -25,7 +29,7 @@ export function CommentCard({
     <article
       id={`comment-${comment.id}`}
       className={`comment-card ${comment.visibility === "hidden" ? "comment-hidden" : ""}`}
-      aria-label={`Сообщение: ${comment.author.displayName}`}
+      aria-label={tr("Сообщение: {0}", [comment.author.displayName])}
     >
       <header className="comment-heading">
         <Avatar
@@ -46,14 +50,14 @@ export function CommentCard({
         {organizerUserId === comment.author.id && (
           <span className="comment-organizer">
             <BadgeCheck size={16} />
-            Организатор
+            {tr("Организатор")}
           </span>
         )}
         <time dateTime={comment.publishedAt}>{date}</time>
       </header>
       <p className="comment-text">
         {comment.visibility === "hidden" ? (
-          "Комментарий скрыт модератором."
+          tr("Комментарий скрыт модератором.")
         ) : (
           <MentionText text={comment.text} mentions={comment.mentions} />
         )}

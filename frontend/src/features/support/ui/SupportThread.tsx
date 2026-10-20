@@ -1,3 +1,6 @@
+import { localeTag } from "../../../shared/i18n/preferences";
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { Select } from "../../../shared/ui/Select";
 import { useState, lazy, Suspense } from "react";
@@ -42,6 +45,7 @@ export function SupportThread({
   viewerId: string;
   admin: boolean;
 }) {
+  useLocale();
   const now = useNow();
   const [mapOpen, setMapOpen] = useState(false);
   const repo = useSupportRepository();
@@ -94,18 +98,18 @@ export function SupportThread({
   if (query.isPending)
     return (
       <p className="page-state" role="status">
-        Загружаем обращение…
+        {tr("Загружаем обращение…")}
       </p>
     );
   if (query.isError)
     return (
       <>
-        <Link to="/support">← В поддержку</Link>
+        <Link to="/support">{tr("← В поддержку")}</Link>
         <ErrorState
           error={query.error}
           message={
             query.error instanceof ApiError && query.error.status === 404
-              ? "Обращение не найдено или недоступно вашему аккаунту."
+              ? tr("Обращение не найдено или недоступно вашему аккаунту.")
               : undefined
           }
           retry={() => void query.refetch()}
@@ -129,25 +133,28 @@ export function SupportThread({
         className="back-link"
         to={admin ? "/support?view=queue" : "/support"}
       >
-        ← {admin ? "К очереди поддержки" : "Мои обращения"}
+        ← {admin ? tr("К очереди поддержки") : tr("Мои обращения")}
       </Link>
       <header className="support-thread-heading">
         <span className="eyebrow muted">
-          {categoryLabels[t.category]} · №{id.slice(0, 8)}
+          {tr(categoryLabels[t.category])} · №{id.slice(0, 8)}
         </span>
         <h1>{t.title}</h1>
         <div className="support-ticket-meta">
           <span
             className={`support-status support-status-${t.status.toLowerCase()}`}
           >
-            {statusLabels[t.status]}
+            {tr(statusLabels[t.status])}
           </span>
-          <span>Создано {relativeTime(t.createdAt, now)}</span>
+          <span>
+            {tr("Создано ")}
+            {relativeTime(t.createdAt, now)}
+          </span>
         </div>
       </header>
       {notice && (
         <p className="notice success" role="status">
-          {notice}
+          {tr(notice)}
         </p>
       )}
       <div className="support-thread-layout">
@@ -158,12 +165,12 @@ export function SupportThread({
                 {t.author.displayName}{" "}
                 <span className="muted">@{t.author.nickname}</span>
               </strong>
-              <span className="eyebrow muted">Обращение</span>
+              <span className="eyebrow muted">{tr("Обращение")}</span>
             </div>
             <p>{t.description}</p>
             {t.venueCity && (
               <div className="support-quote">
-                <strong>Предложение площадки</strong>
+                <strong>{tr("Предложение площадки")}</strong>
                 <p>
                   {t.venueCity} · {t.venueAddress}
                 </p>
@@ -175,7 +182,8 @@ export function SupportThread({
                 }) && (
                   <>
                     <p>
-                      Точка: {t.venueLatitude!.toFixed(5)},{" "}
+                      {tr("Точка: ")}
+                      {t.venueLatitude!.toFixed(5)},{" "}
                       {t.venueLongitude!.toFixed(5)}
                     </p>
                     <button
@@ -185,12 +193,12 @@ export function SupportThread({
                       onClick={() => setMapOpen(!mapOpen)}
                     >
                       {mapOpen
-                        ? "Скрыть карту площадки"
-                        : "Показать площадку на карте"}
+                        ? tr("Скрыть карту площадки")
+                        : tr("Показать площадку на карте")}
                     </button>
                     {mapOpen && (
                       <Suspense
-                        fallback={<p role="status">Загружаем карту…</p>}
+                        fallback={<p role="status">{tr("Загружаем карту…")}</p>}
                       >
                         <GeoMap
                           compact
@@ -211,15 +219,17 @@ export function SupportThread({
                 )}
                 <span className="field-hint">
                   {t.publishedVenueId
-                    ? "Площадка добавлена в список доступных площадок."
-                    : "Площадка появится на карте после проверки и добавления администратором."}
+                    ? tr("Площадка добавлена в список доступных площадок.")
+                    : tr(
+                        "Площадка появится на карте после проверки и добавления администратором.",
+                      )}
                 </span>
                 {t.publishedVenueId && (
                   <Link
                     className="button primary"
                     to={`/map?venueId=${t.publishedVenueId}&lat=${t.venueLatitude}&lng=${t.venueLongitude}&zoom=16&events=0`}
                   >
-                    Открыть добавленную площадку
+                    {tr("Открыть добавленную площадку")}
                   </Link>
                 )}
                 {admin && !t.publishedVenueId && (
@@ -233,22 +243,27 @@ export function SupportThread({
             )}
             {t.commentId && (
               <div className="support-quote">
-                <strong>Комментарий: {t.commentAuthor}</strong>
+                <strong>
+                  {tr("Комментарий: ")}
+                  {t.commentAuthor}
+                </strong>
                 <p>{t.commentText}</p>
                 <p>
-                  Причина:{" "}
-                  {t.reportReason ? reasonLabels[t.reportReason] : "Другая"}
+                  {tr("Причина:")}{" "}
+                  {t.reportReason
+                    ? tr(reasonLabels[t.reportReason])
+                    : tr("Другая")}
                 </p>
                 <Link to={`/events/${t.eventId}#event-discussion`}>
-                  Открыть обсуждение
+                  {tr("Открыть обсуждение")}
                 </Link>
                 {admin && (
                   <Link to={`/admin?section=comments&eventId=${t.eventId}`}>
-                    Перейти к модерации комментария
+                    {tr("Перейти к модерации комментария")}
                   </Link>
                 )}
                 <span className="field-hint">
-                  Сохранён текст на момент жалобы.
+                  {tr("Сохранён текст на момент жалобы.")}
                 </span>
               </div>
             )}
@@ -258,17 +273,17 @@ export function SupportThread({
             aria-labelledby="support-thread-title"
           >
             <div className="support-section-heading">
-              <h2 id="support-thread-title">Переписка</h2>
+              <h2 id="support-thread-title">{tr("Переписка")}</h2>
               <button
                 className="button secondary"
                 disabled={thread.isFetching}
                 onClick={() => void thread.refetch()}
               >
-                Обновить переписку
+                {tr("Обновить переписку")}
               </button>
             </div>
             {thread.isPending ? (
-              <p role="status">Загружаем переписку…</p>
+              <p role="status">{tr("Загружаем переписку…")}</p>
             ) : thread.isError ? (
               <ErrorState
                 error={thread.error}
@@ -282,12 +297,14 @@ export function SupportThread({
                     disabled={thread.isFetchingNextPage}
                     onClick={() => void thread.fetchNextPage()}
                   >
-                    Показать более ранние сообщения
+                    {tr("Показать более ранние сообщения")}
                   </button>
                 )}
                 {messages.length === 0 ? (
                   <p className="join-note">
-                    Пока без ответов. Здесь появится переписка со специалистом.
+                    {tr(
+                      "Пока без ответов. Здесь появится переписка со специалистом.",
+                    )}
                   </p>
                 ) : (
                   <ol className="support-messages">
@@ -304,11 +321,11 @@ export function SupportThread({
                       >
                         <header>
                           <strong>
-                            {m.fromSupport ? "Поддержка · " : ""}
+                            {m.fromSupport ? tr("Поддержка · ") : ""}
                             {m.author.displayName}
                           </strong>
                           <time dateTime={m.createdAt}>
-                            {new Intl.DateTimeFormat("ru-RU", {
+                            {new Intl.DateTimeFormat(localeTag(), {
                               dateStyle: "short",
                               timeStyle: "short",
                             }).format(new Date(m.createdAt))}
@@ -325,18 +342,21 @@ export function SupportThread({
           {closed ? (
             <div className="support-closed">
               <h3>
-                {t.status === "RESOLVED" ? "Вопрос решён" : "Обращение закрыто"}
+                {t.status === "RESOLVED"
+                  ? tr("Вопрос решён")
+                  : tr("Обращение закрыто")}
               </h3>
               <p>
-                Если вопрос остался, откройте обращение повторно — история
-                сохранится.
+                {tr(
+                  "Если вопрос остался, откройте обращение повторно — история сохранится.",
+                )}
               </p>
               <button
                 className="button secondary"
                 disabled={pending}
                 onClick={() => update.mutate({ status: "OPEN" })}
               >
-                Открыть повторно
+                {tr("Открыть повторно")}
               </button>
             </div>
           ) : (
@@ -348,7 +368,9 @@ export function SupportThread({
               }}
             >
               <label className="form-field">
-                {admin ? "Ответ пользователю" : "Ваше сообщение в поддержку"}
+                {admin
+                  ? tr("Ответ пользователю")
+                  : tr("Ваше сообщение в поддержку")}
                 <Textarea
                   disabled={pending}
                   required
@@ -356,37 +378,36 @@ export function SupportThread({
                   rows={4}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Дополните обращение или ответьте на вопрос"
+                  placeholder={tr("Дополните обращение или ответьте на вопрос")}
                 />
               </label>
               <p className="field-hint">
-                Переписка видна только автору и
-                администраторам.
+                {tr("Переписка видна только автору и администраторам.")}
               </p>
               <button
                 className="button primary"
                 disabled={pending || !text.trim()}
                 type="submit"
               >
-                {reply.isPending ? "Отправляем…" : "Отправить ответ"}
+                {reply.isPending ? tr("Отправляем…") : tr("Отправить ответ")}
               </button>
             </form>
           )}
           {(reply.isError || update.isError) && (
             <p role="alert" className="notice error">
-              {errorMessage(reply.error ?? update.error)}
+              {tr(errorMessage(reply.error ?? update.error))}
             </p>
           )}
         </div>
         <aside className="support-sidebar">
-          <h2>Об обращении</h2>
+          <h2>{tr("Об обращении")}</h2>
           <dl>
-            <dt>Статус</dt>
-            <dd>{statusLabels[t.status]}</dd>
-            <dt>Приоритет</dt>
-            <dd>{priorityLabels[t.priority]}</dd>
-            <dt>Специалист</dt>
-            <dd>{t.assignedTo?.displayName ?? "Ещё не назначен"}</dd>
+            <dt>{tr("Статус")}</dt>
+            <dd>{tr(statusLabels[t.status])}</dd>
+            <dt>{tr("Приоритет")}</dt>
+            <dd>{tr(priorityLabels[t.priority])}</dd>
+            <dt>{tr("Специалист")}</dt>
+            <dd>{t.assignedTo?.displayName ?? tr("Ещё не назначен")}</dd>
           </dl>
           {admin ? (
             <TicketControls
@@ -402,13 +423,14 @@ export function SupportThread({
                 disabled={pending}
                 onClick={() => update.mutate({ status: "CLOSED" })}
               >
-                Вопрос решён, закрыть
+                {tr("Вопрос решён, закрыть")}
               </button>
             )
           )}
           <p className="join-note">
-            Мы сохраняем историю обращений. О новых ответах сообщим в
-            колокольчик.
+            {tr(
+              "Мы сохраняем историю обращений. О новых ответах сообщим в колокольчик.",
+            )}
           </p>
         </aside>
       </div>
@@ -424,6 +446,7 @@ function TicketControls({
   pending: boolean;
   save: (input: { status: SupportStatus; priority: SupportPriority }) => void;
 }) {
+  useLocale();
   const [status, setStatus] = useState(ticket.status);
   const [priority, setPriority] = useState(ticket.priority);
   return (
@@ -434,7 +457,7 @@ function TicketControls({
       }}
     >
       <label className="form-field">
-        Изменить статус
+        {tr("Изменить статус")}
         <Select
           disabled={pending}
           value={status}
@@ -442,13 +465,13 @@ function TicketControls({
         >
           {statuses.map((s) => (
             <option key={s} value={s}>
-              {statusLabels[s]}
+              {tr(statusLabels[s])}
             </option>
           ))}
         </Select>
       </label>
       <label className="form-field">
-        Приоритет обращения
+        {tr("Приоритет обращения")}
         <Select
           disabled={pending}
           value={priority}
@@ -456,7 +479,7 @@ function TicketControls({
         >
           {priorities.map((p) => (
             <option key={p} value={p}>
-              {priorityLabels[p]}
+              {tr(priorityLabels[p])}
             </option>
           ))}
         </Select>
@@ -466,13 +489,17 @@ function TicketControls({
         type="submit"
         disabled={pending}
       >
-        {pending ? "Сохраняем…" : "Сохранить изменения"}
+        {pending ? tr("Сохраняем…") : tr("Сохранить изменения")}
       </button>
       <p className="field-hint">
         {ticket.category === "VENUE_SUGGESTION" &&
           !ticket.publishedVenueId &&
-          "Смена статуса не добавляет площадку. Для одобрения используйте «Добавить площадку и решить обращение» выше. "}
-        При ответе или изменении вы назначаетесь специалистом по обращению.
+          tr(
+            "Смена статуса не добавляет площадку. Для одобрения используйте «Добавить площадку и решить обращение» выше. ",
+          )}
+        {tr(
+          "При ответе или изменении вы назначаетесь специалистом по обращению.",
+        )}
       </p>
     </form>
   );

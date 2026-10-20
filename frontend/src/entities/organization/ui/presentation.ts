@@ -1,3 +1,4 @@
+import { tr } from "../../../shared/i18n/translate";
 import {
   OrganizationFailure,
   type OrganizationStatus,
@@ -25,7 +26,9 @@ const messages: Record<OrganizationFailureCode, string> = {
   unknown: "Не удалось выполнить действие. Попробуйте ещё раз.",
 };
 export function organizationErrorMessage(error: unknown) {
-  return error instanceof OrganizationFailure
-    ? messages[error.code]
-    : messages.unknown;
+  return tr(
+    error instanceof OrganizationFailure
+      ? messages[error.code]
+      : messages.unknown,
+  );
 }

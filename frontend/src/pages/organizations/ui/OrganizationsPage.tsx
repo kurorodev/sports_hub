@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
@@ -10,6 +12,7 @@ import { OrganizationsDirectory } from "./OrganizationsDirectory";
 import { OrganizationApplication } from "./OrganizationApplication";
 
 export function OrganizationsPage() {
+  useLocale();
   const session = useQuery(sessionQuery);
   const [params, setParams] = useSearchParams();
   const view =
@@ -40,30 +43,33 @@ export function OrganizationsPage() {
             <Building2 size={28} aria-hidden="true" />
           </span>
           <div>
-            <span className="eyebrow muted">Клубы и сообщества</span>
-            <h1>Организации</h1>
-            <p>Найдите свою команду или развивайте собственный клуб.</p>
+            <span className="eyebrow muted">{tr("Клубы и сообщества")}</span>
+            <h1>{tr("Организации")}</h1>
+            <p>{tr("Найдите свою команду или развивайте собственный клуб.")}</p>
           </div>
         </div>
         {view !== "apply" && (
           <Link className="button primary" to={destination("apply")}>
             <Plus size={18} aria-hidden="true" />
-            Добавить организацию
+            {tr("Добавить организацию")}
           </Link>
         )}
       </header>
-      <nav className="organization-hub-nav" aria-label="Разделы организаций">
+      <nav
+        className="organization-hub-nav"
+        aria-label={tr("Разделы организаций")}
+      >
         <Link
           to={destination("all")}
           aria-current={view === "all" ? "page" : undefined}
         >
-          Все организации
+          {tr("Все организации")}
         </Link>
         <Link
           to={destination("mine")}
           aria-current={view !== "all" ? "page" : undefined}
         >
-          Мои организации
+          {tr("Мои организации")}
         </Link>
       </nav>
       {session.isError ? (
@@ -75,32 +81,34 @@ export function OrganizationsPage() {
         <OrganizationsDirectory key={params.get("q") ?? ""} />
       ) : session.isPending ? (
         <p className="page-state" role="status">
-          Проверяем сессию…
+          {tr("Проверяем сессию…")}
         </p>
       ) : !session.data ? (
         <div className="organization-access">
           <LockKeyhole size={28} aria-hidden="true" />
           <h2>
             {view === "apply"
-              ? "Расскажите о своём клубе"
-              : "Ваши организации и заявки"}
+              ? tr("Расскажите о своём клубе")
+              : tr("Ваши организации и заявки")}
           </h2>
           <p>
-            Войдите, чтобы подать заявку, следить за её статусом и публиковать
-            встречи от организации.
+            {tr(
+              "Войдите, чтобы подать заявку, следить за её статусом и публиковать встречи от организации.",
+            )}
           </p>
           <Link
             className="button primary"
             to={`/login?next=${view === "apply" ? "organization-apply" : "organization"}`}
           >
-            Войти в аккаунт
+            {tr("Войти в аккаунт")}
           </Link>
         </div>
       ) : view === "mine" ? (
         <div className="organization-mine">
           <p className="organization-section-description">
-            Здесь собраны ваши клубы, статусы заявок и доступ к публикации
-            встреч.
+            {tr(
+              "Здесь собраны ваши клубы, статусы заявок и доступ к публикации встреч.",
+            )}
           </p>
           <MyOrganizations
             key={session.data.user.id}
@@ -110,13 +118,15 @@ export function OrganizationsPage() {
       ) : (
         <div className="organization-application-page">
           <Link className="back-link" to={destination("mine")}>
-            <ArrowLeft size={16} aria-hidden="true" />К моим организациям
+            <ArrowLeft size={16} aria-hidden="true" />
+            {tr("К моим организациям")}
           </Link>
           <div className="organization-section-heading">
-            <h2>Добавьте свой клуб</h2>
+            <h2>{tr("Добавьте свой клуб")}</h2>
             <p>
-              Заполните короткую заявку. После одобрения вы сможете публиковать
-              встречи от имени организации.
+              {tr(
+                "Заполните короткую заявку. После одобрения вы сможете публиковать встречи от имени организации.",
+              )}
             </p>
           </div>
           <OrganizationApplication
@@ -125,7 +135,9 @@ export function OrganizationsPage() {
             onCreated={(organization) => {
               setNotice({
                 id: organization.id,
-                text: `«${organization.name}»: заявка отправлена на рассмотрение.`,
+                text: tr("«{0}»: заявка отправлена на рассмотрение.", [
+                  organization.name,
+                ]),
               });
               setParams(search("mine"));
             }}

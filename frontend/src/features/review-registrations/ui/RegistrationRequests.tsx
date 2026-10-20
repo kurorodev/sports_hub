@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +24,7 @@ export function RegistrationRequests({
   eventId: string;
   decisionsOpen: boolean;
 }) {
+  useLocale();
   const repository = useRegistrationRepository();
   const session = useQuery(sessionQuery);
   const viewerId = session.data?.user.id;
@@ -59,7 +62,12 @@ export function RegistrationRequests({
   });
   const onDecided = (registration: Registration) =>
     setAnnouncement(
-      `${registration.participant.displayName}: ${registrationPresentation[registration.status].organizerLabel.toLocaleLowerCase("ru")}. Решение сохранено.`,
+      tr("{0}: {1}. Решение сохранено.", [
+        registration.participant.displayName,
+        tr(
+          registrationPresentation[registration.status].organizerLabel,
+        ).toLocaleLowerCase(),
+      ]),
     );
   return (
     <section
@@ -68,16 +76,22 @@ export function RegistrationRequests({
       aria-labelledby="requests-heading"
     >
       <div className="participants-heading">
-        <h2 id="requests-heading">Заявки на участие</h2>
-        {query.data && <span>Заявок: {query.data.totalCount}</span>}
+        <h2 id="requests-heading">{tr("Заявки на участие")}</h2>
+        {query.data && (
+          <span>
+            {tr("Заявок: ")}
+            {query.data.totalCount}
+          </span>
+        )}
       </div>
       <p className="join-note">
-        Ожидающие заявки не занимают места. Участник появится в составе после
-        одобрения.
+        {tr(
+          "Ожидающие заявки не занимают места. Участник появится в составе после одобрения.",
+        )}
       </p>
       <div className="request-toolbar">
         <label>
-          Статус заявок
+          {tr("Статус заявок")}
           <Select
             value={status}
             onChange={(event) => {
@@ -86,10 +100,10 @@ export function RegistrationRequests({
               setAnnouncement("");
             }}
           >
-            <option value="PENDING">Ожидают решения</option>
-            <option value="CONFIRMED">Одобренные</option>
-            <option value="REJECTED">Отклонённые</option>
-            <option value="">Все заявки</option>
+            <option value="PENDING">{tr("Ожидают решения")}</option>
+            <option value="CONFIRMED">{tr("Одобренные")}</option>
+            <option value="REJECTED">{tr("Отклонённые")}</option>
+            <option value="">{tr("Все заявки")}</option>
           </Select>
         </label>
         <button
@@ -98,7 +112,7 @@ export function RegistrationRequests({
           onClick={() => void query.refetch()}
         >
           <RefreshCw size={18} />
-          {query.isFetching ? "Обновляем…" : "Обновить заявки"}
+          {query.isFetching ? tr("Обновляем…") : tr("Обновить заявки")}
         </button>
       </div>
       {announcement && (
@@ -108,7 +122,7 @@ export function RegistrationRequests({
       )}
       {!decisionsOpen && (
         <p className="join-note">
-          Событие не опубликовано. Рассмотрение заявок закрыто.
+          {tr("Событие не опубликовано. Рассмотрение заявок закрыто.")}
         </p>
       )}
       {session.isError ? (
@@ -118,13 +132,13 @@ export function RegistrationRequests({
         />
       ) : !session.isPending && !viewerId ? (
         <p className="join-note">
-          Войдите в аккаунт организатора, чтобы рассмотреть заявки.
+          {tr("Войдите в аккаунт организатора, чтобы рассмотреть заявки.")}
         </p>
       ) : query.isPending ? (
-        <p role="status">Загружаем заявки…</p>
+        <p role="status">{tr("Загружаем заявки…")}</p>
       ) : query.isError ? (
         <ErrorState
-          message={registrationErrorMessage(query.error)}
+          message={tr(registrationErrorMessage(query.error))}
           error={query.error}
           retry={() => void query.refetch()}
         />
@@ -133,10 +147,12 @@ export function RegistrationRequests({
           {query.data.registrations.length === 0 ? (
             <p className="requests-empty">
               {query.data.totalCount > 0
-                ? "На этой странице больше нет заявок. Вернитесь на предыдущую."
+                ? tr(
+                    "На этой странице больше нет заявок. Вернитесь на предыдущую.",
+                  )
                 : status === "PENDING"
-                  ? "Нет заявок, ожидающих решения."
-                  : "Заявок с таким статусом пока нет."}
+                  ? tr("Нет заявок, ожидающих решения.")
+                  : tr("Заявок с таким статусом пока нет.")}
             </p>
           ) : (
             <ul className="requests-list" aria-labelledby="requests-heading">
@@ -152,16 +168,18 @@ export function RegistrationRequests({
             </ul>
           )}
           {(query.data.totalCount > query.data.pageSize || page > 0) && (
-            <nav className="pagination" aria-label="Страницы заявок">
+            <nav className="pagination" aria-label={tr("Страницы заявок")}>
               <button
                 className="button secondary"
                 disabled={page === 0}
                 onClick={() => setPage((value) => value - 1)}
               >
-                Назад
+                {tr("Назад")}
               </button>
               <span>
-                Страница {page + 1} из{" "}
+                {tr("Страница ")}
+                {page + 1}
+                {tr(" из")}{" "}
                 {Math.max(
                   1,
                   Math.ceil(query.data.totalCount / query.data.pageSize),
@@ -174,7 +192,7 @@ export function RegistrationRequests({
                 }
                 onClick={() => setPage((value) => value + 1)}
               >
-                Далее
+                {tr("Далее")}
               </button>
             </nav>
           )}

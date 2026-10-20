@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { EventDistance } from "../../../shared/ui/EventDistance";
 import { Link, useLocation } from "react-router-dom";
 import type { EventCardDto, VenueMapItem } from "../../../shared/api/types";
@@ -14,6 +16,7 @@ import {
 } from "../../../entities/venue";
 
 export function MapEventSummary({ event }: { event: EventCardDto }) {
+  useLocale();
   const location = useLocation();
   return (
     <>
@@ -27,16 +30,20 @@ export function MapEventSummary({ event }: { event: EventCardDto }) {
       </p>
       <p>
         {participantCount(event.confirmedCount, event.maxParticipants)}
-        {event.spotsLeft != null ? ` · Свободно: ${event.spotsLeft}` : ""}
+        {event.spotsLeft != null
+          ? tr(" · Свободно: {0}", [event.spotsLeft])
+          : ""}
       </p>
       <EventDistance location={event.location} />
-      <p>{event.joinMode === "OPEN" ? "Свободная запись" : "По заявке"}</p>
+      <p>
+        {event.joinMode === "OPEN" ? tr("Свободная запись") : tr("По заявке")}
+      </p>
       <Link
         className="button secondary"
         to={`/events/${event.id}`}
         state={{ mapReturn: `${location.pathname}${location.search}` }}
       >
-        Подробнее
+        {tr("Подробнее")}
       </Link>
     </>
   );
@@ -52,6 +59,7 @@ export function MapMarkers({
   now: number;
   onSelect: (kind: "event" | "venue", id: string) => void;
 }) {
+  useLocale();
   return (
     <>
       {events
@@ -63,7 +71,7 @@ export function MapMarkers({
               latitude: event.location.latitude!,
               longitude: event.location.longitude!,
             }}
-            title={`Мероприятие: ${event.title}`}
+            title={tr("Мероприятие: {0}", [event.title])}
             onSelect={() => onSelect("event", event.id)}
             tooltip={
               <>
@@ -82,10 +90,10 @@ export function MapMarkers({
             key={venue.id}
             point={venue.location}
             tone={presentation.tone}
-            title={`Площадка: ${venue.name} — ${presentation.label}`}
+            title={tr("Площадка: {0} — {1}", [venue.name, presentation.label])}
             tooltip={
               <>
-                {venue.name} · {presentation.label}
+                {venue.name} · {tr(presentation.label)}
               </>
             }
             onSelect={() => onSelect("venue", venue.id)}

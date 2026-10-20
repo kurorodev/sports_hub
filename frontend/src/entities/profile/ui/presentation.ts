@@ -1,3 +1,4 @@
+import { tr } from "../../../shared/i18n/translate";
 import {
   ProfileFailure,
   type ProfileFailureCode,
@@ -44,7 +45,7 @@ const messages: Record<ProfileFailureCode, string> = {
   unknown: "Не удалось сохранить профиль. Попробуйте ещё раз.",
 };
 export function profileErrorMessage(error: unknown) {
-  return error instanceof ProfileFailure
-    ? messages[error.code]
-    : messages.unknown;
+  return tr(
+    error instanceof ProfileFailure ? messages[error.code] : messages.unknown,
+  );
 }

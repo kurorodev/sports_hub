@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { GeoSuggestion, Location } from "../api/types";
@@ -32,6 +34,7 @@ export function LocationPicker({
   preserveAddressOnPoint?: boolean;
   unmappedHint?: string;
 }) {
+  useLocale();
   const listId = useId();
   const [query, setQuery] = useState("");
   const [contextCity, setContextCity] = useState(value.city);
@@ -139,7 +142,7 @@ export function LocationPicker({
         >
           <input
             id={`${idPrefix}-city`}
-            placeholder="Например, Самара"
+            placeholder={tr("Например, Самара")}
             value={value.city}
             onChange={(e) => edit("city", e.target.value)}
             maxLength={120}
@@ -160,7 +163,7 @@ export function LocationPicker({
             <input
               ref={addressRef}
               id={`${idPrefix}-address`}
-              placeholder="Улица, дом или название площадки"
+              placeholder={tr("Улица, дом или название площадки")}
               value={value.address}
               onChange={(e) => edit("address", e.target.value)}
               onFocus={() => setOpen(search)}
@@ -207,24 +210,32 @@ export function LocationPicker({
           </FormField>
           {listVisible && (
             <div className="location-suggestions">
-              {suggestions.isFetching && <p role="status">Ищем адреса…</p>}
+              {suggestions.isFetching && (
+                <p role="status">{tr("Ищем адреса…")}</p>
+              )}
               {suggestions.isError ? (
                 <p role="status">
-                  Поиск адресов недоступен. Можно ввести адрес вручную.{" "}
+                  {tr("Поиск адресов недоступен. Можно ввести адрес вручную.")}{" "}
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => void suggestions.refetch()}
                   >
-                    Повторить
+                    {tr("Повторить")}
                   </button>
                 </p>
               ) : (
                 !suggestions.isFetching &&
                 suggestions.data &&
-                items.length === 0 && <p role="status">Ничего не найдено</p>
+                items.length === 0 && (
+                  <p role="status">{tr("Ничего не найдено")}</p>
+                )
               )}
-              <ul id={listId} role="listbox" aria-label="Подсказки адресов">
+              <ul
+                id={listId}
+                role="listbox"
+                aria-label={tr("Подсказки адресов")}
+              >
                 {items.map((item, index) => (
                   <li
                     id={`${listId}-${index}`}
@@ -252,7 +263,7 @@ export function LocationPicker({
             setMapOpen((v) => !v);
           }}
         >
-          {mapOpen ? "Скрыть карту" : "Указать на карте"}
+          {mapOpen ? tr("Скрыть карту") : tr("Указать на карте")}
         </button>
         <button
           type="button"
@@ -264,13 +275,16 @@ export function LocationPicker({
           }}
           disabled={value.address.trim().length < 3}
         >
-          Найти на карте
+          {tr("Найти на карте")}
         </button>
       </div>
       <p className="field-hint" role="status">
         {hasPoint(value)
-          ? `Точка: ${value.latitude.toFixed(5)}, ${value.longitude.toFixed(5)}`
-          : `Место не привязано к карте. ${unmappedHint}`}
+          ? tr("Точка: {0}, {1}", [
+              value.latitude.toFixed(5),
+              value.longitude.toFixed(5),
+            ])
+          : tr("Место не привязано к карте. {0}", [unmappedHint])}
       </p>
       {(errors.latitude || errors.longitude) && (
         <p role="alert" className="field-error">
@@ -285,19 +299,20 @@ export function LocationPicker({
           disabled={!value.city.trim() || !value.address.trim()}
           onClick={() => {
             setManualPin(false);
-            setReverseStatus("Адрес выбранной точки подтверждён");
+            setReverseStatus(tr("Адрес выбранной точки подтверждён"));
           }}
         >
-          Подтвердить адрес точки
+          {tr("Подтвердить адрес точки")}
         </button>
       )}
       {mapOpen && (
         <>
           <p className="field-hint">
-            Нажмите на карту или перетащите метку. Начальная область — Самара
-            (демо-регион).
+            {tr(
+              "Нажмите на карту или перетащите метку. Начальная область — Самара (демо-регион).",
+            )}
           </p>
-          <Suspense fallback={<p role="status">Загружаем карту…</p>}>
+          <Suspense fallback={<p role="status">{tr("Загружаем карту…")}</p>}>
             <GeoMap
               compact
               center={hasPoint(value) ? value : undefined}

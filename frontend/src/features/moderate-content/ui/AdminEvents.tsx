@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +12,7 @@ import type { EventStatus } from "../../../entities/moderation/model";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import { ModerationEventCard } from "./ModerationEventCard";
 export function AdminEvents({ viewerId }: { viewerId: string }) {
+  useLocale();
   const repo = useModerationRepository();
   const [draft, setDraft] = useState("");
   const [q, setQ] = useState("");
@@ -21,7 +24,7 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
   );
   return (
     <section aria-labelledby="moderation-events-heading">
-      <h2 id="moderation-events-heading">Модерация мероприятий</h2>
+      <h2 id="moderation-events-heading">{tr("Модерация мероприятий")}</h2>
       <div className="organization-toolbar">
         <form
           className="organization-search"
@@ -32,22 +35,22 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
           }}
         >
           <label htmlFor="moderation-search">
-            Название или описание мероприятия
+            {tr("Название или описание мероприятия")}
           </label>
           <div>
             <input
               id="moderation-search"
-              placeholder="Название встречи или ключевое слово"
+              placeholder={tr("Название встречи или ключевое слово")}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
             />
             <button className="button secondary" type="submit">
-              Найти мероприятия
+              {tr("Найти мероприятия")}
             </button>
           </div>
         </form>
         <div className="form-field">
-          <label htmlFor="moderation-status">Статус мероприятий</label>
+          <label htmlFor="moderation-status">{tr("Статус мероприятий")}</label>
           <Select
             id="moderation-status"
             value={status ?? ""}
@@ -65,11 +68,11 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
               }
             }}
           >
-            <option value="PUBLISHED">Опубликованные</option>
-            <option value="UNPUBLISHED">Снятые с публикации</option>
-            <option value="DRAFT">Черновики</option>
-            <option value="DELETED">Удалённые</option>
-            <option value="">Все статусы</option>
+            <option value="PUBLISHED">{tr("Опубликованные")}</option>
+            <option value="UNPUBLISHED">{tr("Снятые с публикации")}</option>
+            <option value="DRAFT">{tr("Черновики")}</option>
+            <option value="DELETED">{tr("Удалённые")}</option>
+            <option value="">{tr("Все статусы")}</option>
           </Select>
         </div>
         <button
@@ -77,30 +80,33 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
           disabled={query.isFetching}
           onClick={() => void query.refetch()}
         >
-          Обновить мероприятия
+          {tr("Обновить мероприятия")}
         </button>
       </div>
       {notice && (
         <p className="notice success" role="status">
-          {notice}
+          {tr(notice)}
         </p>
       )}
       {query.isPending ? (
-        <p role="status">Загружаем мероприятия…</p>
+        <p role="status">{tr("Загружаем мероприятия…")}</p>
       ) : query.isError ? (
         <ErrorState
           error={query.error}
-          message={moderationErrorMessage(query.error)}
+          message={tr(moderationErrorMessage(query.error))}
           retry={() => void query.refetch()}
         />
       ) : (
         <>
           <p className="join-note">
-            Найдено мероприятий: {query.data.totalCount}
+            {tr("Найдено мероприятий: ")}
+            {query.data.totalCount}
           </p>
           {query.data.items.length === 0 ? (
             <p className="notice">
-              Нет мероприятий по этим условиям. Измените поиск или статус.
+              {tr(
+                "Нет мероприятий по этим условиям. Измените поиск или статус.",
+              )}
             </p>
           ) : (
             <div className="moderation-list">
@@ -111,7 +117,9 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
                   viewerId={viewerId}
                   onDone={() =>
                     setNotice(
-                      `«${event.title}»: снято с публикации. Решение сохранено.`,
+                      tr("«{0}»: снято с публикации. Решение сохранено.", [
+                        event.title,
+                      ]),
                     )
                   }
                 />
@@ -121,16 +129,19 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
           {(query.data.totalCount > query.data.pageSize || page > 0) && (
             <nav
               className="pagination"
-              aria-label="Страницы модерации мероприятий"
+              aria-label={tr("Страницы модерации мероприятий")}
             >
               <button
                 className="button secondary"
                 disabled={page === 0}
                 onClick={() => setPage((value) => value - 1)}
               >
-                Назад
+                {tr("Назад")}
               </button>
-              <span>Страница {page + 1}</span>
+              <span>
+                {tr("Страница ")}
+                {page + 1}
+              </span>
               <button
                 className="button secondary"
                 disabled={
@@ -138,7 +149,7 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
                 }
                 onClick={() => setPage((value) => value + 1)}
               >
-                Далее
+                {tr("Далее")}
               </button>
             </nav>
           )}

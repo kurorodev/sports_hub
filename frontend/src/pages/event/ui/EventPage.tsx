@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { sessionQuery } from "../../../entities/session";
 import { EventDiscussion } from "../../../features/event-discussion";
 import { RegistrationRequests } from "../../../features/review-registrations";
@@ -33,6 +35,7 @@ import { ReportCommentDialog } from "../../../features/support";
 import type { DiscussionComment } from "../../../entities/comment/model";
 
 export function EventPage() {
+  useLocale();
   const [report, setReport] = useState<DiscussionComment | null>(null);
   const { eventId = "" } = useParams();
   const location = useLocation();
@@ -83,24 +86,25 @@ export function EventPage() {
       {query.isError && (
         <div className="notice" role="alert">
           <p>
-            Не удалось обновить состояние встречи. Показаны последние полученные
-            данные, введённый текст сохранён.
+            {tr(
+              "Не удалось обновить состояние встречи. Показаны последние полученные данные, введённый текст сохранён.",
+            )}
           </p>
           <button
             className="button secondary"
             onClick={() => void query.refetch()}
           >
-            Обновить состояние встречи
+            {tr("Обновить состояние встречи")}
           </button>
         </div>
       )}
       <Link to={mapReturn ?? "/#activities"} className="back-link">
         <ArrowLeft size={18} />
-        {mapReturn ? "Назад к карте" : "Все активности"}
+        {mapReturn ? tr("Назад к карте") : tr("Все активности")}
       </Link>
       {created && (
         <Toast
-          message="Мероприятие создано"
+          message={tr("Мероприятие создано")}
           placement="top"
           tone="success"
           onDismiss={dismissCreated}
@@ -108,19 +112,24 @@ export function EventPage() {
       )}
       <div className="detail-title">
         {event.viewerIsOrganizer && (
-          <span className="owner-label">Вы организатор</span>
+          <span className="owner-label">{tr("Вы организатор")}</span>
         )}
         <span className="eyebrow muted">{event.sport.name}</span>
         {event.customSportName && (
-          <p className="field-hint">Активность: {event.customSportName}</p>
+          <p className="field-hint">
+            {tr("Активность: ")}
+            {event.customSportName}
+          </p>
         )}
         <h1>{event.title}</h1>
       </div>
       {event.status !== "PUBLISHED" && (
         <div className="notice" role="status">
           <strong>
-            Запись закрыта ·{" "}
-            {event.status === "DRAFT" ? "Черновик" : "Снято с публикации"}
+            {tr("Запись закрыта ·")}{" "}
+            {event.status === "DRAFT"
+              ? tr("Черновик")
+              : tr("Снято с публикации")}
           </strong>
         </div>
       )}
@@ -129,7 +138,7 @@ export function EventPage() {
           <img
             className="detail-art"
             src={sportImage(event.sport.name)}
-            alt={`Спортивная иллюстрация: ${event.sport.name}`}
+            alt={tr("Спортивная иллюстрация: {0}", [event.sport.name])}
             width="600"
             height="360"
           />
@@ -139,7 +148,7 @@ export function EventPage() {
               className="event-requirements"
               aria-labelledby="event-requirements-heading"
             >
-              <h2 id="event-requirements-heading">Условия участия</h2>
+              <h2 id="event-requirements-heading">{tr("Условия участия")}</h2>
               <p>{event.requirements}</p>
             </section>
           )}
@@ -184,7 +193,7 @@ export function EventPage() {
             )}
         </div>
         <aside className="detail-summary">
-          <h2>Встречаемся здесь</h2>
+          <h2>{tr("Встречаемся здесь")}</h2>
           <JoinAction
             event={toEventParticipation(event, event.team)}
             publicationClosed={event.status !== "PUBLISHED"}
@@ -193,7 +202,10 @@ export function EventPage() {
             <CalendarDays size={20} />
             <time dateTime={event.startsAt}>
               {eventDate(event.startsAt)}
-              <small>Часовой пояс: {eventTimezone(event.startsAt)}</small>
+              <small>
+                {tr("Часовой пояс: ")}
+                {eventTimezone(event.startsAt)}
+              </small>
             </time>
           </p>
           <p>
@@ -205,7 +217,7 @@ export function EventPage() {
           </p>
           <p>
             <Gauge size={20} />
-            {skillLabels[event.skillLevel]}
+            {tr(skillLabels[event.skillLevel])}
           </p>
           <p>
             <Users size={20} />
@@ -217,11 +229,11 @@ export function EventPage() {
           </p>
           <div className="detail-condition">
             {event.joinMode === "OPEN"
-              ? "Свободная запись"
-              : "Участие после одобрения организатора"}
+              ? tr("Свободная запись")
+              : tr("Участие после одобрения организатора")}
             {event.maxParticipants != null &&
               event.confirmedCount >= event.maxParticipants && (
-                <strong>Все места заняты</strong>
+                <strong>{tr("Все места заняты")}</strong>
               )}
           </div>
         </aside>

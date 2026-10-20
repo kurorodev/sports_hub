@@ -1,3 +1,6 @@
+import { localeTag } from "../i18n/preferences";
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import {
   useEffect,
   useImperativeHandle,
@@ -16,11 +19,6 @@ const daySteps: Record<string, number> = {
   ArrowUp: -7,
   ArrowDown: 7,
 };
-const monthLabel = new Intl.DateTimeFormat("ru-RU", {
-  month: "long",
-  year: "numeric",
-});
-const dayLabel = new Intl.DateTimeFormat("ru-RU", { dateStyle: "full" });
 
 function dateParts(value: string) {
   const safeValue = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : calendarDate();
@@ -60,6 +58,13 @@ export function DatePicker({
   disabled?: boolean;
   required?: boolean;
 }) {
+  useLocale();
+  const monthLabel = new Intl.DateTimeFormat(localeTag(), {
+    month: "long",
+    year: "numeric",
+  });
+  const dayLabel = new Intl.DateTimeFormat(localeTag(), { dateStyle: "full" });
+
   const initial = value || today;
   const bounded = initial < min ? min : max && initial > max ? max : initial;
   const [open, setOpen] = useState(false);
@@ -176,7 +181,7 @@ export function DatePicker({
         }}
       >
         <span>
-          {value ? value.split("-").reverse().join(".") : "дд.мм.гггг"}
+          {value ? value.split("-").reverse().join(".") : tr("дд.мм.гггг")}
         </span>
         <CalendarDays size={17} aria-hidden="true" />
       </button>
@@ -185,7 +190,7 @@ export function DatePicker({
           ref={panel}
           id={`${id}-calendar`}
           role="dialog"
-          aria-label="Выбор даты"
+          aria-label={tr("Выбор даты")}
           className="sport-select-menu date-picker-panel"
           style={{ left }}
         >
@@ -194,7 +199,7 @@ export function DatePicker({
             <div>
               <button
                 type="button"
-                aria-label="Предыдущий месяц"
+                aria-label={tr("Предыдущий месяц")}
                 disabled={previousEnd < min}
                 onClick={() => moveMonth(-1)}
               >
@@ -202,7 +207,7 @@ export function DatePicker({
               </button>
               <button
                 type="button"
-                aria-label="Следующий месяц"
+                aria-label={tr("Следующий месяц")}
                 disabled={Boolean(max && nextStart > max)}
                 onClick={() => moveMonth(1)}
               >
@@ -212,13 +217,13 @@ export function DatePicker({
           </div>
           <div className="date-picker-weekdays" aria-hidden="true">
             {weekdays.map((day) => (
-              <span key={day}>{day}</span>
+              <span key={day}>{tr(day)}</span>
             ))}
           </div>
           <div
             className="date-picker-days"
             role="group"
-            aria-label="Дни месяца"
+            aria-label={tr("Дни месяца")}
           >
             {days.map((day) => (
               <button
@@ -250,14 +255,14 @@ export function DatePicker({
           </div>
           <div className="date-picker-footer">
             <button type="button" disabled={!value} onClick={() => choose("")}>
-              Очистить
+              {tr("Очистить")}
             </button>
             <button
               type="button"
               disabled={!allowed(today)}
               onClick={() => choose(today)}
             >
-              Сегодня
+              {tr("Сегодня")}
             </button>
           </div>
         </div>

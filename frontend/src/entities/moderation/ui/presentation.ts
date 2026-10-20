@@ -1,3 +1,4 @@
+import { tr } from "../../../shared/i18n/translate";
 import {
   ModerationFailure,
   type EventStatus,
@@ -26,7 +27,9 @@ const messages: Record<ModerationFailureCode, string> = {
   unknown: "Не удалось выполнить действие. Попробуйте ещё раз.",
 };
 export function moderationErrorMessage(error: unknown) {
-  return error instanceof ModerationFailure
-    ? messages[error.code]
-    : messages.unknown;
+  return tr(
+    error instanceof ModerationFailure
+      ? messages[error.code]
+      : messages.unknown,
+  );
 }

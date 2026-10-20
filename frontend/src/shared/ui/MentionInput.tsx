@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import { Textarea } from "./Textarea";
 import {
   useId,
@@ -14,6 +16,7 @@ type Props = Omit<ComponentProps<"textarea">, "value" | "onChange" | "ref"> & {
   onChange: (value: string) => void;
 };
 export function MentionInput({ value, onChange, onKeyDown, ...props }: Props) {
+  useLocale();
   const input = useRef<HTMLTextAreaElement>(null);
   const pendingCaret = useRef<number | null>(null);
   useLayoutEffect(() => {
@@ -107,7 +110,7 @@ export function MentionInput({ value, onChange, onKeyDown, ...props }: Props) {
           className="mention-options"
           id={listId}
           role="listbox"
-          aria-label="Упомянуть пользователя"
+          aria-label={tr("Упомянуть пользователя")}
         >
           {choices.map((user, index) => (
             <li
@@ -130,7 +133,7 @@ export function MentionInput({ value, onChange, onKeyDown, ...props }: Props) {
       )}
       {prefix && !dismissed && users.isError && (
         <p className="field-hint" role="status">
-          Подсказки недоступны. Можно написать @никнейм вручную.
+          {tr("Подсказки недоступны. Можно написать @никнейм вручную.")}
         </p>
       )}
     </div>

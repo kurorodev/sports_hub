@@ -1,3 +1,6 @@
+import { localeTag } from "../../../shared/i18n/preferences";
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Clock3, ListFilter, SlidersHorizontal } from "lucide-react";
@@ -30,6 +33,7 @@ export function AdminCommentFilters({
   onRefresh: () => void;
   refreshing: boolean;
 }) {
+  useLocale();
   const repo = useModerationRepository();
   const [draft, setDraft] = useState({
     eventId: appliedEventId,
@@ -95,15 +99,20 @@ export function AdminCommentFilters({
     <div className="comment-filter-panel">
       <div className="comment-filter-heading">
         <SlidersHorizontal size={19} aria-hidden="true" />
-        <h3>Фильтры комментариев</h3>
+        <h3>{tr("Фильтры комментариев")}</h3>
         {activeCount > 0 && (
-          <span className="comment-filter-count">Выбрано: {activeCount}</span>
+          <span className="comment-filter-count">
+            {tr("Выбрано: ")}
+            {activeCount}
+          </span>
         )}
       </div>
       <div className="comment-filter-grid">
         <CommentFilterSearch
-          label="Пользователь"
-          hint="Ищите только по никнейму @user. По имени и фамилии поиск не работает."
+          label={tr("Пользователь")}
+          hint={tr(
+            "Ищите только по никнейму @user. По имени и фамилии поиск не работает.",
+          )}
           placeholder="@user"
           value={userSearch}
           onSearch={setUserSearch}
@@ -122,23 +131,27 @@ export function AdminCommentFilters({
               ? `${chosenUser.displayName} (@${chosenUser.nickname})`
               : undefined
           }
-          allLabel="Все пользователи"
+          allLabel={tr("Все пользователи")}
           onSelect={(id) => edit({ authorId: id })}
           loading={validPrefix && users.isFetching}
           emptyMessage={
             !prefix
-              ? "Введите хотя бы один символ никнейма после @."
+              ? tr("Введите хотя бы один символ никнейма после @.")
               : !validPrefix
-                ? "Никнейм вводится латиницей: @user. По имени поиск недоступен."
-                : "Пользователи не найдены. Проверьте никнейм."
+                ? tr(
+                    "Никнейм вводится латиницей: @user. По имени поиск недоступен.",
+                  )
+                : tr("Пользователи не найдены. Проверьте никнейм.")
           }
           error={validPrefix && users.isError}
           onRetry={() => void users.refetch()}
         />
         <CommentFilterSearch
-          label="Мероприятие"
-          hint="Начните вводить название — варианты появятся уже с первой буквы."
-          placeholder="Название мероприятия"
+          label={tr("Мероприятие")}
+          hint={tr(
+            "Начните вводить название — варианты появятся уже с первой буквы.",
+          )}
+          placeholder={tr("Название мероприятия")}
           value={eventSearch}
           onSearch={(value) => {
             setEventSearch(value);
@@ -147,14 +160,16 @@ export function AdminCommentFilters({
           choices={(events.data?.items ?? []).map((event) => ({
             id: event.id,
             label: event.title,
-            detail: `${event.city} · ${new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(event.startsAt))}`,
+            detail: `${event.city} · ${new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium", timeZone: "UTC" }).format(new Date(event.startsAt))}`,
           }))}
           selectedId={eventId}
           selectedLabel={chosenEvent?.title}
-          allLabel="Все мероприятия"
+          allLabel={tr("Все мероприятия")}
           onSelect={(id) => edit({ eventId: id })}
           loading={events.isFetching}
-          emptyMessage="Мероприятия не найдены. Попробуйте другую часть названия."
+          emptyMessage={tr(
+            "Мероприятия не найдены. Попробуйте другую часть названия.",
+          )}
           error={events.isError}
           onRetry={() => void events.refetch()}
           footer={
@@ -162,16 +177,19 @@ export function AdminCommentFilters({
             (events.data.totalCount > events.data.pageSize || eventPage > 0) ? (
               <div
                 className="comment-search-pages"
-                aria-label="Выбор мероприятий"
+                aria-label={tr("Выбор мероприятий")}
               >
                 <button
                   type="button"
                   disabled={eventPage === 0}
                   onClick={() => setEventPage((page) => page - 1)}
                 >
-                  Назад
+                  {tr("Назад")}
                 </button>
-                <span>Страница {eventPage + 1}</span>
+                <span>
+                  {tr("Страница ")}
+                  {eventPage + 1}
+                </span>
                 <button
                   type="button"
                   disabled={
@@ -180,7 +198,7 @@ export function AdminCommentFilters({
                   }
                   onClick={() => setEventPage((page) => page + 1)}
                 >
-                  Далее
+                  {tr("Далее")}
                 </button>
               </div>
             ) : undefined
@@ -199,7 +217,7 @@ export function AdminCommentFilters({
             }
           />
           <ListFilter size={18} aria-hidden="true" />
-          <span>Последние 10 комментариев</span>
+          <span>{tr("Последние 10 комментариев")}</span>
         </label>
         <label
           className={`comment-filter-toggle ${last24Hours ? "is-checked" : ""}`}
@@ -212,7 +230,7 @@ export function AdminCommentFilters({
             }
           />
           <Clock3 size={18} aria-hidden="true" />
-          <span>За последние 24 часа</span>
+          <span>{tr("За последние 24 часа")}</span>
         </label>
       </div>
       <div className="comment-filter-footer">
@@ -221,8 +239,8 @@ export function AdminCommentFilters({
           aria-live="polite"
         >
           {dirty
-            ? "Есть изменения. Нажмите «Применить фильтры»."
-            : "Выберите условия и нажмите «Применить фильтры»."}
+            ? tr("Есть изменения. Нажмите «Применить фильтры».")
+            : tr("Выберите условия и нажмите «Применить фильтры».")}
         </p>
         <div className="comment-filter-actions">
           <button
@@ -246,7 +264,7 @@ export function AdminCommentFilters({
               });
             }}
           >
-            Сбросить фильтры
+            {tr("Сбросить фильтры")}
           </button>
           <button
             type="button"
@@ -258,7 +276,7 @@ export function AdminCommentFilters({
             }}
           >
             <Check size={17} aria-hidden="true" />
-            Применить фильтры
+            {tr("Применить фильтры")}
           </button>
         </div>
       </div>

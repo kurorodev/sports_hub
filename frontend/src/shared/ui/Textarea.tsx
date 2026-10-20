@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import {
   useId,
   useImperativeHandle,
@@ -17,6 +19,7 @@ export function Textarea({
   "aria-invalid": invalid,
   ...props
 }: ComponentPropsWithRef<"textarea">) {
+  useLocale();
   const input = useRef<HTMLTextAreaElement>(null);
   const counterId = useId();
   const statusId = useId();
@@ -26,9 +29,9 @@ export function Textarea({
   const exceeded = maxLength !== undefined && length > maxLength;
   const reached = maxLength !== undefined && length === maxLength;
   const message = exceeded
-    ? `Превышен лимит: максимум ${maxLength} символов`
+    ? tr("Превышен лимит: максимум {0} символов", [maxLength ?? 0])
     : reached
-      ? "Достигнут лимит символов"
+      ? tr("Достигнут лимит символов")
       : "";
   useImperativeHandle(ref, () => input.current!, []);
 
@@ -40,7 +43,7 @@ export function Textarea({
     setLength(count);
     element.setCustomValidity(
       maxLength !== undefined && count > maxLength
-        ? `Максимум ${maxLength} символов`
+        ? tr("Максимум {0} символов", [maxLength])
         : "",
     );
   });
@@ -67,7 +70,7 @@ export function Textarea({
           setLength(count);
           event.currentTarget.setCustomValidity(
             maxLength !== undefined && count > maxLength
-              ? `Максимум ${maxLength} символов`
+              ? tr("Максимум {0} символов", [maxLength])
               : "",
           );
           onChange?.(event);
@@ -76,12 +79,12 @@ export function Textarea({
       {maxLength !== undefined && (
         <span className="textarea-meta">
           <span id={statusId} role="status">
-            {message}
+            {tr(message)}
           </span>
           <span
             id={counterId}
             className="textarea-counter"
-            aria-label={`${length} из ${maxLength} символов`}
+            aria-label={tr("{0} из {1} символов", [length, maxLength])}
           >
             {length} / {maxLength}
           </span>

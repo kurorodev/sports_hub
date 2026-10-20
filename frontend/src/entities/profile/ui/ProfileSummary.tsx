@@ -1,3 +1,6 @@
+import { localeTag } from "../../../shared/i18n/preferences";
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Avatar } from "../../../shared/ui/Avatar";
 import { MapPin, Clock3, Trophy, CalendarDays } from "lucide-react";
 import type { Profile } from "../model";
@@ -16,6 +19,7 @@ export function ProfileSummary({
   sports: { id: string; name: string }[];
   sportsLoading?: boolean;
 }) {
+  useLocale();
   return (
     <div className="profile-summary">
       <div className="profile-identity">
@@ -28,7 +32,7 @@ export function ProfileSummary({
           />
         </div>
         <div>
-          <span className="eyebrow muted">Участник сообщества</span>
+          <span className="eyebrow muted">{tr("Участник сообщества")}</span>
           <h1>{profile.name}</h1>
           <p className="profile-handle">@{profile.handle}</p>
           {(profile.firstName || profile.lastName) && (
@@ -40,11 +44,11 @@ export function ProfileSummary({
             {profile.roles.length ? (
               profile.roles.map((role) => (
                 <span className="profile-chip" key={role}>
-                  {sportRoleLabels[role]}
+                  {tr(sportRoleLabels[role])}
                 </span>
               ))
             ) : (
-              <span className="muted">Спортивные роли не указаны</span>
+              <span className="muted">{tr("Спортивные роли не указаны")}</span>
             )}
           </div>
         </div>
@@ -52,17 +56,18 @@ export function ProfileSummary({
       <div className="profile-facts">
         <p>
           <MapPin size={18} />
-          {profile.city || "Город не указан"}
+          {profile.city || tr("Город не указан")}
         </p>
         <p>
           <Clock3 size={18} />
           {profile.preferredTime
-            ? timeLabels[profile.preferredTime]
-            : "Удобное время не указано"}
+            ? tr(timeLabels[profile.preferredTime])
+            : tr("Удобное время не указано")}
         </p>
         <p>
-          <CalendarDays size={18} />На платформе с{" "}
-          {new Intl.DateTimeFormat("ru-RU", {
+          <CalendarDays size={18} />
+          {tr("На платформе с")}{" "}
+          {new Intl.DateTimeFormat(localeTag(), {
             month: "long",
             year: "numeric",
             timeZone: "UTC",
@@ -73,39 +78,42 @@ export function ProfileSummary({
         className="profile-about"
         aria-labelledby="profile-about-heading"
       >
-        <h2 id="profile-about-heading">О себе</h2>
+        <h2 id="profile-about-heading">{tr("О себе")}</h2>
         <p>
           {profile.about ||
-            "Пока без описания. Познакомиться можно в обсуждении встречи."}
+            tr("Пока без описания. Познакомиться можно в обсуждении встречи.")}
         </p>
       </section>
       <section aria-labelledby="profile-interests-heading">
-        <h2 id="profile-interests-heading">Спортивные интересы</h2>
+        <h2 id="profile-interests-heading">{tr("Спортивные интересы")}</h2>
         {sportsLoading && profile.preferences.length ? (
-          <p role="status">Загружаем названия видов спорта…</p>
+          <p role="status">{tr("Загружаем названия видов спорта…")}</p>
         ) : profile.preferences.length ? (
           <ul className="profile-preferences">
             {profile.preferences.map((item) => (
               <li key={item.sportId}>
                 <strong>
                   {sports.find((sport) => sport.id === item.sportId)?.name ??
-                    "Вид спорта недоступен"}
+                    tr("Вид спорта недоступен")}
                 </strong>
-                <span>{levelLabels[item.level]}</span>
+                <span>{tr(levelLabels[item.level])}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="muted">Любимые виды спорта пока не выбраны.</p>
+          <p className="muted">{tr("Любимые виды спорта пока не выбраны.")}</p>
         )}
       </section>
       <div className="profile-rating">
         <Trophy size={24} />
         <div>
           <strong>
-            {rankLabels[profile.rank]} · {profile.points} очков
+            {tr(rankLabels[profile.rank])} · {profile.points}
+            {tr(" очков")}
           </strong>
-          <p>Ранг и очки рассчитывает сервер по подтверждённому участию.</p>
+          <p>
+            {tr("Ранг и очки рассчитывает сервер по подтверждённому участию.")}
+          </p>
         </div>
       </div>
     </div>

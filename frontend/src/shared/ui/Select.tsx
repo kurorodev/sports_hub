@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import {
   useId,
   useImperativeHandle,
@@ -25,6 +27,7 @@ export function Select({
   style,
   ...props
 }: Omit<ComponentPropsWithRef<"select">, "multiple" | "size">) {
+  useLocale();
   const generatedId = useId();
   const controlId = id ?? generatedId;
   const native = useRef<HTMLSelectElement>(null);
@@ -65,11 +68,11 @@ export function Select({
         options={options}
         disabled={disabled}
         searchable={options.length > 8}
-        placeholder="Выберите вариант"
-        searchLabel="Поиск по вариантам"
-        searchPlaceholder="Найти вариант…"
-        listLabel={props["aria-label"] ?? "Варианты выбора"}
-        hint="Выберите вариант или начните вводить название"
+        placeholder={tr("Выберите вариант")}
+        searchLabel={tr("Поиск по вариантам")}
+        searchPlaceholder={tr("Найти вариант…")}
+        listLabel={props["aria-label"] ?? tr("Варианты выбора")}
+        hint={tr("Выберите вариант или начните вводить название")}
         aria-label={props["aria-label"]}
         aria-labelledby={props["aria-labelledby"]}
         aria-invalid={props["aria-invalid"]}

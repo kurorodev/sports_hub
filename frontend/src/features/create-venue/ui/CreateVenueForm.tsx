@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Select } from "../../../shared/ui/Select";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +36,7 @@ export function CreateVenueForm({
   sports: Sport[];
   onSuccess: (venue: VenueMapItem) => void;
 }) {
+  useLocale();
   const client = useQueryClient();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -73,25 +76,25 @@ export function CreateVenueForm({
       })}
     >
       <fieldset disabled={mutation.isPending}>
-        <legend>Новая спортивная площадка</legend>
+        <legend>{tr("Новая спортивная площадка")}</legend>
         <label className="form-field">
-          Название площадки
+          {tr("Название площадки")}
           <input
             {...form.register("name")}
-            placeholder="Например, футбольное поле в парке"
+            placeholder={tr("Например, футбольное поле в парке")}
             maxLength={120}
             aria-invalid={Boolean(errors.name)}
           />
         </label>
         {errors.name && (
           <p role="alert" className="field-error">
-            {errors.name.message}
+            {tr(errors.name.message ?? "")}
           </p>
         )}
         <div className="form-field">
-          <label htmlFor="venue-sport">Вид спорта площадки</label>
+          <label htmlFor="venue-sport">{tr("Вид спорта площадки")}</label>
           <Select id="venue-sport" {...form.register("sportId")}>
-            <option value="">Любой спорт</option>
+            <option value="">{tr("Любой спорт")}</option>
             {sports.map((sport) => (
               <option key={sport.id} value={sport.id}>
                 {sport.name}
@@ -105,8 +108,10 @@ export function CreateVenueForm({
           render={({ field }) => (
             <LocationPicker
               idPrefix="venue"
-              addressLabel="Адрес площадки"
-              unmappedHint="Для площадки выберите точку на карте или в подсказках."
+              addressLabel={tr("Адрес площадки")}
+              unmappedHint={tr(
+                "Для площадки выберите точку на карте или в подсказках.",
+              )}
               value={field.value}
               onChange={field.onChange}
               errors={{
@@ -118,7 +123,7 @@ export function CreateVenueForm({
         />
         {errors.location?.message && (
           <p role="alert" className="field-error">
-            {errors.location.message}
+            {tr(errors.location.message ?? "")}
           </p>
         )}
         {mutation.isError && (
@@ -134,7 +139,7 @@ export function CreateVenueForm({
           className="button primary"
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? "Сохраняем…" : "Сохранить площадку"}
+          {mutation.isPending ? tr("Сохраняем…") : tr("Сохранить площадку")}
         </button>
       </fieldset>
     </form>

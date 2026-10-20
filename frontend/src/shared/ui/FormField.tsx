@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import type { ReactNode } from "react";
 
 export function FormField({
@@ -13,18 +15,19 @@ export function FormField({
   error?: string;
   children: ReactNode;
 }) {
+  useLocale();
   return (
     <div className="form-field">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{tr(label)}</label>
       {children}
       {hint && (
         <p className="field-hint" id={`${id}-hint`}>
-          {hint}
+          {tr(hint)}
         </p>
       )}
       {error && (
         <p className="field-error" id={`${id}-error`}>
-          {error}
+          {tr(error)}
         </p>
       )}
     </div>

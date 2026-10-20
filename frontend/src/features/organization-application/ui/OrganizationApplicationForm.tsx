@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -35,6 +37,7 @@ export function OrganizationApplicationForm({
   sports: { id: string; name: string }[];
   onCreated: (organization: Organization) => void;
 }) {
+  useLocale();
   const repo = useOrganizationRepository();
   const client = useQueryClient();
   const form = useForm<Values>({
@@ -68,15 +71,15 @@ export function OrganizationApplicationForm({
       onSubmit={form.handleSubmit((input) => mutation.mutate(input))}
     >
       <fieldset disabled={mutation.isPending}>
-        <legend>Новая заявка организации</legend>
+        <legend>{tr("Новая заявка организации")}</legend>
         <FormField
           id="organization-name"
-          label="Название организации"
+          label={tr("Название организации")}
           error={error.name?.message}
         >
           <input
             id="organization-name"
-            placeholder="Например, беговой клуб «Темп»"
+            placeholder={tr("Например, беговой клуб «Темп»")}
             {...form.register("name")}
             maxLength={160}
             required
@@ -88,13 +91,17 @@ export function OrganizationApplicationForm({
         </FormField>
         <FormField
           id="organization-description"
-          label="О вашей организации"
-          hint="Чем занимаетесь, кого ждёте на встречах. От 10 до 2000 символов."
+          label={tr("О вашей организации")}
+          hint={tr(
+            "Чем занимаетесь, кого ждёте на встречах. От 10 до 2000 символов.",
+          )}
           error={error.description?.message}
         >
           <Textarea
             id="organization-description"
-            placeholder="Расскажите, какие тренировки и мероприятия вы проводите и кого ждёте"
+            placeholder={tr(
+              "Расскажите, какие тренировки и мероприятия вы проводите и кого ждёте",
+            )}
             {...form.register("description")}
             rows={4}
             maxLength={2000}
@@ -109,20 +116,23 @@ export function OrganizationApplicationForm({
         </FormField>
         <FormField
           id="organization-sport-search"
-          label="Найти вид спорта организации"
-          hint="Необязательно. Найдите и отметьте нужные направления."
+          label={tr("Найти вид спорта организации")}
+          hint={tr("Необязательно. Найдите и отметьте нужные направления.")}
         >
           <input
             id="organization-sport-search"
             type="search"
             value={sportSearch}
             onChange={(event) => setSportSearch(event.target.value)}
-            placeholder="Например, шахматы"
+            placeholder={tr("Например, шахматы")}
             aria-describedby="organization-sport-search-hint"
           />
         </FormField>
         <fieldset className="organization-sports">
-          <legend>Выбрано видов спорта: {selectedSports.length}</legend>
+          <legend>
+            {tr("Выбрано видов спорта: ")}
+            {selectedSports.length}
+          </legend>
           {sports.map((sport) => (
             <label key={sport.id} hidden={!visibleSports.includes(sport)}>
               <input
@@ -136,19 +146,21 @@ export function OrganizationApplicationForm({
           {visibleSports.length === 0 && (
             <p className="field-hint" role="status">
               {sportSearch.trim()
-                ? "По этому запросу виды спорта не найдены."
-                : "Начните вводить название вида спорта."}
+                ? tr("По этому запросу виды спорта не найдены.")
+                : tr("Начните вводить название вида спорта.")}
             </p>
           )}
         </fieldset>
       </fieldset>
       <p className="join-note">
-        До одобрения администратора публикация от имени организации недоступна.
-        Личные встречи можно создавать сразу.
+        {tr(
+          "До одобрения администратора публикация от имени организации недоступна. Личные встречи можно создавать сразу.",
+        )}
       </p>
       {mutation.isError && (
         <p className="field-error" role="alert">
-          {organizationErrorMessage(mutation.error)} Данные формы сохранены.
+          {tr(organizationErrorMessage(mutation.error))}
+          {tr(" Данные формы сохранены.")}
         </p>
       )}
       <button
@@ -157,8 +169,8 @@ export function OrganizationApplicationForm({
         type="submit"
       >
         {mutation.isPending
-          ? "Отправляем заявку…"
-          : "Отправить заявку организации"}
+          ? tr("Отправляем заявку…")
+          : tr("Отправить заявку организации")}
       </button>
     </form>
   );

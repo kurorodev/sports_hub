@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,6 +19,7 @@ export function ReportOccupancyForm({
   session: Session;
   onSuccess: () => void;
 }) {
+  useLocale();
   const client = useQueryClient();
   const [level, setLevel] = useState<OccupancyReportCreate["level"] | null>(
     null,
@@ -38,12 +41,12 @@ export function ReportOccupancyForm({
   return (
     <form
       className="occupancy-form"
-      aria-label="Оценка загруженности площадки"
+      aria-label={tr("Оценка загруженности площадки")}
       onSubmit={(event) => {
         event.preventDefault();
         setValidation("");
         if (!level) {
-          setValidation("Выберите загруженность");
+          setValidation(tr("Выберите загруженность"));
           return;
         }
         const count = people.trim() ? Number(people) : null;
@@ -51,14 +54,14 @@ export function ReportOccupancyForm({
           count !== null &&
           (!Number.isInteger(count) || count < 0 || count > 1000)
         ) {
-          setValidation("Количество людей: целое число от 0 до 1000");
+          setValidation(tr("Количество людей: целое число от 0 до 1000"));
           return;
         }
         mutation.mutate({ level, peopleCount: count });
       }}
     >
       <fieldset disabled={mutation.isPending}>
-        <legend>Как сейчас на площадке?</legend>
+        <legend>{tr("Как сейчас на площадке?")}</legend>
         <div className="occupancy-options">
           {(["LOW", "MEDIUM", "HIGH"] as const).map((value) => (
             <label
@@ -71,12 +74,12 @@ export function ReportOccupancyForm({
                 checked={level === value}
                 onChange={() => setLevel(value)}
               />
-              {occupancyPresentation[value].label}
+              {tr(occupancyPresentation[value].label)}
             </label>
           ))}
         </div>
         <label className="form-field">
-          Сколько людей вы видите (необязательно)
+          {tr("Сколько людей вы видите (необязательно)")}
           <input
             type="number"
             min={0}
@@ -87,8 +90,9 @@ export function ReportOccupancyForm({
           />
         </label>
         <p className="field-hint">
-          Это ваша субъективная оценка. Число людей не определяет цвет. Оценка
-          действует 90 минут.
+          {tr(
+            "Это ваша субъективная оценка. Число людей не определяет цвет. Оценка действует 90 минут.",
+          )}
         </p>
         {validation && (
           <p className="field-error" role="alert">
@@ -98,7 +102,9 @@ export function ReportOccupancyForm({
         {mutation.isError && (
           <p className="field-error" role="alert">
             {mutation.error instanceof ApiError && mutation.error.status === 429
-              ? "Повторную оценку можно оставить через 10 минут. Ваш выбор сохранён."
+              ? tr(
+                  "Повторную оценку можно оставить через 10 минут. Ваш выбор сохранён.",
+                )
               : errorMessage(mutation.error)}
           </p>
         )}
@@ -107,7 +113,7 @@ export function ReportOccupancyForm({
           type="submit"
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? "Отправляем…" : "Отправить оценку"}
+          {mutation.isPending ? tr("Отправляем…") : tr("Отправить оценку")}
         </button>
       </fieldset>
     </form>

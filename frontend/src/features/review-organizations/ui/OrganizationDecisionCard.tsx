@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -32,6 +34,7 @@ export function OrganizationDecisionCard({
   viewerId: string;
   onDecided: (organization: Organization) => void;
 }) {
+  useLocale();
   const repo = useOrganizationRepository();
   const client = useQueryClient();
   const [rejecting, setRejecting] = useState(false);
@@ -65,8 +68,8 @@ export function OrganizationDecisionCard({
               onClick={() => mutation.mutate({ outcome: "approve" })}
             >
               {mutation.isPending && !rejecting
-                ? "Одобряем…"
-                : "Одобрить организацию"}
+                ? tr("Одобряем…")
+                : tr("Одобрить организацию")}
             </button>
             <button
               ref={trigger}
@@ -77,7 +80,7 @@ export function OrganizationDecisionCard({
                 mutation.reset();
               }}
             >
-              Отклонить организацию
+              {tr("Отклонить организацию")}
             </button>
           </div>
           {rejecting && (
@@ -90,14 +93,16 @@ export function OrganizationDecisionCard({
             >
               <FormField
                 id={reasonId}
-                label="Причина отказа"
-                hint="Обязательна: от 3 до 1000 символов. Представитель увидит её."
+                label={tr("Причина отказа")}
+                hint={tr(
+                  "Обязательна: от 3 до 1000 символов. Представитель увидит её.",
+                )}
                 error={form.formState.errors.reason?.message}
               >
                 <Textarea
                   id={reasonId}
                   {...form.register("reason")}
-                  placeholder="Объясните представителю причину отказа"
+                  placeholder={tr("Объясните представителю причину отказа")}
                   rows={3}
                   maxLength={1000}
                   disabled={mutation.isPending}
@@ -116,8 +121,8 @@ export function OrganizationDecisionCard({
                   type="submit"
                 >
                   {mutation.isPending
-                    ? "Отклоняем…"
-                    : "Подтвердить отказ организации"}
+                    ? tr("Отклоняем…")
+                    : tr("Подтвердить отказ организации")}
                 </button>
                 <button
                   className="button secondary"
@@ -129,7 +134,7 @@ export function OrganizationDecisionCard({
                     trigger.current?.focus();
                   }}
                 >
-                  Отмена
+                  {tr("Отмена")}
                 </button>
               </div>
             </form>
@@ -138,7 +143,8 @@ export function OrganizationDecisionCard({
       )}
       {mutation.isError && (
         <p className="field-error" role="alert">
-          {organizationErrorMessage(mutation.error)} Причина сохранена.
+          {tr(organizationErrorMessage(mutation.error))}
+          {tr(" Причина сохранена.")}
         </p>
       )}
     </OrganizationCard>
