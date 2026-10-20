@@ -38,6 +38,7 @@ export function ReportOccupancyForm({
   return (
     <form
       className="occupancy-form"
+      aria-label="Оценка загруженности площадки"
       onSubmit={(event) => {
         event.preventDefault();
         setValidation("");

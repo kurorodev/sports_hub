@@ -65,7 +65,7 @@ async function fillForm() {
     input.title,
   );
   await user.click(screen.getByLabelText("Вид спорта"));
-  await user.click(screen.getByRole("option", { name: "Другое", exact: true }));
+  await user.click(screen.getByRole("option", { name: "Другое" }));
   await user.type(screen.getByLabelText("Название активности"), "Петанк");
   await user.type(screen.getByLabelText("О встрече"), input.description);
   await user.type(

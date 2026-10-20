@@ -11,7 +11,6 @@ import {
 import {
   currentOccupancy,
   occupancyPresentation,
-  VenueSummary,
 } from "../../../entities/venue";
 
 export function MapEventSummary({ event }: { event: EventCardDto }) {
@@ -46,14 +45,14 @@ export function MapMarkers({
   events,
   venues,
   now,
-  onReport,
   onSelect,
+  popupEnabled = true,
 }: {
   events: EventCardDto[];
   venues: VenueMapItem[];
   now: number;
-  onReport: (id: string) => void;
   onSelect: (kind: "event" | "venue", id: string) => void;
+  popupEnabled?: boolean;
 }) {
   return (
     <>
@@ -62,6 +61,7 @@ export function MapMarkers({
         .map((event) => (
           <GeoMarker
             key={event.id}
+            popupEnabled={popupEnabled}
             point={{
               latitude: event.location.latitude!,
               longitude: event.location.longitude!,
@@ -94,16 +94,7 @@ export function MapMarkers({
               </>
             }
             onSelect={() => onSelect("venue", venue.id)}
-          >
-            <VenueSummary venue={venue} now={now} />
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => onReport(venue.id)}
-            >
-              Оценить загруженность
-            </button>
-          </GeoMarker>
+          />
         );
       })}
     </>

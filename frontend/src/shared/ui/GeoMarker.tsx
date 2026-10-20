@@ -21,6 +21,7 @@ export function GeoMarker({
   onSelect,
   draggable = false,
   onDragEnd,
+  popupEnabled = true,
 }: {
   point: Point;
   title: string;
@@ -30,6 +31,7 @@ export function GeoMarker({
   onSelect?: () => void;
   draggable?: boolean;
   onDragEnd?: (point: Point) => void;
+  popupEnabled?: boolean;
 }) {
   const map = useContext(GeoMapContext);
   const [root] = useState(() => {
@@ -44,7 +46,7 @@ export function GeoMarker({
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const tooltipId = useId();
-  const hasPopup = Boolean(children);
+  const hasPopup = Boolean(children) && popupEnabled;
   useLayoutEffect(() => {
     latest.current = { point, onDragEnd };
   });
@@ -96,8 +98,8 @@ export function GeoMarker({
     popup.current = instance;
     return () => {
       map.off("click", closeFromMap);
-      instance.off("close", close);
       instance.remove();
+      instance.off("close", close);
       popup.current = null;
     };
   }, [map, open, hasPopup, popupRoot, root]);
@@ -117,7 +119,7 @@ export function GeoMarker({
             onFocus={() => setHovered(true)}
             onBlur={() => setHovered(false)}
             onClick={() => {
-              if (hasPopup) setOpen((value) => !value);
+              if (children) setOpen((value) => !value);
               onSelect?.();
             }}
             onKeyDown={(event) => {

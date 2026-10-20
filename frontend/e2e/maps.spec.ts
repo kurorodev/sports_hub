@@ -42,7 +42,9 @@ for (const width of [375, 1440]) {
     await expect(
       page.getByRole("combobox", { name: "Место встречи" }),
     ).toHaveValue("площадь Куйбышева");
-    await page.getByLabel("Дата", { exact: true }).fill("2026-11-10");
+    await page.getByLabel("Дата", { exact: true }).click();
+    await page.getByRole("button", { name: "Следующий месяц" }).click();
+    await page.locator('[data-date="2026-11-10"]').click();
     await page.getByLabel("Время", { exact: true }).fill("18:00");
     const posted = page.waitForResponse(
       (response) =>
@@ -159,7 +161,7 @@ for (const width of [320, 375, 768, 1024, 1440]) {
     await page.getByRole("link", { name: "Войти и вернуться к карте" }).click();
     await page.getByLabel("Александр", { exact: false }).check();
     await page.getByRole("button", { name: "Войти в аккаунт" }).click();
-    await expect(page).toHaveURL("/map");
+    await expect(page).toHaveURL(/\/map(?:\?|$)/);
   });
 }
 
@@ -219,3 +221,82 @@ test("selected point moves with keyboard and keeps actual coordinates through re
   ).toBeVisible();
   await expect(page.getByText(/Точка:/)).not.toContainText("50.10102");
 });
+
+for (const width of [375, 1440]) {
+  test(`venue rating uses one map card at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await login(page);
+    await page.goto("/events/new");
+    await page
+      .getByLabel("Название встречи", { exact: true })
+      .fill("Встреча рядом с площадкой");
+    await page.getByLabel("Вид спорта", { exact: true }).click();
+    await page.getByRole("option", { name: "Баскетбол", exact: true }).click();
+    await page
+      .getByLabel("О встрече", { exact: true })
+      .fill("Собираемся вместе поиграть на площадке.");
+    await selectLocation(page);
+    await page.getByLabel("Дата", { exact: true }).click();
+    await page.getByRole("button", { name: "Следующий месяц" }).click();
+    await page.locator('[data-date="2026-11-10"]').click();
+    await page.getByLabel("Время", { exact: true }).fill("18:00");
+    await page.getByRole("button", { name: "Опубликовать встречу" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Встреча рядом с площадкой",
+    );
+    await page.goto("/map");
+    const venue = page
+      .getByRole("region", { name: "Площадки в этой области" })
+      .getByRole("article")
+      .first();
+    const name = await venue.getByRole("heading", { level: 3 }).textContent();
+    await page.locator(".map-pin-venue").first().click();
+    const selected = page.getByRole("complementary", {
+      name: "Выбранный объект",
+    });
+    await expect(selected).toContainText(name!);
+    await expect(page.locator(".maplibregl-popup")).toHaveCount(0);
+    await selected
+      .getByRole("button", { name: "Оценить загруженность", exact: true })
+      .click();
+    const form = selected.getByRole("form", {
+      name: "Оценка загруженности площадки",
+    });
+    await expect(form).toBeVisible();
+    await expect(page.locator(".occupancy-form")).toHaveCount(1);
+    await expect(page.locator(".map-action-panel")).toHaveCount(0);
+    await expect(page.locator(".maplibregl-popup")).toHaveCount(0);
+    await form.getByLabel("Много людей", { exact: true }).check();
+    await form.getByLabel(/Сколько людей/).fill("12");
+    await selected.screenshot({
+      path: `/private/tmp/sports-hub-one-venue-card-${width}.png`,
+    });
+    await selected
+      .getByRole("button", { name: "Закрыть форму", exact: true })
+      .click();
+    await expect(form).toHaveCount(0);
+    await expect(selected).toContainText(name!);
+    await venue
+      .getByRole("button", { name: "Оценить загруженность", exact: true })
+      .click();
+    await expect(form).toBeVisible();
+    await expect(page.locator(".occupancy-form")).toHaveCount(1);
+    await selected
+      .getByRole("button", { name: "Закрыть карточку", exact: true })
+      .click();
+    await expect(selected).toHaveCount(0);
+    await expect(page.locator(".occupancy-form")).toHaveCount(0);
+
+    // An event popup must not overlap the rating or return after cancelling it.
+    await page.goto("/map");
+    await page.locator(".map-pin-event").first().press("Enter");
+    await expect(page.locator(".maplibregl-popup")).toHaveCount(1);
+    await venue
+      .getByRole("button", { name: "Оценить загруженность", exact: true })
+      .click();
+    await expect(form).toBeVisible();
+    await expect(page.locator(".maplibregl-popup")).toHaveCount(0);
+    await selected.getByRole("button", { name: "Закрыть форму" }).click();
+    await expect(page.locator(".maplibregl-popup")).toHaveCount(0);
+  });
+}
