@@ -31,8 +31,14 @@ for (const viewport of [
       localStorage.setItem("sport.mock.account", "admin");
     });
     await page.goto("/admin?section=stories");
+    await expect(
+      page.getByRole("heading", { name: "Истории", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Истории", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
     await page.getByRole("button", { name: "Добавить", exact: true }).click();
-    const editor = page.getByRole("dialog", { name: "Новая сторис" });
+    const editor = page.getByRole("dialog", { name: "Новая история" });
     await expect(editor).toBeVisible();
     await expectCentered(page, ".story-editor-dialog");
     await expect(editor.getByRole("textbox")).toHaveCount(0);
@@ -51,7 +57,7 @@ for (const viewport of [
       context.fillRect(80, 80, 560, 1120);
       return canvas.toDataURL("image/png").split(",")[1];
     });
-    const upload = editor.getByLabel("Изображение сторис", { exact: true });
+    const upload = editor.getByLabel("Изображение истории", { exact: true });
     await upload.setInputFiles({
       name: "invalid.jpg",
       mimeType: "image/jpeg",
@@ -76,27 +82,30 @@ for (const viewport of [
     expect((await published).status()).toBe(201);
     await expect(editor).not.toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Удалить сторис 1", exact: true }),
+      page.getByRole("button", { name: "Удалить историю 1", exact: true }),
     ).toHaveCount(0);
     await page
       .getByRole("button", {
-        name: "Сторис 1 из 1. Не просмотрено",
+        name: "История 1 из 1. Не просмотрено",
         exact: true,
       })
       .click();
     const viewer = page.getByRole("dialog", {
-      name: "Сторис 1 из 1",
+      name: "История 1 из 1",
       exact: true,
     });
     await expect(viewer).toBeVisible();
-    const image = viewer.getByRole("img", { name: "Фото сторис", exact: true });
+    const image = viewer.getByRole("img", {
+      name: "Фото истории",
+      exact: true,
+    });
     await expect(image).toBeVisible();
     await expect
       .poll(() =>
         image.evaluate((element) => (element as HTMLImageElement).naturalWidth),
       )
       .toBe(720);
-    await viewer.getByRole("button", { name: "Приостановить сторис" }).click();
+    await viewer.getByRole("button", { name: "Приостановить историю" }).click();
     const frame = await expectCentered(page, ".story-viewer-dialog");
     const imageBox = (await image.boundingBox())!;
     expect(Math.abs(frame.width / frame.height - 9 / 16)).toBeLessThan(0.01);
@@ -110,15 +119,45 @@ for (const viewport of [
     await page.screenshot({
       path: `test-results/stories-${viewport.width}x${viewport.height}.png`,
     });
-    await viewer.getByRole("button", { name: "Закрыть сторис" }).click();
+    await viewer.getByRole("button", { name: "Закрыть историю" }).click();
     await expect(viewer).not.toBeVisible();
     await page
-      .getByRole("button", { name: "Сторис 1 из 1. Просмотрено", exact: true })
+      .getByRole("button", { name: "История 1 из 1. Просмотрено", exact: true })
       .click();
     await viewer
-      .getByRole("button", { name: "Удалить сторис", exact: true })
+      .getByRole("button", { name: "Удалить историю", exact: true })
+      .click();
+    const confirmation = page.getByRole("dialog", {
+      name: "Удалить историю?",
+      exact: true,
+    });
+    await expect(confirmation).toBeVisible();
+    await expect(confirmation).toContainText("Восстановить её не получится.");
+    if (viewport.width === 375) {
+      // The eight-second story timer must not advance behind the warning.
+      await page.waitForTimeout(8200);
+      await expect(confirmation).toBeVisible();
+    }
+    await confirmation
+      .getByRole("button", { name: "Отмена", exact: true })
+      .click();
+    await expect(confirmation).not.toBeVisible();
+    await expect(viewer).toBeVisible();
+    await viewer
+      .getByRole("button", { name: "Удалить историю", exact: true })
+      .click();
+    await page.keyboard.press("Escape");
+    await expect(confirmation).not.toBeVisible();
+    await expect(viewer).toBeVisible();
+    await expect(page.locator(".story-bubble:not(.story-add)")).toHaveCount(1);
+    await viewer
+      .getByRole("button", { name: "Удалить историю", exact: true })
+      .click();
+    await confirmation
+      .getByRole("button", { name: "Удалить", exact: true })
       .click();
     await expect(viewer).not.toBeVisible();
     await expect(page.locator(".story-bubble:not(.story-add)")).toHaveCount(0);
+    await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
   });
 }

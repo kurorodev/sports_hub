@@ -2,6 +2,79 @@ import { selectCity } from "./helpers/cities";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "./helpers/approval";
 
+test("universal category photo is used before upload and after restoring the default", async ({
+  page,
+}) => {
+  await signInAs(page, "admin");
+  await page.goto("/admin?section=sports");
+  const fallback = "/art/sports/default.png";
+  const preview = page.getByRole("img", {
+    name: "Предпросмотр фото категории",
+    exact: true,
+  });
+  await expect(preview).toHaveAttribute("src", fallback);
+  await expect
+    .poll(() =>
+      preview.evaluate((image) => (image as HTMLImageElement).naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  const name = "Универсальная категория";
+  await page.getByLabel("Название вида спорта", { exact: true }).fill(name);
+  await page
+    .getByRole("button", { name: "Создать категорию", exact: true })
+    .click();
+  await page.getByLabel("Поиск вида спорта", { exact: true }).fill(name);
+  const row = page.getByRole("button", {
+    name: `Редактировать: ${name}`,
+    exact: true,
+  });
+  await expect(row.locator("img")).toHaveAttribute("src", fallback);
+  await row.click();
+  const editor = page.getByRole("dialog", {
+    name: "Настройки категории",
+    exact: true,
+  });
+  const photo = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 10;
+    canvas.height = 10;
+    return canvas.toDataURL("image/png").split(",")[1];
+  });
+  await editor
+    .getByLabel("Заменить фото категории", { exact: true })
+    .setInputFiles({
+      name: "category.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(photo, "base64"),
+    });
+  await editor
+    .getByRole("button", { name: "Сохранить изменения", exact: true })
+    .click();
+  await expect(editor).not.toBeVisible();
+  await expect(row.locator("img")).toHaveAttribute(
+    "src",
+    /\/api\/v1\/sports\//,
+  );
+  await row.click();
+  await editor
+    .getByRole("button", { name: "Вернуть стандартное фото", exact: true })
+    .click();
+  await expect(
+    editor.getByRole("img", { name: `Фото категории: ${name}`, exact: true }),
+  ).toHaveAttribute("src", fallback);
+  await editor
+    .getByRole("button", { name: "Сохранить изменения", exact: true })
+    .click();
+  await expect(editor).not.toBeVisible();
+  await expect(row.locator("img")).toHaveAttribute("src", fallback);
+  await page.getByLabel("Поиск вида спорта", { exact: true }).fill("Другое");
+  await expect(
+    page
+      .getByRole("button", { name: "Редактировать: Другое", exact: true })
+      .locator("img"),
+  ).toHaveAttribute("src", fallback);
+});
+
 for (const width of [375, 768, 1440]) {
   test(`official categories and Other stay fixed at ${width}px`, async ({
     page,

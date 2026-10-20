@@ -4181,3 +4181,9 @@ select:focus:not([aria-invalid="true"]),
 .event-age-options { padding: 16px; margin-block: 16px; border: 1px solid var(--color-outline); border-radius: 14px; }
 .event-age-options summary { cursor: pointer; font-size: 14px; font-weight: 700; }
 .event-age-options .field-hint { margin-block: 12px; }
+
+.story-delete-dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
+.story-delete-dialog h2 { margin: 0 0 12px; }
+.story-delete-dialog > p { color: var(--color-ink-muted); line-height: 1.6; }
+.story-delete-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+img[src="/art/sports/default.png"] { object-fit: contain; background: #fff; }

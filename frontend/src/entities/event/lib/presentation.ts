@@ -2,6 +2,7 @@ import { tr } from "../../../shared/i18n/translate";
 import { localeTag } from "../../../shared/i18n/preferences";
 // Supplied illustrations; sport identifiers continue to come from the API catalog.
 export const sportArt: Record<string, string> = {
+  default: "/art/sports/default.png",
   running: "/art/sports/running.jpg",
   basketball: "/art/sports/basketball.jpg",
   tennis: "/art/sports/tennis.jpg",
@@ -48,10 +49,13 @@ export function sportIcon(name: string) {
     "лыжный спорт": "skiing",
     "горнолыжный спорт": "skiing",
   };
-  return sportArt[key[name.toLocaleLowerCase("ru").replaceAll("ё", "е")]];
+  return (
+    sportArt[key[name.toLocaleLowerCase("ru").replaceAll("ё", "е")]] ??
+    sportArt.default
+  );
 }
 export function sportImage(name: string) {
-  return sportIcon(name) ?? "/art/sports/panorama.jpg";
+  return sportIcon(name);
 }
 export function eventTimezone(value: string) {
   return value.endsWith("Z") ? "UTC" : `UTC${value.slice(-6)}`;

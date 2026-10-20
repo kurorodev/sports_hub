@@ -34,22 +34,64 @@ type StoryViewerProps = {
 
 export function StoryViewer(props: StoryViewerProps) {
   const titleId = useId();
+  const confirmationId = useId();
+  const [confirming, setConfirming] = useState(false);
   const [closeBlocked, setCloseBlocked] = useState(false);
   // Keep the modal and its backdrop mounted; reset only the slide between stories.
   return (
     <Dialog
-      labelledBy={titleId}
+      labelledBy={confirming ? confirmationId : titleId}
       onClose={() => {
-        if (!closeBlocked) props.onClose();
+        if (props.deleting || closeBlocked) return;
+        if (confirming) setConfirming(false);
+        else props.onClose();
       }}
-      className="story-viewer-dialog"
+      className={confirming ? "story-delete-dialog" : "story-viewer-dialog"}
     >
-      <StorySlide
-        key={props.story.id}
-        {...props}
-        titleId={titleId}
-        onCloseBlocked={setCloseBlocked}
-      />
+      <div hidden={confirming}>
+        <StorySlide
+          key={props.story.id}
+          {...props}
+          confirming={confirming}
+          onDelete={() => setConfirming(true)}
+          titleId={titleId}
+          onCloseBlocked={setCloseBlocked}
+        />
+      </div>
+      {confirming && (
+        <>
+          <h2 id={confirmationId}>{tr("Удалить историю?")}</h2>
+          <p>
+            {tr(
+              "История будет удалена у всех пользователей. Восстановить её не получится.",
+            )}
+          </p>
+          {props.deleteError && (
+            <p className="field-error" role="alert">
+              {props.deleteError}
+            </p>
+          )}
+          <div className="story-delete-actions">
+            <button
+              type="button"
+              className="button secondary"
+              autoFocus
+              disabled={props.deleting}
+              onClick={() => setConfirming(false)}
+            >
+              {tr("Отмена")}
+            </button>
+            <button
+              type="button"
+              className="button danger-button"
+              disabled={props.deleting}
+              onClick={props.onDelete}
+            >
+              {props.deleting ? tr("Удаляем…") : tr("Удалить")}
+            </button>
+          </div>
+        </>
+      )}
     </Dialog>
   );
 }
@@ -69,10 +111,12 @@ function StorySlide({
   onDelete,
   deleting,
   deleteError,
+  confirming,
   titleId,
   onCloseBlocked,
 }: StoryViewerProps & {
   titleId: string;
+  confirming: boolean;
   onCloseBlocked: (blocked: boolean) => void;
 }) {
   const slide = useRef<HTMLDivElement>(null);
@@ -108,8 +152,8 @@ function StorySlide({
   });
   const { mutate: markViewed } = viewed;
   useLayoutEffect(() => {
-    slide.current?.focus({ preventScroll: true });
-  }, []);
+    if (!confirming) slide.current?.focus({ preventScroll: true });
+  }, [confirming]);
   useEffect(() => {
     onCloseBlocked(deleting);
     return () => onCloseBlocked(false);
@@ -119,6 +163,7 @@ function StorySlide({
     holding ||
     background ||
     deleting ||
+    confirming ||
     Boolean(deleteError) ||
     imageError ||
     !ready;
@@ -151,7 +196,7 @@ function StorySlide({
       tabIndex={-1}
       className="story-viewer"
       onKeyDown={(event) => {
-        if (deleting) return;
+        if (deleting || confirming) return;
         if (event.key === "ArrowRight") {
           event.preventDefault();
           onNext();
@@ -163,12 +208,12 @@ function StorySlide({
       }}
     >
       <h2 id={titleId} className="sr-only">
-        {tr("Сторис {0} из {1}", [index + 1, count])}
+        {tr("История {0} из {1}", [index + 1, count])}
       </h2>
       <div
         className="story-progress"
         role="group"
-        aria-label={tr("Сторис {0} из {1}", [index + 1, count])}
+        aria-label={tr("История {0} из {1}", [index + 1, count])}
       >
         {Array.from({ length: count }, (_, i) => (
           <span key={i}>
@@ -185,7 +230,7 @@ function StorySlide({
           type="button"
           className="story-icon-button"
           aria-label={
-            paused ? tr("Продолжить сторис") : tr("Приостановить сторис")
+            paused ? tr("Продолжить историю") : tr("Приостановить историю")
           }
           aria-pressed={paused}
           disabled={deleting}
@@ -197,7 +242,7 @@ function StorySlide({
           <button
             type="button"
             className="story-icon-button"
-            aria-label={tr("Удалить сторис")}
+            aria-label={tr("Удалить историю")}
             disabled={deleting}
             onClick={onDelete}
           >
@@ -211,7 +256,7 @@ function StorySlide({
         <button
           type="button"
           className="story-icon-button"
-          aria-label={tr("Закрыть сторис")}
+          aria-label={tr("Закрыть историю")}
           disabled={deleting}
           onClick={onClose}
         >
@@ -242,7 +287,7 @@ function StorySlide({
           const dx = event.clientX - start.x;
           const dy = event.clientY - start.y;
           touch.current = null;
-          if (deleting) return;
+          if (deleting || confirming) return;
           if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
             if (dx < 0) onNext();
             else if (index > 0) onPrevious();
@@ -274,7 +319,7 @@ function StorySlide({
             className="story-image"
             draggable={false}
             src={imageUrl}
-            alt={tr("Фото сторис")}
+            alt={tr("Фото истории")}
             onLoad={() => setReady(true)}
             onError={() => setImageError(true)}
           />
@@ -292,7 +337,7 @@ function StorySlide({
           <div className="story-image-status" role="alert">
             <p>
               {tr(
-                "Изображение недоступно. Сторис могла быть удалена или срок показа истёк.",
+                "Изображение недоступно. История могла быть удалена или срок показа истёк.",
               )}
             </p>
             <button
@@ -313,7 +358,7 @@ function StorySlide({
         <button
           className="story-icon-button"
           type="button"
-          aria-label={tr("Предыдущая сторис")}
+          aria-label={tr("Предыдущая история")}
           disabled={index === 0 || deleting}
           onClick={onPrevious}
         >
@@ -325,7 +370,7 @@ function StorySlide({
           aria-label={
             index + 1 === count
               ? tr("Завершить просмотр")
-              : tr("Следующая сторис")
+              : tr("Следующая история")
           }
           disabled={deleting}
           onClick={onNext}

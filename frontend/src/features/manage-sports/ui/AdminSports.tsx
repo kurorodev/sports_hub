@@ -112,13 +112,11 @@ export function AdminSports() {
         <p className="field-hint">
           PNG или JPEG до 2 МБ, не более 4096×4096 пикселей. Фото необязательно.
         </p>
-        {image && (
-          <img
-            className="admin-sport-preview"
-            src={image}
-            alt="Предпросмотр фото категории"
-          />
-        )}
+        <img
+          className="admin-sport-preview"
+          src={image || sportImage("")}
+          alt="Предпросмотр фото категории"
+        />
         <button
           className="button primary"
           disabled={busy || name.trim().length < 2}

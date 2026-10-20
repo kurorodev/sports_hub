@@ -108,7 +108,7 @@ function StoriesFeed({
   if (query.isPending && !admin)
     return (
       <div className="stories-loading" role="status">
-        {tr("Загружаем сторис…")}
+        {tr("Загружаем истории…")}
       </div>
     );
   if (!query.isError && !query.isPending && !items.length && !admin)
@@ -122,7 +122,7 @@ function StoriesFeed({
         {management ? (
           <div>
             <span className="eyebrow muted">{tr("От команды Стечения")}</span>
-            <h2>{tr("Сторис")}</h2>
+            <h2>{tr("Истории")}</h2>
           </div>
         ) : (
           <h2 className="stories-label">
@@ -138,7 +138,7 @@ function StoriesFeed({
       </div>
       {query.isPending && (
         <p className="stories-loading" role="status">
-          {tr("Загружаем сторис…")}
+          {tr("Загружаем истории…")}
         </p>
       )}
       {query.isError && (
@@ -172,7 +172,7 @@ function StoriesFeed({
               className={`story-bubble${story.readAt ? " is-viewed" : ""}`}
               type="button"
               onClick={() => setSelected(story.id)}
-              aria-label={`${tr("Сторис {0} из {1}", [storyIndex + 1, items.length])}. ${story.readAt ? tr("Просмотрено") : tr("Не просмотрено")}`}
+              aria-label={`${tr("История {0} из {1}", [storyIndex + 1, items.length])}. ${story.readAt ? tr("Просмотрено") : tr("Не просмотрено")}`}
             >
               <span className="story-bubble-ring">
                 {media.images[story.id] ? (
@@ -192,7 +192,9 @@ function StoriesFeed({
       )}
       {admin && !items.length && !query.isError && !query.isPending && (
         <p className="field-hint">
-          {tr("Пока нет активных сторис. Опубликуйте первую новость для всех.")}
+          {tr(
+            "Пока нет активных историй. Опубликуйте первую новость для всех.",
+          )}
         </p>
       )}
       {editor && (

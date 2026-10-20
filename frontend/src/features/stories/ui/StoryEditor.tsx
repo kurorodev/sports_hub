@@ -54,7 +54,7 @@ export function StoryEditor({
     >
       <header className="story-editor-heading">
         <div>
-          <h2 id={titleId}>{tr("Новая сторис")}</h2>
+          <h2 id={titleId}>{tr("Новая история")}</h2>
         </div>
         <button
           className="icon-button"
@@ -77,7 +77,7 @@ export function StoryEditor({
       >
         {image && (
           <div className="story-editor-preview">
-            <img src={image} alt={tr("Предпросмотр изображения сторис")} />
+            <img src={image} alt={tr("Предпросмотр изображения истории")} />
             <button
               className="button secondary"
               type="button"
@@ -101,7 +101,7 @@ export function StoryEditor({
             type="file"
             accept="image/png,image/jpeg"
             disabled={busy}
-            aria-label={tr("Изображение сторис")}
+            aria-label={tr("Изображение истории")}
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = "";
@@ -111,7 +111,7 @@ export function StoryEditor({
         </label>
         <p className="field-hint">
           {tr(
-            "PNG или JPEG до 2 МБ, не более 4096×4096 пикселей. Для сторис лучше фото 9:16.",
+            "PNG или JPEG до 2 МБ, не более 4096×4096 пикселей. Для историй лучше фото 9:16.",
           )}
         </p>
         {(uploadError || mutation.isError) && (

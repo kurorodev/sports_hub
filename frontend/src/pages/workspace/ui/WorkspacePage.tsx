@@ -90,7 +90,7 @@ export function WorkspacePage() {
           to="/admin?section=stories"
           aria-current={section === "stories" ? "page" : undefined}
         >
-          {tr("Сторис")}
+          {tr("Истории")}
         </Link>
       </nav>
       {section === "stories" ? (
