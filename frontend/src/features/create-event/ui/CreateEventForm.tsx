@@ -360,7 +360,7 @@ export function CreateEventForm({
               </FormField>
               <FormField
                 id="event-capacity"
-                label="Количество мест"
+                label="Количество участников"
                 error={errors.capacity?.message}
               >
                 <input
