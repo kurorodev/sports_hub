@@ -15,6 +15,10 @@ public class SportManagementController {
     public SportManagementController(SportManagementService sports){this.sports=sports;}
     @PostMapping("/admin/sports") @ResponseStatus(HttpStatus.CREATED)
     public Api.Sport create(@Valid @RequestBody Create input){return sports.create(input.name(),input.imageData());}
+    @PatchMapping("/admin/sports/{sportId}")
+    public Api.Sport update(@PathVariable UUID sportId,@RequestBody com.fasterxml.jackson.databind.JsonNode input){return sports.update(sportId,input);}
+    @DeleteMapping("/admin/sports/{sportId}") @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID sportId){sports.delete(sportId);}
     @PutMapping("/admin/sports/{sportId}/image")
     public Api.Sport image(@PathVariable UUID sportId,@Valid @RequestBody Image input){return sports.image(sportId,input.imageData());}
     @GetMapping("/sports/{sportId}/image")

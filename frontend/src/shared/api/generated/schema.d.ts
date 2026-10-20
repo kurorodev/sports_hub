@@ -1160,6 +1160,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/sports/{sportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sportId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Удалить категорию из выбора, сохранив существующие связи (только ADMIN). */
+        delete: operations["deleteSportCategory"];
+        options?: never;
+        head?: never;
+        /** Переименовать категорию и заменить фото (только ADMIN). */
+        patch: operations["updateSportCategory"];
+        trace?: never;
+    };
     "/admin/sports/{sportId}/image": {
         parameters: {
             query?: never;
@@ -1482,6 +1502,11 @@ export interface components {
         SportCategoryCreate: {
             name: string;
             /** @description Data URL PNG/JPEG до 2 МБ и 4096×4096 пикселей. */
+            imageData?: string | null;
+        };
+        SportCategoryPatch: {
+            name?: string;
+            /** @description Data URL PNG/JPEG; null возвращает стандартное фото. Пропуск сохраняет текущее фото. */
             imageData?: string | null;
         };
         SportCategoryImage: {
@@ -4745,6 +4770,101 @@ export interface operations {
                 content?: never;
             };
             /** @description Название уже существует. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteSportCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Категория удалена из выбора. Повторное удаление допустимо. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Общую категорию Другое нельзя удалить. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется ADMIN. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Категория не найдена. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSportCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SportCategoryPatch"];
+            };
+        };
+        responses: {
+            /** @description Категория обновлена; изменения сохраняются вместе. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sport"];
+                };
+            };
+            /** @description Некорректные данные или переименование категории Другое. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется ADMIN. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Категория не найдена или удалена. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Название уже существует */
             409: {
                 headers: {
                     [name: string]: unknown;

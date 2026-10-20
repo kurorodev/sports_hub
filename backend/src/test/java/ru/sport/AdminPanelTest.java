@@ -37,6 +37,53 @@ class AdminPanelTest extends ApiTestSupport {
         call(admin,"POST","/admin/sports",Map.of("name","   "),400);
         call(admin,"POST","/admin/sports",Map.of("name","Фото "+UUID.randomUUID(),"imageData","https://example.com/photo.png"),400);
     }
+    @Test void renameReplaceAndDeletePreserveExistingEvents() throws Exception {
+        var admin=login("admin");var owner=login("coach");String name="Категория "+UUID.randomUUID();
+        var created=json(call(admin,"POST","/admin/sports",Map.of("name",name,"imageData",image()),201));
+        String id=created.path("id").asText(),path="/admin/sports/"+id;
+        var body=Map.of("title","Проверка удаления категории","description","Существующее мероприятие должно сохраниться",
+            "sport",Map.of("sportId",id),"startsAt",java.time.Instant.now().plusSeconds(864000).toString(),
+            "location",Map.of("city","Самара","address","Парк"),"joinMode","OPEN","organizer",Map.of("type","USER","id",owner.id()));
+        String event=json(call(owner,"POST","/events",body,201)).path("id").asText();
+        call(owner,"PATCH",path,Map.of("name","Чужое название"),403);
+        call(owner,"DELETE",path,null,403);
+        String renamed="Новое "+UUID.randomUUID();
+        var changed=json(call(admin,"PATCH",path,Map.of("name",renamed),200));
+        assertThat(changed.path("imageUrl").isTextual()).isTrue();
+        assertThat(getJson(null,"/events/"+event).path("sport").path("name").asText()).isEqualTo(renamed);
+        var photo=json(call(admin,"PATCH",path,Map.of("imageData",image()),200));
+        call(null,"GET",photo.path("imageUrl").asText(),null,200);
+        call(admin,"PATCH",path,"{\"imageData\":null}",200);
+        call(null,"GET","/sports/"+id+"/image",null,404);
+        call(admin,"DELETE",path,null,204);
+        call(admin,"DELETE",path,null,204);
+        assertThat(getJson(null,"/sports").toString()).doesNotContain(id);
+        assertThat(getJson(null,"/events/"+event).path("sport").path("id").asText()).isEqualTo(id);
+        call(owner,"POST","/events",body,400);
+        call(admin,"PATCH",path,Map.of("name",renamed),404);
+        call(admin,"PUT",path+"/image",Map.of("imageData",image()),404);
+    }
+    @Test void officialCategoriesCanBeChangedButOtherAndDuplicateNamesAreProtected() throws Exception {
+        var admin=login("admin");var catalog=getJson(null,"/sports");String official=null,other=null,duplicate=null;
+        for(var sport:catalog) {
+            if(sport.path("isCustom").asBoolean())other=sport.path("id").asText();
+            else if(official==null)official=sport.path("id").asText();
+            else if(duplicate==null)duplicate=sport.path("name").asText();
+        }
+        call(admin,"PATCH","/admin/sports/"+official,Map.of("name",duplicate.toUpperCase(Locale.ROOT)),409);
+        call(admin,"PATCH","/admin/sports/"+official,Map.of("name","Обновлённый спорт "+UUID.randomUUID()),200);
+        call(admin,"DELETE","/admin/sports/"+official,null,204);
+        call(admin,"PATCH","/admin/sports/"+other,Map.of("imageData",image()),200);
+        call(admin,"PATCH","/admin/sports/"+other,Map.of("name","Переименовано"),400);
+        call(admin,"DELETE","/admin/sports/"+other,null,400);
+        var sport=json(call(admin,"POST","/admin/sports",Map.of("name","Валидация "+UUID.randomUUID()),201));
+        String path="/admin/sports/"+sport.path("id").asText();
+        call(admin,"PATCH",path,Map.of(),400);
+        call(admin,"PATCH",path,"{\"name\":null}",400);
+        call(admin,"PATCH",path,Map.of("name","  "),400);
+        call(admin,"PATCH",path,Map.of("unexpected",true),400);
+        call(admin,"PATCH",path,Map.of("imageData","data:image/png;base64,PHNjcmlwdD4="),400);
+    }
     @Test void administratorCannotActAsParticipantButCanUseModeration() throws Exception {
         var owner=login("coach");String event=createEvent(owner,"OPEN",5);var admin=login("admin");
         call(admin,"POST","/events",Map.of("title","Администратор","description","Проверка административного аккаунта","sport",Map.of("customName","Падел"),"startsAt",java.time.Instant.now().plusSeconds(864000).toString(),"location",Map.of("city","Самара","address","Парк"),"joinMode","OPEN","organizer",Map.of("type","USER","id",admin.id())),403);

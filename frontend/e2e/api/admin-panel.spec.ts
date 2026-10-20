@@ -44,8 +44,13 @@ for (const width of [375, 1440]) {
     await page.reload();
     await page.getByLabel("Поиск вида спорта", { exact: true }).fill(name);
     const card = page
-      .locator(".admin-sport-grid > li")
-      .filter({ has: page.getByRole("heading", { name, exact: true }) });
+      .locator(".admin-sport-list > li")
+      .filter({
+        has: page.getByRole("button", {
+          name: `Редактировать: ${name}`,
+          exact: true,
+        }),
+      });
     await expect(card).toHaveCount(1);
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator("img")).toHaveJSProperty("naturalWidth", 2);
@@ -53,6 +58,62 @@ for (const width of [375, 1440]) {
       path: `test-results/admin-sports-${width}.png`,
       fullPage: true,
     });
+    await card.getByRole("button").click();
+    const editor = page.getByRole("dialog", { name: "Настройки категории" });
+    const renamed = `${name} новое`;
+    await editor
+      .getByLabel("Название категории", { exact: true })
+      .fill(renamed);
+    await editor
+      .getByLabel("Заменить фото категории", { exact: true })
+      .setInputFiles({
+        name: "replacement.png",
+        mimeType: "image/png",
+        buffer: Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGNQmBAARAwQCgAbTgQBKKQQpAAAAABJRU5ErkJggg==",
+          "base64",
+        ),
+      });
+    await page.screenshot({
+      path: `test-results/sport-editor-${width}.png`,
+      fullPage: true,
+    });
+    expect(
+      await editor.evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true);
+    const updated = page.waitForResponse(
+      (r) =>
+        r.url().endsWith(`/admin/sports/${sport.id}`) &&
+        r.request().method() === "PATCH",
+    );
+    await editor
+      .getByRole("button", { name: "Сохранить изменения", exact: true })
+      .click();
+    const patchResponse = await updated;
+    expect(patchResponse.status()).toBe(200);
+    sport.imageUrl = (await patchResponse.json()).imageUrl;
+    await expect(editor).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: `Редактировать: ${renamed}`,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page.reload();
+    await page.getByLabel("Поиск вида спорта", { exact: true }).fill(renamed);
+    await page
+      .getByRole("button", { name: `Редактировать: ${renamed}`, exact: true })
+      .click();
+    await editor
+      .getByLabel("Название категории", { exact: true })
+      .fill("Не сохранять");
+    await editor.getByRole("button", { name: "Отмена", exact: true }).click();
+    await expect(
+      page.getByRole("button", {
+        name: `Редактировать: ${renamed}`,
+        exact: true,
+      }),
+    ).toBeFocused();
     await page.goto("/profile?edit=1");
     await expect(
       page.getByRole("heading", { name: "Редактировать профиль", exact: true }),
@@ -114,6 +175,34 @@ for (const width of [375, 1440]) {
     await expect(
       page.getByRole("textbox", { name: "Ваше сообщение", exact: true }),
     ).toHaveCount(0);
+    await page.goto("/admin?section=sports");
+    await page.getByLabel("Поиск вида спорта", { exact: true }).fill(renamed);
+    await page
+      .getByRole("button", { name: `Редактировать: ${renamed}`, exact: true })
+      .click();
+    await editor
+      .getByRole("button", { name: "Удалить категорию", exact: true })
+      .click();
+    await expect(
+      editor.getByRole("group", { name: "Подтверждение удаления категории" }),
+    ).toBeVisible();
+    await editor
+      .getByRole("button", { name: "Подтвердить удаление", exact: true })
+      .click();
+    await expect(editor).toHaveCount(0);
+    await expect(
+      page.getByText("Категория удалена", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Редактировать: ${renamed}`,
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await page.goto(`/events/${eventId}`);
+    await expect(
+      page.getByRole("heading", { name: title, exact: true }),
+    ).toBeVisible();
     await page.goto("/events/new");
     await expect(
       page.getByRole("button", { name: "Опубликовать встречу", exact: true }),

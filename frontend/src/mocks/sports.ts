@@ -11,6 +11,7 @@ const schema = z.array(
     registryCode: z.string().nullable().optional(),
     imageUrl: z.string().nullable().optional(),
     imageData: z.string().nullable().optional(),
+    archived: z.boolean().optional(),
   }),
 );
 let memory: z.infer<typeof schema> = [];
@@ -22,9 +23,16 @@ export function resetMockSports() {
   memory = [];
   localStorage.removeItem(key);
 }
-export function sportOverrides(base: Sport[]): Sport[] {
+export function sportOverrides(
+  base: Sport[],
+  includeArchived = false,
+): Sport[] {
   const records = new Map(base.map((s) => [s.id, s]));
-  for (const s of read())
+  for (const s of read()) {
+    if (s.archived && !includeArchived) {
+      records.delete(s.id);
+      continue;
+    }
     records.set(s.id, {
       id: s.id,
       name: s.name,
@@ -32,6 +40,7 @@ export function sportOverrides(base: Sport[]): Sport[] {
       registryCode: s.registryCode,
       imageUrl: s.imageUrl,
     });
+  }
   return [...records.values()].sort(
     (a, b) =>
       Number(a.isCustom) - Number(b.isCustom) ||
@@ -52,31 +61,69 @@ export function sportHandlers(
       request.headers.get("X-CSRF-Token") !== user.csrfToken
     )
       return HttpResponse.json({ code: "FORBIDDEN" }, { status: 403 });
+    const existing = id ? sports().find((s) => s.id === id) : undefined;
+    if (id && !existing)
+      return new HttpResponse(null, {
+        status:
+          request.method === "DELETE" &&
+          read().some((s) => s.id === id && s.archived)
+            ? 204
+            : 404,
+      });
+    if (request.method === "DELETE") {
+      if (existing?.isCustom)
+        return HttpResponse.json(
+          {
+            code: "VALIDATION_ERROR",
+            message: "Общую категорию Другое нельзя удалить",
+          },
+          { status: 400 },
+        );
+      memory = [
+        ...read().filter((s) => s.id !== id),
+        {
+          ...existing!,
+          imageData: read().find((s) => s.id === id)?.imageData,
+          archived: true,
+        },
+      ];
+      localStorage.setItem(key, JSON.stringify(memory));
+      return new HttpResponse(null, { status: 204 });
+    }
     const input = (await request.json()) as {
       name?: string;
       imageData?: string | null;
     };
-    const existing = id ? sports().find((s) => s.id === id) : undefined;
-    if (id && !existing)
-      return HttpResponse.json({ code: "NOT_FOUND" }, { status: 404 });
-    const name = (existing?.name ?? input.name ?? "")
+    const name = (input.name ?? existing?.name ?? "")
       .trim()
       .replace(/\s+/g, " ");
     if (name.length < 2 || name.length > 80)
       return HttpResponse.json({ code: "VALIDATION_ERROR" }, { status: 400 });
+    if (existing?.isCustom && name !== existing.name)
+      return HttpResponse.json(
+        {
+          code: "VALIDATION_ERROR",
+          message: "Общую категорию Другое нельзя переименовать",
+        },
+        { status: 400 },
+      );
     if (
-      !id &&
-      sports().some(
+      [...sports(), ...read()].some(
         (s) =>
+          s.id !== id &&
           s.name.toLocaleLowerCase("ru").replaceAll("ё", "е") ===
-          name.toLocaleLowerCase("ru").replaceAll("ё", "е"),
+            name.toLocaleLowerCase("ru").replaceAll("ё", "е"),
       )
     )
       return HttpResponse.json(
         { code: "CONFLICT", message: "Такой вид спорта уже существует" },
         { status: 409 },
       );
-    const image = input.imageData ?? null;
+    const previous = read().find((s) => s.id === id);
+    const image =
+      "imageData" in input
+        ? (input.imageData ?? null)
+        : (previous?.imageData ?? null);
     try {
       if (
         image &&
@@ -105,6 +152,12 @@ export function sportHandlers(
   };
   return [
     http.post(`${api}/admin/sports`, ({ request }) => write(request)),
+    http.patch(`${api}/admin/sports/:sportId`, ({ request, params }) =>
+      write(request, String(params.sportId)),
+    ),
+    http.delete(`${api}/admin/sports/:sportId`, ({ request, params }) =>
+      write(request, String(params.sportId)),
+    ),
     http.put(`${api}/admin/sports/:sportId/image`, ({ request, params }) =>
       write(request, String(params.sportId)),
     ),

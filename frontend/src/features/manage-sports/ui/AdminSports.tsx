@@ -1,22 +1,12 @@
+import { ChevronRight } from "lucide-react";
+import { SportEditorDialog } from "./SportEditorDialog";
+import { readImage } from "./sport-image";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sportsQuery, sportImage } from "../../../entities/event";
 import { ApiError, request, errorMessage } from "../../../shared/api/client";
 import type { Sport } from "../../../shared/api/types";
 
-async function readImage(file: File) {
-  if (
-    !["image/png", "image/jpeg"].includes(file.type) ||
-    file.size > 2 * 1024 * 1024
-  )
-    throw new Error("Выберите PNG или JPEG до 2 МБ.");
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Не удалось прочитать файл."));
-    reader.readAsDataURL(file);
-  });
-}
 export function AdminSports() {
   const client = useQueryClient();
   const sports = useQuery(sportsQuery);
@@ -27,46 +17,41 @@ export function AdminSports() {
   const [notice, setNotice] = useState("");
   const [reading, setReading] = useState(false);
   const [version, setVersion] = useState(0);
+  const [selected, setSelected] = useState<Sport | null>(null);
   const [visible, setVisible] = useState(12);
+  async function refresh() {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: sportsQuery.queryKey }),
+      client.invalidateQueries({ queryKey: ["events"] }),
+      client.invalidateQueries({ queryKey: ["map"] }),
+      client.invalidateQueries({ queryKey: ["profile"] }),
+      client.invalidateQueries({ queryKey: ["organizations"] }),
+    ]);
+  }
   const mutation = useMutation({
-    mutationFn: ({
-      id,
-      name,
-      imageData,
-    }: {
-      id?: string;
-      name?: string;
-      imageData: string | null;
-    }) =>
-      request<Sport>(id ? `/admin/sports/${id}/image` : "/admin/sports", {
-        method: id ? "PUT" : "POST",
-        body: JSON.stringify(id ? { imageData } : { name, imageData }),
+    mutationFn: (input: { name: string; imageData: string | null }) =>
+      request<Sport>("/admin/sports", {
+        method: "POST",
+        body: JSON.stringify(input),
       }),
-    onSuccess: async (result, input) => {
-      if (!input.id) {
-        setName("");
-        setImage(null);
-        setSearch(result.name);
-        setVisible(12);
-      }
-      setNotice(input.id ? "Изображение сохранено" : "Категория создана");
+    onSuccess: async (result) => {
+      setName("");
+      setImage(null);
+      setSearch(result.name);
+      setVisible(12);
+      setNotice("Категория создана");
       setVersion((v) => v + 1);
-      await Promise.all([
-        client.invalidateQueries({ queryKey: sportsQuery.queryKey }),
-        client.invalidateQueries({ queryKey: ["events"] }),
-        client.invalidateQueries({ queryKey: ["map", "events"] }),
-      ]);
+      await refresh();
     },
   });
-  async function upload(file: File | undefined, id?: string) {
+  async function upload(file: File | undefined) {
     if (!file) return;
     setError("");
     setNotice("");
+    mutation.reset();
     setReading(true);
     try {
-      const data = await readImage(file);
-      if (id) mutation.mutate({ id, imageData: data });
-      else setImage(data);
+      setImage(await readImage(file));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось загрузить фото");
     } finally {
@@ -91,6 +76,7 @@ export function AdminSports() {
           e.preventDefault();
           setNotice("");
           setError("");
+          mutation.reset();
           mutation.mutate({ name: name.trim(), imageData: image });
         }}
       >
@@ -182,48 +168,48 @@ export function AdminSports() {
           </button>
         </div>
       ) : (
-        <ul className="admin-sport-grid">
+        <ul className="admin-sport-list">
           {matching.slice(0, visible).map((s) => (
             <li key={s.id}>
-              <img
-                src={s.imageUrl ? s.imageUrl : sportImage(s.name)}
-                alt={`Иллюстрация: ${s.name}`}
-                loading="lazy"
-              />
-              <h3>{s.name}</h3>
-              <span className="field-hint">
-                {s.registryCode
-                  ? `ВРВС: ${s.registryCode}`
-                  : s.isCustom
-                    ? "Общая категория"
-                    : "Дополнительная категория"}
-              </span>
-              <label className="admin-sport-upload">
-                {s.imageUrl ? "Заменить фото" : "Добавить фото"}
-                <input
-                  aria-label={`Фото: ${s.name}`}
-                  type="file"
-                  accept="image/png,image/jpeg"
-                  disabled={busy}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    e.target.value = "";
-                    void upload(file, s.id);
-                  }}
+              <button
+                type="button"
+                className="admin-sport-row"
+                aria-label={`Редактировать: ${s.name}`}
+                aria-haspopup="dialog"
+                onClick={() => setSelected(s)}
+              >
+                <img
+                  src={s.imageUrl || sportImage(s.name)}
+                  alt=""
+                  loading="lazy"
                 />
-              </label>
-              {s.imageUrl && (
-                <button
-                  className="button secondary"
-                  disabled={busy}
-                  onClick={() => mutation.mutate({ id: s.id, imageData: null })}
-                >
-                  Убрать фото
-                </button>
-              )}
+                <span className="admin-sport-row-text">
+                  <strong>{s.name}</strong>
+                  <span className="field-hint">
+                    {s.registryCode
+                      ? `ВРВС: ${s.registryCode}`
+                      : s.isCustom
+                        ? "Общая категория"
+                        : "Дополнительная категория"}
+                  </span>
+                </span>
+                <ChevronRight size={18} aria-hidden="true" />
+              </button>
             </li>
           ))}
         </ul>
+      )}
+      {selected && (
+        <SportEditorDialog
+          sport={selected}
+          onClose={() => setSelected(null)}
+          onSaved={async (result) => {
+            setSelected(null);
+            setNotice(result ? "Категория обновлена" : "Категория удалена");
+            if (result && search) setSearch(result.name);
+            await refresh();
+          }}
+        />
       )}
       {matching.length > visible && (
         <button

@@ -602,7 +602,7 @@ export function getSports(): Sport[] {
 function canonicalSport(sport: Sport): Sport {
   const name = sport.name === "Бег" ? "Легкая атлетика" : sport.name;
   return (
-    getSports().find(
+    sportOverrides(catalog, true).find(
       (item) =>
         item.id === sport.id || normalize(item.name) === normalize(name),
     ) ?? catalog[catalog.length - 1]

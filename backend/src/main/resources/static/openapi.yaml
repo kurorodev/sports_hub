@@ -2973,7 +2973,7 @@ paths:
       tags: [Admin]
       summary: Создать категорию вида спорта (только ADMIN).
       operationId: createSportCategory
-      security: [{sessionCookie: []}]
+      security: [{cookieAuth: []}]
       requestBody:
         required: true
         content:
@@ -2988,12 +2988,45 @@ paths:
         '400': {description: Некорректное название или изображение.}
         '403': {description: Требуется ADMIN.}
         '409': {description: Название уже существует.}
+  /admin/sports/{sportId}:
+    parameters:
+    - {name: sportId, in: path, required: true, schema: {type: string, format: uuid}}
+    patch:
+      tags: [Admin]
+      summary: Переименовать категорию и заменить фото (только ADMIN).
+      operationId: updateSportCategory
+      security: [{cookieAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SportCategoryPatch'}
+      responses:
+        '200':
+          description: Категория обновлена; изменения сохраняются вместе.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Sport'}
+        '400': {description: Некорректные данные или переименование категории Другое.}
+        '403': {description: Требуется ADMIN.}
+        '404': {description: Категория не найдена или удалена.}
+        '409': {description: Название уже существует, включая удалённые категории.}
+    delete:
+      tags: [Admin]
+      summary: Удалить категорию из выбора, сохранив существующие связи (только ADMIN).
+      operationId: deleteSportCategory
+      security: [{cookieAuth: []}]
+      responses:
+        '204': {description: Категория удалена из выбора. Повторное удаление допустимо.}
+        '400': {description: Общую категорию Другое нельзя удалить.}
+        '403': {description: Требуется ADMIN.}
+        '404': {description: Категория не найдена.}
   /admin/sports/{sportId}/image:
     put:
       tags: [Admin]
       summary: Загрузить, заменить или убрать фото категории (только ADMIN).
       operationId: setSportCategoryImage
-      security: [{sessionCookie: []}]
+      security: [{cookieAuth: []}]
       parameters:
       - {name: sportId, in: path, required: true, schema: {type: string, format: uuid}}
       requestBody:
@@ -3954,6 +3987,17 @@ components:
           nullable: true
           maxLength: 2800000
           description: Data URL PNG/JPEG до 2 МБ и 4096×4096 пикселей.
+    SportCategoryPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name: {type: string, minLength: 2, maxLength: 80}
+        imageData:
+          type: string
+          nullable: true
+          maxLength: 2800000
+          description: Data URL PNG/JPEG; null возвращает стандартное фото. Пропуск сохраняет текущее фото.
     SportCategoryImage:
       type: object
       additionalProperties: false

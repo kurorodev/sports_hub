@@ -12,7 +12,9 @@ public class SportsCatalog {
     public SportsCatalog(Store db) { this.db = db; }
     public SportEntity resolve(UUID id) {
         var sport = db.get(SportEntity.class, id);
-        return sport.canonicalId == null ? sport : db.get(SportEntity.class, sport.canonicalId);
+        sport = sport.canonicalId == null ? sport : db.get(SportEntity.class, sport.canonicalId);
+        if(sport.archived)throw ru.sport.api.Problem.invalid("Категория удалена. Выберите другой вид спорта");
+        return sport;
     }
     public SportEntity other() {
         return db.first(SportEntity.class, "e.canonicalId is null and e.isCustom=true", Map.of()).orElseThrow();
