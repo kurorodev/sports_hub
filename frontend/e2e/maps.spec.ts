@@ -3,7 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-19T12:00:00Z"));
-  // Browser checks exercise our map and markers without depending on a public tile server.
+  // Проверяем управление картой и маркеры независимо от доступности внешнего сервера тайлов.
   await page
     .context()
     .route("https://tiles.openfreemap.org/**", (route) => route.abort());
@@ -38,7 +38,7 @@ for (const width of [375, 1440]) {
       .getByLabel("О встрече", { exact: true })
       .fill("Собираемся вместе, знакомимся и играем в баскетбол.");
     await selectLocation(page);
-    // Picking a point invokes reverse geocoding; the selected coordinates survive POST and GET.
+    // Выбранные координаты должны сохраниться после обратного геопоиска, создания и повторного чтения события.
     await page.locator(".location-picker .map-canvas").click();
     await expect(
       page.getByRole("combobox", { name: "Место встречи" }),
@@ -61,7 +61,7 @@ for (const width of [375, 1440]) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
     const detailUrl = page.url();
     await page.getByRole("link", { name: "Карта", exact: true }).click();
-    // Demo venues share this reference point; layers keep overlapping objects accessible.
+    // У демоплощадок одинаковая точка; переключение слоёв должно позволять выбрать перекрытые объекты.
     await page.getByLabel("Площадки", { exact: true }).uncheck();
     const marker = page.getByTitle(`Мероприятие: ${title}`, { exact: true });
     await expect(marker).toBeVisible();
@@ -289,7 +289,7 @@ for (const width of [375, 1440]) {
     await expect(selected).toHaveCount(0);
     await expect(page.locator(".occupancy-form")).toHaveCount(0);
 
-    // Switching from an event to a venue keeps a single selection card.
+    // При выборе площадки карточка события должна закрыться, а не остаться вторым окном.
     await page.goto("/map");
     await page.locator(".map-pin-event").first().press("Enter");
     await expect(selected).toContainText("Встреча рядом с площадкой");

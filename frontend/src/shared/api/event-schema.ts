@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { EventCreate } from "./types";
 import { citySchema } from "./city-schema";
 
-/** UI/mock validation aligned with EventCreate in the generated contract. Java validates independently. */
+/** Проверка формы и моков следует EventCreate; сервер повторно проверяет входные данные. */
 export const eventFieldsSchema = z.object({
   title: z
     .string()

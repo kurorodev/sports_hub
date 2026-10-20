@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import ru.sport.api.Problem;
 import ru.sport.domain.UserEntity;
 
-/** Only the character is persisted; the server chooses the uniform for each context. */
+/** Храним выбор персонажа; форму подбирает сервер по контексту, без смены аватара в профиле. */
 public final class AvatarImages {
     private static final Pattern BUILTIN=Pattern.compile("^/avatars/(user|organizer|admin)/((?:male|female)-0[1-5])\\.svg$");
     private AvatarImages() {}

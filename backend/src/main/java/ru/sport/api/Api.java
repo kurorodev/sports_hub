@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-/** DTO from contracts/openapi.yaml. Entities never leave the service layer. */
+/** DTO следуют OpenAPI-контракту; JPA-сущности не передаются в ответы API. */
 public final class Api {
     private Api() {}
     public enum SystemRole { USER, ORGANIZATION, ADMIN }

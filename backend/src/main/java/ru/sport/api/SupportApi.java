@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 import jakarta.validation.constraints.*;
 
-/** Private support DTOs, separate from public discussions and JPA entities. */
+/** Обращения в поддержку приватны; их DTO отделены от публичного обсуждения события. */
 public final class SupportApi {
     private SupportApi() {}
     public enum Category { HELP, BUG, IDEA, VENUE_SUGGESTION, COMMENT_REPORT }

@@ -2,7 +2,7 @@ package ru.sport.service;
 
 import java.util.*;
 
-/** Bounded one-edit search using portable, parameterized SQL LIKE patterns. */
+/** Поиск с одной опечаткой: шаблоны LIKE параметризованы, количество вариантов ограничено. */
 final class EventTextSearch {
     private EventTextSearch() {}
 
@@ -10,8 +10,7 @@ final class EventTextSearch {
         String text=normalize(query);
         String exact=matches(List.of(literal(text)),params);
         String[] words=text.split("\\s+");
-        // Keep unusually long or punctuation-heavy queries on the literal path.
-        // This also bounds the SQL size independently of the number of events.
+        // Длинный запрос или пунктуацию ищем буквально, чтобы ограничить размер SQL и число вариантов.
         if(text.length()>64 || words.length>4 || !text.matches("[\\p{L}\\p{N}]+(?:\\s+[\\p{L}\\p{N}]+)*"))return exact;
         var conditions=new ArrayList<String>();
         for(String word:words)conditions.add(matches(patterns(word),params));
@@ -20,14 +19,14 @@ final class EventTextSearch {
 
     private static Set<String> patterns(String word) {
         var patterns=new LinkedHashSet<String>();patterns.add(word);
-        // Fuzzy matching short fragments would produce too many unrelated events.
+        // Короткие фрагменты ищем точно: допуск опечатки давал бы слишком много посторонних встреч.
         if(word.length()<5 || word.length()>24)return patterns;
         for(int i=0;i<word.length();i++) {
-            patterns.add(word.substring(0,i)+"_"+word.substring(i+1)); // wrong letter
-            patterns.add(word.substring(0,i)+word.substring(i+1)); // extra letter
+            patterns.add(word.substring(0,i)+"_"+word.substring(i+1)); // замена буквы
+            patterns.add(word.substring(0,i)+word.substring(i+1)); // лишняя буква в запросе
             if(i+1<word.length())patterns.add(word.substring(0,i)+word.charAt(i+1)+word.charAt(i)+word.substring(i+2));
         }
-        for(int i=0;i<=word.length();i++)patterns.add(word.substring(0,i)+"_"+word.substring(i)); // missing letter
+        for(int i=0;i<=word.length();i++)patterns.add(word.substring(0,i)+"_"+word.substring(i)); // пропущенная буква в запросе
         return patterns;
     }
 
@@ -42,6 +41,7 @@ final class EventTextSearch {
     }
 
     private static String literal(String value) {
+        // Пользовательские % и _ ищем как символы, а не как шаблоны SQL.
         return value.replace("!","!!").replace("%","!%").replace("_","!_");
     }
     private static String normalize(String value) {

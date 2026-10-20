@@ -29,7 +29,8 @@ public class NotificationService {
         return dto(n);
     }
     @Transactional public void readAll(Instant through) {
-        // A conditional update preserves the first read timestamp under concurrent requests.
+        // Обновляем только непрочитанные записи: параллельный запрос не должен менять время первого прочтения.
+        // through — граница показанной выдачи; более новые уведомления остаются непрочитанными.
         var user=access.user();
         var now=clock.instant();if(through.isAfter(now))through=now;
         db.execute("update NotificationEntity e set e.readAt=:now,e.updatedAt=:now,e.version=e.version+1 where e.recipientId=:user and e.readAt is null and e.createdAt>=:since and e.createdAt<=:through",
@@ -37,7 +38,7 @@ public class NotificationService {
     }
     private Api.Notification dto(NotificationEntity n){return new Api.Notification(n.id,n.type,n.title,n.text,n.reason,n.href,n.createdAt,n.readAt,n.commentText);}
 
-    // Called inside the business mutation transaction; rejected/rolled back actions produce no notification.
+    // Уведомление сохраняется в транзакции действия; при откате оно тоже отменяется.
     @Transactional public void send(UUID recipient,Api.NotificationType type,String title,String text,String reason,String href,String key) {
         send(recipient,type,title,text,reason,href,key,null);
     }
@@ -57,7 +58,7 @@ public class NotificationService {
     }
     @Transactional public void registration(EventEntity e,RegistrationEntity r,boolean newlyJoined) {
         String title=switch(r.status){case CONFIRMED -> "Участие подтверждено";case PENDING -> "Заявка отправлена";case REJECTED -> "Заявка отклонена";case WAITLISTED -> "Вы в листе ожидания";case CANCELLED -> "Участие отменено";};
-        // A rejoin is a separate transition even when the registration row is reused.
+        // Повторная запись — новое событие для уведомлений, даже если строка регистрации используется повторно.
         String key="registration:"+r.id+":"+r.status+":"+UUID.randomUUID();
         send(r.userId,Api.NotificationType.REGISTRATION_STATUS,title,e.title,r.decisionReason,"/events/"+e.id,key);
         UUID owner=owner(e);
@@ -77,7 +78,7 @@ public class NotificationService {
     }
     @Transactional public void reminders() {
         var now=clock.instant();
-        // Lock the same event row as join/edit/moderation. Multiple server instances recheck the dedupe key under this lock.
+        // Блокируем событие, как при записи и модерации, чтобы несколько экземпляров сервера не отправили дубль напоминания.
         for(var candidate:db.list(EventEntity.class,"e.status=:status and e.startsAt>:now and e.startsAt<=:until",Map.of("status",Api.EventStatus.PUBLISHED,"now",now,"until",now.plusSeconds(3600)))) {
             var e=db.refreshLocked(candidate);
             if(e.status!=Api.EventStatus.PUBLISHED || !e.startsAt.isAfter(now) || e.startsAt.isAfter(now.plusSeconds(3600)))continue;

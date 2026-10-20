@@ -27,7 +27,7 @@ import { GeoMarker } from "./GeoMarker";
 import { CurrentLocationMarker } from "./CurrentLocationMarker";
 import type { CurrentLocationState } from "../lib/current-location-context";
 
-// Explicit asset URL keeps the SDK worker available after Vite bundling.
+// Явный URL включает worker карты в сборку Vite.
 setWorkerUrl(mapWorkerUrl);
 
 export function GeoMap({
@@ -97,8 +97,7 @@ export function GeoMap({
         },
       });
       const current = instance;
-      // A 360° longitude range wraps to zero in MapLibre 6 bounds constraints.
-      // Keep a small seam at the antimeridian to avoid a singular camera matrix.
+      // MapLibre 6 сворачивает диапазон 360° в нулевую ширину; оставляем зазор у линии перемены дат.
       current.setMaxBounds([
         [-179.99999, -85],
         [179.99999, 85],
@@ -141,8 +140,7 @@ export function GeoMap({
       let fallbackStyle = false;
       current.on("error", () => {
         setTileError(true);
-        // A failed initial style otherwise leaves the SDK render loop inactive.
-        // An empty valid style keeps camera interaction and DOM markers working.
+        // При недоступном стиле пустая карта сохраняет управление камерой и маркеры.
         if (!fallbackStyle && !current.getStyle()) {
           fallbackStyle = true;
           current.setStyle({ version: 8, sources: {}, layers: [] });
@@ -170,7 +168,7 @@ export function GeoMap({
     longitude = center?.longitude;
   useEffect(() => {
     if (!failed) return;
-    // Keep the server-backed list useful around the requested center without WebGL.
+    // Без WebGL сохраняем список результатов около выбранного центра карты.
     const point = {
       latitude: latitude ?? demoCenter.latitude,
       longitude: longitude ?? demoCenter.longitude,

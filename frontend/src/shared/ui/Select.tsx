@@ -36,7 +36,7 @@ export function Select({
   const [options, setOptions] = useState<Option[]>([]);
   useImperativeHandle(ref, () => native.current!, []);
 
-  // Preserve native form values, autofill and React Hook Form's register/reset contract.
+  // Нативное поле сохраняет работу register/reset и автозаполнения за пользовательским списком.
   useLayoutEffect(() => {
     const element = native.current;
     if (!element) return;

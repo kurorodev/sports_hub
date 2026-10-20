@@ -129,7 +129,7 @@ class RecommendationTest extends ApiTestSupport {
         call(owner,"PATCH",path,Map.of("recommendedMaxAge",-1),400);
         var clear=new LinkedHashMap<String,Object>();clear.put("recommendedMinAge",null);clear.put("recommendedMaxAge",null);
         call(owner,"PATCH",path,clear,200);assertThat(getJson(user,path).path("recommendedMinAge").isNull()).isTrue();
-        // Rejected cross-field validation is last: this test transaction must not retain a mutated entity.
+        // Невалидный диапазон проверяем последним: после исключения сущность изменена в тестовой транзакции.
         call(owner,"PATCH",path,Map.of("recommendedMinAge",70,"recommendedMaxAge",20),400);
     }
 }

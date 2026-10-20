@@ -1,4 +1,4 @@
-# Use together with compose.yaml; paths resolve relative to backend/.
+# Подключается вместе с compose.yaml; относительные пути считаются от backend/.
 services:
   backend:
     environment:

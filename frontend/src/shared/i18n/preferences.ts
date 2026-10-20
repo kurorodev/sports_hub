@@ -56,7 +56,7 @@ export function setPreferences(patch: Partial<InterfacePreferences>) {
   try {
     localStorage.setItem(preferencesKey, JSON.stringify(next));
   } catch {
-    /* Keep settings usable when browser storage is unavailable. */
+    /* Недоступное хранилище не должно мешать смене настроек. */
   }
 }
 export function initializePreferences() {

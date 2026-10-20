@@ -1,4 +1,3 @@
-/** Application model. HTTP field names and generated DTOs belong to API adapters. */
 export interface Participant {
   id: string;
   displayName: string;

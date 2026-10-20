@@ -11,7 +11,7 @@ import {
 import { createPortal } from "react-dom";
 import { Info, X } from "lucide-react";
 
-/** An interactive, nonmodal preview. Hover/focus opens; the info button also works on touch. */
+/** Превью доступно по наведению и фокусу; на сенсорном экране его открывает кнопка информации. */
 export function HoverCard({
   label,
   triggerLabel,

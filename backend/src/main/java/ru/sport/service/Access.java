@@ -28,6 +28,7 @@ public class Access {
         if(org.status != Api.OrganizationStatus.APPROVED) throw new Problem(403,Api.ErrorCode.ORGANIZATION_NOT_APPROVED,"Организация ещё не допущена");
     }
     public boolean owns(EventEntity e) {
+        // Модератор не становится организатором: право рассматривать заявки остаётся у автора события.
         UUID viewer=viewerId();
         if(viewer==null || admin()) return false;
         if(e.organizerUserId!=null) return e.organizerUserId.equals(viewer);
@@ -39,6 +40,7 @@ public class Access {
     }
     public void eventVisible(EventEntity e) {
         if(e.status==Api.EventStatus.PUBLISHED || owns(e) || admin()) return;
+        // Снятое событие остаётся доступно пользователям с записью, чтобы они могли узнать причину.
         UUID id=viewerId();
         if(e.status!=Api.EventStatus.DRAFT && id!=null && db.count(RegistrationEntity.class,"e.eventId=:event and e.userId=:user",Map.of("event",e.id,"user",id))>0) return;
         throw Problem.notFound();

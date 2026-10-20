@@ -10,7 +10,7 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:5174",
     serviceWorkers: "block",
     trace: "retain-on-failure",
-    // MapLibre needs WebGL; headless CI uses Chromium's software renderer.
+    // Для карты в CI нужен программный WebGL-рендерер Chromium.
     launchOptions: {
       args: [
         "--use-gl=angle",

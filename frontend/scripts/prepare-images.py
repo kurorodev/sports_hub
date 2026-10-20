@@ -1,4 +1,4 @@
-"""Prepare supplied artwork from assets/; run on macOS, outputs are checked in."""
+"""Подготовка исходных изображений из assets/ на macOS; готовые файлы хранятся в репозитории."""
 from pathlib import Path
 from zipfile import ZipFile
 import colorsys
@@ -50,7 +50,7 @@ with ZipFile(source / 'sport_avatars_10_svg_png.zip') as archive:
                     groups = {False: [], True: []}
                     for shape in re.findall(r'M[^M]+', path.get('d', '')):
                         ys = [float(y) for _, y in re.findall(r'([-\d.]+),([-\d.]+)', shape)]
-                        # Recolor clothing polygons, keeping facial details and hair accessories.
+                        # Меняем цвет одежды, сохраняя детали лица, волос и аксессуаров.
                         uniform = bool(ys) and max(ys) >= 300 and (min(ys) + max(ys)) / 2 >= 280
                         groups[uniform].append(shape)
                     if not groups[True]:
@@ -64,7 +64,7 @@ with ZipFile(source / 'sport_avatars_10_svg_png.zip') as archive:
                             attributes['d'] = ' '.join(shapes)
                             attributes['fill'] = color if tinted else fill
                             if tinted:
-                                # Close tiny gaps introduced by automatic tracing of the source.
+                                # Убираем мелкие разрывы, появившиеся при трассировке исходного изображения.
                                 attributes.update({'stroke': color, 'stroke-width': '2', 'stroke-linejoin': 'round'})
                             svg.insert(index, ET.Element(path.tag, attributes))
                             index += 1

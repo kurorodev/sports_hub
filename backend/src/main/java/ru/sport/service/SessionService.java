@@ -29,7 +29,7 @@ public class SessionService {
         user.nickname=request.nickname();user.normalizedNickname=normalized;user.displayName=request.displayName();
         user.admin=false;user.demoAccount="signup-"+user.id;
         db.add(user);db.flush();
-        // The unique database constraint also handles concurrent requests for the same nickname.
+        // Уникальность в БД защищает ник от одновременного выбора в разных запросах.
         return user.id;
     }
     public Api.Session session(UUID user,String token) {

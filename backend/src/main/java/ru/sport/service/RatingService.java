@@ -4,7 +4,7 @@ import java.util.*;
 import org.springframework.stereotype.Service;
 import ru.sport.api.*;
 
-/** Compatibility endpoints for retired gamification. No writes or awards are performed. */
+/** Старые маршруты геймификации оставлены для совместимости; начисления отключены. */
 @Service
 public class RatingService {
     private final Access access;

@@ -3,7 +3,7 @@ package ru.sport.service;
 import java.util.*;
 import ru.sport.api.Problem;
 
-/** Great-circle radius shared by the catalogue and map; applied before count/pagination. */
+/** Фильтр расстояния общий для каталога и карты; применяется до подсчёта и разбивки выдачи на страницы. */
 public final class EventDistance {
     private static final Set<Integer> RADII=Set.of(100,200,500,1000,2000,3000,5000);
     private static final List<String> KEYS=List.of("originLatitude","originLongitude","radiusMeters");

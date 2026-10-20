@@ -14,7 +14,7 @@ function verifyIdentity(
   registration: Registration,
   input: JoinEventInput,
 ): Registration {
-  // A session may change while a request is in flight. Never confirm another user's response.
+  // За время запроса аккаунт мог смениться; ответ прежней сессии не подтверждает участие текущего пользователя.
   if (
     registration.eventId !== input.eventId ||
     registration.participant.id !== input.viewerId

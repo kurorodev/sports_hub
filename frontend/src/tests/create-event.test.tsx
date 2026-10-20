@@ -83,7 +83,7 @@ async function fillForm() {
   await user.click(
     screen.getByRole("button", { name: "суббота, 7 ноября 2026 г." }),
   );
-  // Native time inputs do not accept localized keyboard typing consistently in jsdom.
+  // В jsdom локализованный ввод времени нестабилен; значение задаём через событие поля.
   fireEvent.change(screen.getByLabelText("Время"), {
     target: { value: "18:30" },
   });

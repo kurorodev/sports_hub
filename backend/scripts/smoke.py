@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HTTP smoke for an explicitly enabled demo instance. Uses only Python's standard library."""
+"""Проверка основных HTTP-сценариев на сервере с явно включённым деморежимом."""
 import argparse
 import http.cookiejar
 import json

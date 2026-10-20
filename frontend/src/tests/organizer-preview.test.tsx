@@ -80,7 +80,7 @@ describe("organizer preview", () => {
       within(card).getByRole("link", { name: "Открыть профиль" }),
     ).toHaveAttribute("href", `/users/${organizer.id}`);
     expect(calls).toBe(1);
-    // A click leaves focus on Copy; that focus must not pin a mouse preview.
+    // После копирования фокус остаётся на кнопке; это не должно удерживать превью после ухода мыши.
     await user.hover(screen.getByRole("button", { name: "Снаружи" }));
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),

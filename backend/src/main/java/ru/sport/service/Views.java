@@ -7,7 +7,7 @@ import ru.sport.api.*;
 import ru.sport.domain.*;
 import ru.sport.persistence.Store;
 
-/** Explicit API projections; no entity is serialized by a controller. */
+/** Ответы API собираем отдельно от JPA-сущностей, чтобы не раскрывать внутренние поля. */
 @Component
 public class Views {
     private final Store db;
@@ -40,7 +40,7 @@ public class Views {
             "firstName",u.firstName,"lastName",u.lastName,"bio",u.bio,"city",u.city,"preferredTime",u.admin?null:u.preferredTime,
             "sportsPreferences",u.admin?List.of():u.sportsPreferences.stream().map(p -> new Api.SportsPreference(p.sportId,p.level)).toList(),"createdAt",u.createdAt));
     }
-    /** Legacy wire fields stay neutral after retirement of gamification. */
+    /** Поля старой геймификации сохраняем для совместимости API, но баллы и ранги больше не рассчитываем. */
     public Api.Rating rating(UserEntity u) { return new Api.Rating(u.id,0,Api.Rank.ROOKIE,0,"disabled"); }
     public Api.Sport sport(SportEntity s) { return new Api.Sport(s.id,s.name,s.isCustom,s.registryCode,s.imageData==null?null:"/api/v1/sports/"+s.id+"/image?v="+s.updatedAt.toEpochMilli()); }
     public Api.Organization organization(OrganizationEntity o) {

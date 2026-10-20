@@ -50,7 +50,7 @@ public class QuestionnaireService {
     @Transactional
     public Api.Questionnaire skip() {
         var user=db.lock(UserEntity.class,access.user().id);
-        // Cancelling a repeated questionnaire never destroys existing answers.
+        // Отказ от повторной анкеты сохраняет прежние ответы.
         if (!user.questionnaireStatus.equals("COMPLETED")) {
             user.questionnaireStatus="SKIPPED";
             user.updatedAt=clock.instant();

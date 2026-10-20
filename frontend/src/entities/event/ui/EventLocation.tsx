@@ -29,7 +29,7 @@ export function EventLocation({
   params.set("eventId", eventId);
   params.delete("venueId");
   params.delete("events");
-  // Explicit coordinates belong to the event; an address alone is never guessed into a pin.
+  // Показываем точку только по координатам события; адрес сам по себе не задаёт положение маркера.
   const href = pinned
     ? `/map?${writeMapView(params, { ...location, zoom: 16 })}`
     : undefined;

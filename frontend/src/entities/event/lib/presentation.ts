@@ -1,6 +1,6 @@
 import { tr } from "../../../shared/i18n/translate";
 import { localeTag } from "../../../shared/i18n/preferences";
-// Supplied illustrations; sport identifiers continue to come from the API catalog.
+// Изображения сопоставляем с каталогом API; они не задают идентификаторы видов спорта.
 export const sportArt: Record<string, string> = {
   default: "/art/sports/default.png",
   running: "/art/sports/running.jpg",
@@ -13,7 +13,7 @@ export const sportArt: Record<string, string> = {
   skiing: "/art/sports/skiing.jpg",
 };
 export function eventDate(value: string) {
-  // Preserve the event's supplied offset rather than silently converting to the viewer's zone.
+  // Сохраняем смещение времени события, чтобы часовой пояс зрителя не менял указанную дату.
   const day = new Date(`${value.slice(0, 10)}T12:00:00Z`);
   const date = new Intl.DateTimeFormat(localeTag(), {
     day: "numeric",

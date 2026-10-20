@@ -10,7 +10,6 @@ import ru.sport.config.DemoSeed;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
-/** The same concurrent HTTP scenarios run against H2 and PostgreSQL. */
 @SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test")
 abstract class ConcurrentApiScenarios extends ApiTestSupport {
     private List<org.springframework.test.web.servlet.MvcResult> race(Actor first,Actor second,String path,Object firstBody,Object secondBody) throws Exception {

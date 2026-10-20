@@ -19,7 +19,7 @@ async function manualPoint(page: Page) {
   await address.fill("площадь Куйбышева · точка для проверки");
   await page.getByRole("button", { name: "Указать на карте" }).click();
   await page.locator(".location-picker .map-canvas").click();
-  // This suite runs with the provider disabled; only geocoding degrades, Java stays real.
+  // Провайдер геопоиска отключён намеренно; остальные запросы продолжают идти в настоящий Java API.
   await expect(
     page.getByText(/Поиск адресов недоступен. Заполните город/),
   ).toBeVisible();
@@ -71,8 +71,7 @@ test("Java map: disabled geocoder keeps event creation with a pin working", asyn
   await expect(
     page.getByTitle(`Мероприятие: ${title}`, { exact: true }),
   ).toBeVisible();
-  // Persistent Java runs can leave several events at exactly the same point.
-  // Use the public list to select this event without clicking a covered marker.
+  // В базе могут остаться события с теми же координатами; выбираем нужное из списка, а не перекрытый маркер.
   await page
     .getByRole("region", { name: "Мероприятия в этой области" })
     .getByRole("article")

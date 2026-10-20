@@ -2,7 +2,7 @@ import { familiarVisitorState } from "./helpers/site-onboarding";
 import { test, expect } from "@playwright/test";
 import { signInAs } from "./helpers/approval";
 
-// Clipboard state belongs to the browser, so copy/paste scenarios run sequentially.
+// Системный буфер обмена общий; параллельные проверки копирования мешали бы друг другу.
 test.describe.configure({ mode: "serial" });
 for (const width of [320, 375, 768, 1440]) {
   test(`organizer hover, copy and paste into discussion at ${width}px`, async ({
@@ -79,7 +79,7 @@ test("touch info button opens organization preview and copies representative via
   });
   const page = await context.newPage();
   try {
-    // LAN HTTP does not expose navigator.clipboard. Exercise the same legacy copy path.
+    // Проверяем запасной способ копирования для локальной сети по HTTP без navigator.clipboard.
     await page.addInitScript(() =>
       Object.defineProperty(navigator, "clipboard", {
         configurable: true,

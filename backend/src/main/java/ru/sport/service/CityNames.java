@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
 import ru.sport.api.Problem;
 
-/** The same licensed city directory is used by the frontend suggestions. */
+/** Подсказки frontend и проверка backend используют один справочник городов. */
 public final class CityNames {
     private static final Map<String,String> NAMES=load();
     private CityNames() {}

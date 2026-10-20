@@ -10,7 +10,7 @@ for (const width of [375, 768, 1440]) {
     page,
     browser,
   }) => {
-    test.setTimeout(75000); // Separate sessions poll for new applications and decisions.
+    test.setTimeout(75000); // Отдельные сессии ждут новые заявки и решения через поллинг.
     await page.setViewportSize({ width, height: 1000 });
     await signInAs(page, "athlete-a");
     const url = await createApproval(
@@ -41,7 +41,7 @@ for (const width of [375, 768, 1440]) {
         .getByRole("button", { name: "Одобрить", exact: true })
         .click();
       await expect(emptyAction).toBeDisabled();
-      // No reload/refetch click in the participant session: only real HTTP polling can update this page.
+      // Не обновляем страницу участника вручную: решение должно прийти через поллинг API.
       await expect(
         participant.getByText("Заявка одобрена. До встречи!", { exact: true }),
       ).toBeVisible({ timeout: 12000 });
@@ -106,7 +106,7 @@ for (const width of [375, 768, 1440]) {
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       ).toBe(true);
-      // ADMIN may read requests, but cannot replace the organizer's decision.
+      // Администратор видит заявки, но решение за организатора принять не может.
       await signInAs(participant, "admin");
       const eventId = new URL(url).pathname.split("/").at(-1)!;
       const adminSession = await (

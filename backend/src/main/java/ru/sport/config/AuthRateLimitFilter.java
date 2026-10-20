@@ -9,7 +9,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.sport.api.Api;
 
-/** Bounds expensive password hashing. Uses the socket peer, never untrusted forwarded headers. */
+/** Ограничиваем дорогое хеширование паролей по адресу соединения; заголовки клиента не задают IP для лимита. */
 @Component
 public class AuthRateLimitFilter extends OncePerRequestFilter {
     private final Map<String,long[]> windows=new LinkedHashMap<>();

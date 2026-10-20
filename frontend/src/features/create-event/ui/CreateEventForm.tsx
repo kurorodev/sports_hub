@@ -78,7 +78,7 @@ export function CreateEventForm({
       return createEvent(toEventInput(values, session.user.id));
     },
     onSuccess: async (event) => {
-      // A late response must not open a previous account's result after switching sessions.
+      // После смены аккаунта поздний ответ не должен открывать событие, созданное предыдущим пользователем.
       if (
         client.getQueryData(sessionQuery.queryKey)?.user.id !== session.user.id
       )

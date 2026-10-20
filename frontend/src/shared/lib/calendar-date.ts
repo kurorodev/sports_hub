@@ -1,4 +1,4 @@
-/** Calendar day at an explicit offset; browser and event time zones may differ. */
+/** День считаем с явным смещением: часовой пояс браузера может отличаться от часового пояса события. */
 export function calendarDate(offset = "+00:00", now = Date.now()) {
   const sign = offset.startsWith("-") ? -1 : 1;
   const minutes =

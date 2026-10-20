@@ -8,7 +8,7 @@ type Entry = {
   url?: string;
 };
 
-/** Session-scoped media cache: thumbnails and slides share one fetched image. */
+/** Превью и просмотр используют один загруженный файл; кэш живёт в пределах аккаунта. */
 export function useStoryImages(stories: readonly Story[]) {
   const entries = useRef(new Map<string, Entry>());
   const [images, setImages] = useState<Record<string, string>>({});
@@ -19,6 +19,7 @@ export function useStoryImages(stories: readonly Story[]) {
     const entry: Entry = { controller, promise: Promise.resolve("") };
     entry.promise = fetchStoryImage(story, controller.signal)
       .then((blob) => {
+        // Загрузка могла завершиться одновременно со сменой аккаунта; такой файл в кэш не добавляем.
         if (controller.signal.aborted)
           throw new DOMException("Aborted", "AbortError");
         const url = URL.createObjectURL(blob);

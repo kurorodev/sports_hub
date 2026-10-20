@@ -6,7 +6,7 @@ import type {
   EventPreview,
 } from "../../src/shared/api/types";
 
-// S1 covers creation through the form; S6 prepares its event via the same public API.
+// Готовим событие через публичный API; создание через форму проверяется отдельно.
 export async function setupModerationEvent(page: Page, title: string) {
   return page.evaluate(async (name) => {
     const session: Session = await (

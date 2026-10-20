@@ -80,8 +80,7 @@ export function GeoMarker({
       .setDOMContent(popupRoot)
       .addTo(map);
     const close = () => setOpen(false);
-    // React can flush this effect before the opening click reaches the map.
-    // Ignore that marker click, but close on a click elsewhere (including another marker).
+    // Открывающий клик может дойти до карты уже после эффекта React; не закрываем карточку этим же кликом.
     const closeFromMap = (event: MapMouseEvent) => {
       const target = event.originalEvent.target;
       if (

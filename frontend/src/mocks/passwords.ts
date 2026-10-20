@@ -1,4 +1,4 @@
-// Mock-only password storage. Real mode never imports or verifies credentials in the browser.
+// Хранилище паролей только для моков; в рабочем режиме пароль проверяет сервер.
 const hex = (bytes: Uint8Array) =>
   Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 async function derive(password: string, salt: Uint8Array) {
