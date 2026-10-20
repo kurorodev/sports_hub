@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Link } from "react-router-dom";
 import { useRegistrationRepository } from "../lib/use-registration-repository";
 import { registrationErrorMessage } from "./presentation";
@@ -9,6 +11,7 @@ import { ErrorState } from "../../../shared/ui/Feedback";
 import { Avatar } from "../../../shared/ui/Avatar";
 
 export function Participants({ eventId }: { eventId: string }) {
+  useLocale();
   const repository = useRegistrationRepository();
   const [page, setPage] = useState(0);
   const query = useQuery(participantsQuery(repository, eventId, page));
@@ -18,24 +21,29 @@ export function Participants({ eventId }: { eventId: string }) {
       aria-labelledby="participants-heading"
     >
       <div className="participants-heading">
-        <h2 id="participants-heading">Кто идёт</h2>
-        {query.data && <span>Участников: {query.data.totalCount}</span>}
+        <h2 id="participants-heading">{tr("Кто идёт")}</h2>
+        {query.data && (
+          <span>
+            {tr("Участников: ")}
+            {query.data.totalCount}
+          </span>
+        )}
       </div>
       {query.isPending ? (
         <p className="join-note" role="status">
-          Загружаем участников…
+          {tr("Загружаем участников…")}
         </p>
       ) : query.isError ? (
         <ErrorState
-          message={registrationErrorMessage(query.error)}
+          message={tr(registrationErrorMessage(query.error))}
           error={query.error}
           retry={() => void query.refetch()}
         />
       ) : query.data.totalCount === 0 ? (
         <div className="participants-empty">
           <Users size={28} />
-          <p>Пока никто не записался.</p>
-          <span>Компания только собирается.</span>
+          <p>{tr("Пока никто не записался.")}</p>
+          <span>{tr("Компания только собирается.")}</span>
         </div>
       ) : (
         <>
@@ -57,16 +65,18 @@ export function Participants({ eventId }: { eventId: string }) {
             ))}
           </ul>
           {(query.data.totalCount > query.data.pageSize || page > 0) && (
-            <nav className="pagination" aria-label="Страницы участников">
+            <nav className="pagination" aria-label={tr("Страницы участников")}>
               <button
                 className="button secondary"
                 disabled={page === 0}
                 onClick={() => setPage((value) => value - 1)}
               >
-                Назад
+                {tr("Назад")}
               </button>
               <span>
-                Страница {page + 1} из{" "}
+                {tr("Страница ")}
+                {page + 1}
+                {tr(" из")}{" "}
                 {Math.max(
                   1,
                   Math.ceil(query.data.totalCount / query.data.pageSize),
@@ -79,7 +89,7 @@ export function Participants({ eventId }: { eventId: string }) {
                 }
                 onClick={() => setPage((value) => value + 1)}
               >
-                Далее
+                {tr("Далее")}
               </button>
             </nav>
           )}

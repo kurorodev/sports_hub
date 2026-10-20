@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useId, useState, type ReactNode } from "react";
 import { Check, ChevronDown, LoaderCircle, Search, X } from "lucide-react";
 
@@ -40,6 +42,7 @@ export function CommentFilterSearch({
   onRetry: () => void;
   footer?: ReactNode;
 }) {
+  useLocale();
   const id = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -62,7 +65,7 @@ export function CommentFilterSearch({
         {label}
       </label>
       <p className="comment-search-hint" id={`${id}-hint`}>
-        {hint}
+        {tr(hint)}
       </p>
       <div className={`comment-search-control ${open ? "is-open" : ""}`}>
         <Search size={18} aria-hidden="true" />
@@ -124,22 +127,22 @@ export function CommentFilterSearch({
             <div
               id={`${id}-options`}
               role="listbox"
-              aria-label={`${label}: варианты`}
+              aria-label={tr("{0}: варианты", [label])}
               aria-busy={loading}
             >
               {loading ? (
                 <p className="comment-search-message" role="status">
-                  Ищем…
+                  {tr("Ищем…")}
                 </p>
               ) : error ? (
                 <div className="comment-search-message" role="alert">
-                  Не удалось загрузить варианты.{" "}
+                  {tr("Не удалось загрузить варианты.")}{" "}
                   <button
                     type="button"
                     className="text-button"
                     onClick={onRetry}
                   >
-                    Повторить поиск
+                    {tr("Повторить поиск")}
                   </button>
                 </div>
               ) : choices.length ? (
@@ -180,13 +183,13 @@ export function CommentFilterSearch({
       >
         <span>
           {selectedId
-            ? (selectedLabel ?? "Загружаем выбранный фильтр…")
+            ? (selectedLabel ?? tr("Загружаем выбранный фильтр…"))
             : allLabel}
         </span>
         {selectedId && (
           <button
             type="button"
-            aria-label={`Сбросить: ${label}`}
+            aria-label={tr("Сбросить: {0}", [label])}
             onClick={() => choose("")}
           >
             <X size={16} aria-hidden="true" />

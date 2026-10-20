@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
@@ -20,6 +22,7 @@ export function EventLocation({
   eventId: string;
   mapReturn?: string;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const pinned = hasPoint(location);
   const params = new URLSearchParams(mapReturn?.split("?")[1]);
@@ -36,7 +39,8 @@ export function EventLocation({
       aria-labelledby={`event-location-${eventId}`}
     >
       <h2 id={`event-location-${eventId}`}>
-        <MapPin size={22} /> Место встречи
+        <MapPin size={22} />
+        {tr(" Место встречи")}
       </h2>
       <p>
         {location.city}, {location.address}
@@ -50,35 +54,41 @@ export function EventLocation({
               aria-controls={`event-map-${eventId}`}
               onClick={() => setOpen(!open)}
             >
-              {open ? "Скрыть карту места" : "Показать место на карте"}
+              {open ? tr("Скрыть карту места") : tr("Показать место на карте")}
             </button>
             <Link className="button secondary" to={href!}>
-              Открыть карту района
+              {tr("Открыть карту района")}
             </Link>
           </div>
           {open && (
             <div id={`event-map-${eventId}`}>
-              <Suspense fallback={<p role="status">Загружаем карту места…</p>}>
+              <Suspense
+                fallback={<p role="status">{tr("Загружаем карту места…")}</p>}
+              >
                 <GeoMap
                   compact
                   center={location}
                   point={location}
                   zoom={16}
                   locate={false}
-                  tileErrorMessage="Подложка недоступна. Адрес встречи и точка организатора сохранены."
+                  tileErrorMessage={tr(
+                    "Подложка недоступна. Адрес встречи и точка организатора сохранены.",
+                  )}
                 />
               </Suspense>
               <p className="field-hint">
-                Точка указана организатором. Уточнения по месту — в обсуждении
-                встречи.
+                {tr(
+                  "Точка указана организатором. Уточнения по месту — в обсуждении встречи.",
+                )}
               </p>
             </div>
           )}
         </>
       ) : (
         <p className="field-hint">
-          Точная точка не указана. Ориентируйтесь на адрес или уточните место у
-          организатора.
+          {tr(
+            "Точная точка не указана. Ориентируйтесь на адрес или уточните место у организатора.",
+          )}
         </p>
       )}
     </section>

@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -13,6 +15,7 @@ import { ErrorState } from "../../../shared/ui/Feedback";
 import { CreateEventForm } from "../../../features/create-event";
 
 export function CreateEventPage() {
+  useLocale();
   const session = useQuery(sessionQuery);
   const sports = useQuery(sportsQuery);
   const [params] = useSearchParams();
@@ -28,7 +31,7 @@ export function CreateEventPage() {
   if (session.isPending)
     return (
       <p className="page-state" role="status">
-        Восстанавливаем сессию…
+        {tr("Восстанавливаем сессию…")}
       </p>
     );
   if (session.isError)
@@ -39,10 +42,10 @@ export function CreateEventPage() {
     return (
       <section className="feedback page-state">
         <CalendarPlus size={36} />
-        <h1>Собери свою компанию</h1>
-        <p>Войди в аккаунт, чтобы создать спортивную встречу.</p>
+        <h1>{tr("Собери свою компанию")}</h1>
+        <p>{tr("Войди в аккаунт, чтобы создать спортивную встречу.")}</p>
         <Link className="button primary" to="/login?next=create-event">
-          Войти и создать
+          {tr("Войти и создать")}
         </Link>
       </section>
     );
@@ -59,7 +62,7 @@ export function CreateEventPage() {
   if (sports.isPending)
     return (
       <p className="page-state" role="status">
-        Загружаем виды спорта…
+        {tr("Загружаем виды спорта…")}
       </p>
     );
   if (sports.isError)
@@ -69,14 +72,14 @@ export function CreateEventPage() {
   if (needOrganizations && organizations.isPending)
     return (
       <p role="status" className="page-state">
-        Проверяем организации для публикации…
+        {tr("Проверяем организации для публикации…")}
       </p>
     );
   if (needOrganizations && organizations.isError && !organizations.data)
     return (
       <ErrorState
         error={organizations.error}
-        message={organizationErrorMessage(organizations.error)}
+        message={tr(organizationErrorMessage(organizations.error))}
         retry={() => void organizations.refetch()}
       />
     );
@@ -92,10 +95,10 @@ export function CreateEventPage() {
   )
     return (
       <section className="feedback page-state">
-        <h1>Публикация от организации недоступна</h1>
-        <p>Нужна одобренная организация, которую вы представляете.</p>
+        <h1>{tr("Публикация от организации недоступна")}</h1>
+        <p>{tr("Нужна одобренная организация, которую вы представляете.")}</p>
         <Link className="button secondary" to="/organizations?view=mine">
-          Проверить мою заявку
+          {tr("Проверить мою заявку")}
         </Link>
       </section>
     );
@@ -104,14 +107,15 @@ export function CreateEventPage() {
       {needOrganizations && organizations.isError && (
         <div className="notice" role="alert">
           <p>
-            Не удалось обновить организации. Данные формы сохранены. При
-            публикации сервер повторно проверит допуск.
+            {tr(
+              "Не удалось обновить организации. Данные формы сохранены. При публикации сервер повторно проверит допуск.",
+            )}
           </p>
           <button
             className="button secondary"
             onClick={() => void organizations.refetch()}
           >
-            Обновить организации для публикации
+            {tr("Обновить организации для публикации")}
           </button>
         </div>
       )}

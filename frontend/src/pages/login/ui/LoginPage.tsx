@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +22,7 @@ const schema = z.object({
 type LoginValues = z.infer<typeof schema>;
 
 export function LoginPage() {
+  useLocale();
   const location = useLocation();
   const accounts = useQuery(demoAccountsQuery);
   const [params] = useSearchParams();
@@ -36,50 +39,57 @@ export function LoginPage() {
   return (
     <section className="login-page">
       <div className="login-intro">
-        <span className="eyebrow muted">Сначала познакомимся</span>
+        <span className="eyebrow muted">{tr("Сначала познакомимся")}</span>
         <h1>
-          Твоя компания
+          {tr("Твоя компания")}
           <br />
-          уже рядом<span className="brand-dot">.</span>
+          {tr("уже рядом")}
+          <span className="brand-dot">.</span>
         </h1>
         <p>
-          Войди по никнейму и паролю, чтобы присоединяться к встречам и
-          общаться.
+          {tr(
+            "Войди по никнейму и паролю, чтобы присоединяться к встречам и общаться.",
+          )}
         </p>
         <div className="notice">
           <strong>
             {apiConfig.mode === "mock"
-              ? "Демо на локальных моках"
-              : "Режим реального API"}
+              ? tr("Демо на локальных моках")
+              : tr("Режим реального API")}
           </strong>
           <p>
             {apiConfig.mode === "mock"
-              ? "Это тестовые аккаунты. Данные не отправляются в Java backend. Переключение очищает кэш предыдущего пользователя."
-              : "Войди по @никнейму и паролю. Тестовые аккаунты отображаются отдельно, если включён демонстрационный режим."}
+              ? tr(
+                  "Это тестовые аккаунты. Данные не отправляются в Java backend. Переключение очищает кэш предыдущего пользователя.",
+                )
+              : tr(
+                  "Войди по @никнейму и паролю. Тестовые аккаунты отображаются отдельно, если включён демонстрационный режим.",
+                )}
           </p>
         </div>
       </div>
       <div className="login-panel">
-        <h2>Войти</h2>
+        <h2>{tr("Войти")}</h2>
         <PasswordLoginForm onSuccess={complete} />
         {!(
           accounts.error instanceof ApiError && accounts.error.status === 404
         ) && (
-          <section aria-label="Демонстрационные аккаунты">
-            <h2 className="demo-login-heading">Демо-вход</h2>
+          <section aria-label={tr("Демонстрационные аккаунты")}>
+            <h2 className="demo-login-heading">{tr("Демо-вход")}</h2>
             <p className="field-hint">
-              Тестовые роли для знакомства с приложением. Аккаунты с паролем
-              сюда не попадают.
+              {tr(
+                "Тестовые роли для знакомства с приложением. Аккаунты с паролем сюда не попадают.",
+              )}
             </p>
             {accounts.isPending ? (
-              <p role="status">Загружаем аккаунты…</p>
+              <p role="status">{tr("Загружаем аккаунты…")}</p>
             ) : accounts.isError ? (
               <ErrorState
                 error={accounts.error}
                 retry={() => void accounts.refetch()}
               />
             ) : accounts.data.length === 0 ? (
-              <p>Демо-аккаунты пока не настроены на сервере.</p>
+              <p>{tr("Демо-аккаунты пока не настроены на сервере.")}</p>
             ) : (
               <form
                 onSubmit={form.handleSubmit((values) =>
@@ -89,7 +99,9 @@ export function LoginPage() {
                 <fieldset
                   disabled={!form.formState.isReady || mutation.isPending}
                 >
-                  <legend className="sr-only">Выберите демо-аккаунт</legend>
+                  <legend className="sr-only">
+                    {tr("Выберите демо-аккаунт")}
+                  </legend>
                   {accounts.data.map((account) => (
                     <label
                       className={`account-option ${selected === account.id ? "selected" : ""}`}
@@ -115,12 +127,12 @@ export function LoginPage() {
                 </fieldset>
                 {form.formState.errors.accountId && (
                   <p className="field-error" role="alert">
-                    {form.formState.errors.accountId.message}
+                    {tr(form.formState.errors.accountId.message ?? "")}
                   </p>
                 )}
                 {mutation.isError && (
                   <p className="field-error" role="alert">
-                    {errorMessage(mutation.error)}
+                    {tr(errorMessage(mutation.error))}
                   </p>
                 )}
                 <button
@@ -128,7 +140,7 @@ export function LoginPage() {
                   disabled={!form.formState.isReady || mutation.isPending}
                   type="submit"
                 >
-                  {mutation.isPending ? "Входим…" : "Войти в аккаунт"}
+                  {mutation.isPending ? tr("Входим…") : tr("Войти в аккаунт")}
                   <ArrowUpRight size={19} />
                 </button>
               </form>
@@ -136,12 +148,12 @@ export function LoginPage() {
           </section>
         )}
         <p className="auth-switch">
-          Новый участник?{" "}
+          {tr("Новый участник?")}{" "}
           <Link
             to={{ pathname: "/register", search: location.search }}
             state={location.state}
           >
-            Создать аккаунт
+            {tr("Создать аккаунт")}
           </Link>
         </p>
       </div>

@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { sessionQuery } from "../../../entities/session";
@@ -10,13 +12,14 @@ import {
 import { ErrorState, NotFound } from "../../../shared/ui/Feedback";
 import { isUuid } from "../../../shared/lib/identifiers";
 export function SupportPage({ create = false }: { create?: boolean }) {
+  useLocale();
   const session = useQuery(sessionQuery);
   const { ticketId } = useParams();
   const [params] = useSearchParams();
   if (session.isPending)
     return (
       <p className="page-state" role="status">
-        Проверяем сессию…
+        {tr("Проверяем сессию…")}
       </p>
     );
   if (session.isError)
@@ -26,10 +29,12 @@ export function SupportPage({ create = false }: { create?: boolean }) {
   if (!session.data)
     return (
       <section className="feedback page-state">
-        <h1>Центр поддержки</h1>
-        <p>Войдите, чтобы написать нам и видеть ответы в своём аккаунте.</p>
+        <h1>{tr("Центр поддержки")}</h1>
+        <p>
+          {tr("Войдите, чтобы написать нам и видеть ответы в своём аккаунте.")}
+        </p>
         <Link className="button primary" to="/login?next=support">
-          Войти и написать
+          {tr("Войти и написать")}
         </Link>
       </section>
     );
@@ -44,10 +49,10 @@ export function SupportPage({ create = false }: { create?: boolean }) {
     return (
       <section className="support-create-page">
         <Link className="back-link" to="/support">
-          ← В поддержку
+          {tr("← В поддержку")}
         </Link>
-        <h1>Новое обращение</h1>
-        <p>Расскажите нам о вопросе, ошибке или идее.</p>
+        <h1>{tr("Новое обращение")}</h1>
+        <p>{tr("Расскажите нам о вопросе, ошибке или идее.")}</p>
         <CreateSupportForm
           key={category}
           viewerId={viewerId}

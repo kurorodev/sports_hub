@@ -1,3 +1,4 @@
+import { tr } from "../i18n/translate";
 import type { ApiErrorBody } from "./types";
 
 const mode = import.meta.env.VITE_API_MODE ?? "real";
@@ -73,7 +74,7 @@ export type HttpClient = typeof request;
 
 export function errorMessage(error: unknown): string {
   if (!(error instanceof ApiError))
-    return "Что-то пошло не так. Попробуйте ещё раз.";
+    return tr("Что-то пошло не так. Попробуйте ещё раз.");
   const messages: Record<number, string> = {
     0: "Нет связи с сервером. Проверьте подключение и повторите попытку.",
     400: "Проверьте введённые данные.",
@@ -84,7 +85,7 @@ export function errorMessage(error: unknown): string {
     409: "Данные уже изменились. Обновите страницу и повторите действие.",
     422: "Проверьте введённые данные.",
   };
-  return (
-    messages[error.status] ?? "Сервис временно недоступен. Попробуйте ещё раз."
+  return tr(
+    messages[error.status] ?? "Сервис временно недоступен. Попробуйте ещё раз.",
   );
 }

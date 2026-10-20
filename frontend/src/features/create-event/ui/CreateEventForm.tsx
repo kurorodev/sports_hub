@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { Select } from "../../../shared/ui/Select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -34,6 +36,7 @@ export function CreateEventForm({
   organizations?: { id: string; name: string }[];
   initialOrganizationId?: string;
 }) {
+  useLocale();
   const navigate = useNavigate();
   const client = useQueryClient();
   const form = useForm<EventFormValues>({
@@ -124,14 +127,16 @@ export function CreateEventForm({
   return (
     <section className="create-page">
       <Link to="/" className="back-link">
-        <ArrowLeft size={18} />К активностям
+        <ArrowLeft size={18} />
+        {tr("К активностям")}
       </Link>
       <div className="create-heading">
-        <span className="eyebrow muted">От идеи — к встрече</span>
+        <span className="eyebrow muted">{tr("От идеи — к встрече")}</span>
         <h1>
-          Давай соберёмся<span className="brand-dot">.</span>
+          {tr("Давай соберёмся")}
+          <span className="brand-dot">.</span>
         </h1>
-        <p>Выбери спорт, место и время. Компания найдётся.</p>
+        <p>{tr("Выбери спорт, место и время. Компания найдётся.")}</p>
       </div>
       <div className="create-layout">
         <form
@@ -141,24 +146,25 @@ export function CreateEventForm({
         >
           <fieldset disabled={mutation.isPending}>
             <legend>
-              <span>01</span>Что за встреча?
+              <span>01</span>
+              {tr("Что за встреча?")}
             </legend>
             <FormField
               id="event-title"
-              label="Название встречи"
+              label={tr("Название встречи")}
               error={errors.title?.message}
             >
               <input
                 {...accessibility("event-title", errors.title?.message)}
                 {...form.register("title")}
-                placeholder="Например, волейбол после работы"
+                placeholder={tr("Например, волейбол после работы")}
                 maxLength={160}
                 required
               />
             </FormField>
             <FormField
               id="event-sport"
-              label="Вид спорта"
+              label={tr("Вид спорта")}
               error={errors.sportChoice?.message}
             >
               <Controller
@@ -177,7 +183,7 @@ export function CreateEventForm({
                     disabled={mutation.isPending}
                     aria-required="true"
                     options={[
-                      { id: "", name: "Выберите спорт" },
+                      { id: "", name: tr("Выберите спорт") },
                       ...sports
                         .filter((sport) => !sport.isCustom)
                         .map((sport) => ({
@@ -187,8 +193,8 @@ export function CreateEventForm({
                         })),
                       {
                         id: customSportValue,
-                        name: "Другое",
-                        imageUrl: sportIcon("Другое"),
+                        name: tr("Другое"),
+                        imageUrl: sportIcon(tr("Другое")),
                       },
                     ]}
                   />
@@ -198,8 +204,10 @@ export function CreateEventForm({
             {sportChoice === customSportValue && (
               <FormField
                 id="custom-sport"
-                label="Название активности"
-                hint="Опишите свой вариант. Встреча останется в категории «Другое» и не создаст новую категорию."
+                label={tr("Название активности")}
+                hint={tr(
+                  "Опишите свой вариант. Встреча останется в категории «Другое» и не создаст новую категорию.",
+                )}
                 error={errors.customSportName?.message}
               >
                 <input
@@ -210,15 +218,17 @@ export function CreateEventForm({
                   )}
                   {...form.register("customSportName")}
                   maxLength={80}
-                  placeholder="Например, петанк в парке"
+                  placeholder={tr("Например, петанк в парке")}
                   required
                 />
               </FormField>
             )}
             <FormField
               id="event-description"
-              label="О встрече"
-              hint="Как всё пройдёт, что взять с собой, есть ли расходы? От 10 до 5000 символов."
+              label={tr("О встрече")}
+              hint={tr(
+                "Как всё пройдёт, что взять с собой, есть ли расходы? От 10 до 5000 символов.",
+              )}
               error={errors.description?.message}
             >
               <Textarea
@@ -230,14 +240,16 @@ export function CreateEventForm({
                 {...form.register("description")}
                 rows={5}
                 maxLength={5000}
-                placeholder="Расскажите, что ждёт участников…"
+                placeholder={tr("Расскажите, что ждёт участников…")}
                 required
               />
             </FormField>
             <FormField
               id="event-requirements"
-              label="Условия участия"
-              hint="Что взять с собой, какая подготовка нужна? Необязательно, до 2000 символов."
+              label={tr("Условия участия")}
+              hint={tr(
+                "Что взять с собой, какая подготовка нужна? Необязательно, до 2000 символов.",
+              )}
               error={errors.requirements?.message}
             >
               <Textarea
@@ -247,7 +259,9 @@ export function CreateEventForm({
                   true,
                 )}
                 {...form.register("requirements")}
-                placeholder="Например, удобная обувь, вода и базовая подготовка"
+                placeholder={tr(
+                  "Например, удобная обувь, вода и базовая подготовка",
+                )}
                 rows={3}
                 maxLength={2000}
               />
@@ -255,7 +269,8 @@ export function CreateEventForm({
           </fieldset>
           <fieldset disabled={mutation.isPending}>
             <legend>
-              <span>02</span>Где и когда
+              <span>02</span>
+              {tr("Где и когда")}
             </legend>
             <Controller
               control={form.control}
@@ -276,7 +291,7 @@ export function CreateEventForm({
             <div className="form-two-columns">
               <FormField
                 id="event-date"
-                label="Дата"
+                label={tr("Дата")}
                 error={errors.date?.message}
               >
                 <Controller
@@ -302,7 +317,7 @@ export function CreateEventForm({
               </FormField>
               <FormField
                 id="event-time"
-                label="Время"
+                label={tr("Время")}
                 error={errors.time?.message}
               >
                 <input
@@ -315,8 +330,8 @@ export function CreateEventForm({
             </div>
             <FormField
               id="event-timezone"
-              label="Часовой пояс места встречи"
-              hint="Часовой пояс будет указан рядом со временем встречи."
+              label={tr("Часовой пояс места встречи")}
+              hint={tr("Часовой пояс будет указан рядом со временем встречи.")}
               error={errors.timezoneOffset?.message}
             >
               <Select
@@ -331,9 +346,9 @@ export function CreateEventForm({
                   <option key={offset} value={offset}>
                     UTC{offset}
                     {offset === "+03:00"
-                      ? " · Москва"
+                      ? tr(" · Москва")
                       : offset === "+07:00"
-                        ? " · Красноярск"
+                        ? tr(" · Красноярск")
                         : ""}
                   </option>
                 ))}
@@ -342,28 +357,29 @@ export function CreateEventForm({
           </fieldset>
           <fieldset disabled={mutation.isPending}>
             <legend>
-              <span>03</span>Кого ждём
+              <span>03</span>
+              {tr("Кого ждём")}
             </legend>
             <div className="form-two-columns">
               <FormField
                 id="event-level"
-                label="Уровень участников"
+                label={tr("Уровень участников")}
                 error={errors.skillLevel?.message}
               >
                 <Select
                   {...accessibility("event-level", errors.skillLevel?.message)}
                   {...form.register("skillLevel")}
                 >
-                  <option value="ANY">Любой уровень</option>
-                  <option value="BEGINNER">Начинающий</option>
-                  <option value="AMATEUR">Любитель</option>
-                  <option value="ADVANCED">Продвинутый</option>
-                  <option value="PROFESSIONAL">Профессиональный</option>
+                  <option value="ANY">{tr("Любой уровень")}</option>
+                  <option value="BEGINNER">{tr("Начинающий")}</option>
+                  <option value="AMATEUR">{tr("Любитель")}</option>
+                  <option value="ADVANCED">{tr("Продвинутый")}</option>
+                  <option value="PROFESSIONAL">{tr("Профессиональный")}</option>
                 </Select>
               </FormField>
               <FormField
                 id="event-capacity"
-                label="Количество участников"
+                label={tr("Количество участников")}
                 error={errors.capacity?.message}
               >
                 <input
@@ -379,27 +395,27 @@ export function CreateEventForm({
             </div>
             <FormField
               id="event-join"
-              label="Как присоединиться"
+              label={tr("Как присоединиться")}
               error={errors.joinMode?.message}
               hint={
                 joinMode === "OPEN"
-                  ? "Запись будет подтверждаться сразу."
-                  : "Каждую заявку нужно будет одобрить организатору."
+                  ? tr("Запись будет подтверждаться сразу.")
+                  : tr("Каждую заявку нужно будет одобрить организатору.")
               }
             >
               <Select
                 {...accessibility("event-join", errors.joinMode?.message, true)}
                 {...form.register("joinMode")}
               >
-                <option value="OPEN">Свободная запись</option>
-                <option value="APPROVAL">По заявке</option>
+                <option value="OPEN">{tr("Свободная запись")}</option>
+                <option value="APPROVAL">{tr("По заявке")}</option>
               </Select>
             </FormField>
           </fieldset>
           <div className="publish-panel">
             <FormField
               id="event-organizer"
-              label="Организатор встречи"
+              label={tr("Организатор встречи")}
               error={errors.organizerChoice?.message}
             >
               <Select
@@ -409,23 +425,26 @@ export function CreateEventForm({
                 aria-invalid={Boolean(errors.organizerChoice)}
               >
                 <option value="__personal__">
-                  Лично: {session.user.displayName}
+                  {tr("Лично: ")}
+                  {session.user.displayName}
                 </option>
                 {organizations.map((organization) => (
                   <option key={organization.id} value={organization.id}>
-                    Организация: {organization.name}
+                    {tr("Организация: ")}
+                    {organization.name}
                   </option>
                 ))}
               </Select>
             </FormField>
             <p>
-              После публикации встречу увидят другие пользователи. Организации
-              публикуют встречи после допуска, без повторного согласования.
+              {tr(
+                "После публикации встречу увидят другие пользователи. Организации публикуют встречи после допуска, без повторного согласования.",
+              )}
             </p>
             {mutation.isError && (
               <p className="field-error" role="alert">
-                {errorMessage(mutation.error)} Данные формы сохранены, можно
-                повторить отправку.
+                {tr(errorMessage(mutation.error))}
+                {tr(" Данные формы сохранены, можно повторить отправку.")}
               </p>
             )}
             <button
@@ -433,7 +452,9 @@ export function CreateEventForm({
               type="submit"
               disabled={mutation.isPending}
             >
-              {mutation.isPending ? "Публикуем…" : "Опубликовать встречу"}
+              {mutation.isPending
+                ? tr("Публикуем…")
+                : tr("Опубликовать встречу")}
               <ArrowUpRight size={18} />
             </button>
           </div>
@@ -441,20 +462,21 @@ export function CreateEventForm({
         <aside className="create-aside">
           <div className="notice">
             <Lightbulb size={24} />
-            <h2>Хорошая встреча начинается с ясности</h2>
+            <h2>{tr("Хорошая встреча начинается с ясности")}</h2>
             <p>
-              Назови точку сбора, удобный темп и всё, что нужно взять. Так проще
-              решиться прийти впервые.
+              {tr(
+                "Назови точку сбора, удобный темп и всё, что нужно взять. Так проще решиться прийти впервые.",
+              )}
             </p>
           </div>
           <div className="create-aside-note">
             <span className="eyebrow muted">
-              Твоя идея — чей-то план на вечер
+              {tr("Твоя идея — чей-то план на вечер")}
             </span>
             <p>
-              Не нашёл свой спорт?
+              {tr("Не нашёл свой спорт?")}
               <br />
-              <strong>Добавь его сам.</strong>
+              <strong>{tr("Добавь его сам.")}</strong>
             </p>
           </div>
         </aside>

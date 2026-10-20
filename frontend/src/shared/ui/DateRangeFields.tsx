@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import { useId, useState } from "react";
 import { useCurrentDate } from "../hooks/use-current-date";
 import { calendarDate } from "../lib/calendar-date";
@@ -16,6 +18,7 @@ function DateField({
   max?: string;
   onChange: (value: string) => void;
 }) {
+  useLocale();
   const id = useId();
   const [error, setError] = useState("");
   return (
@@ -35,8 +38,8 @@ function DateField({
           ) {
             setError(
               next < calendarDate()
-                ? "Выберите сегодняшнюю или будущую дату"
-                : "Дата окончания не может быть раньше даты начала",
+                ? tr("Выберите сегодняшнюю или будущую дату")
+                : tr("Дата окончания не может быть раньше даты начала"),
             );
             return;
           }
@@ -46,7 +49,7 @@ function DateField({
       />
       {error && (
         <p className="field-error" id={`${id}-error`} role="alert">
-          {error}
+          {tr(error)}
         </p>
       )}
     </div>
@@ -62,18 +65,19 @@ export function DateRangeFields({
   to: string;
   onChange: (key: "from" | "to", value: string) => void;
 }) {
+  useLocale();
   const today = useCurrentDate();
   return (
     <>
       <DateField
-        label="Дата от (UTC)"
+        label={tr("Дата от (UTC)")}
         value={from}
         min={today}
         max={to || undefined}
         onChange={(value) => onChange("from", value)}
       />
       <DateField
-        label="Дата до (UTC)"
+        label={tr("Дата до (UTC)")}
         value={to}
         min={from > today ? from : today}
         onChange={(value) => onChange("to", value)}

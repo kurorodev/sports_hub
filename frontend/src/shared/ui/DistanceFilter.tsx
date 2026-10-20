@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import { Navigation } from "lucide-react";
 import { useCurrentLocation } from "../lib/current-location-context";
 import { distanceRadii, formatDistance } from "../lib/distance";
@@ -10,12 +12,13 @@ export function DistanceFilter({
   value: string;
   onChange: (value: string) => void;
 }) {
+  useLocale();
   const location = useCurrentLocation();
   return (
     <fieldset className="distance-filter">
       <legend>
         <Navigation size={16} aria-hidden="true" />
-        Рядом со мной
+        {tr("Рядом со мной")}
       </legend>
       <button
         type="button"
@@ -24,39 +27,42 @@ export function DistanceFilter({
         onClick={location.request}
       >
         {location.status === "locating"
-          ? "Определяем геопозицию…"
+          ? tr("Определяем геопозицию…")
           : location.position
-            ? "Обновить геопозицию"
-            : "Использовать геолокацию"}
+            ? tr("Обновить геопозицию")
+            : tr("Использовать геолокацию")}
       </button>
       <label>
-        Расстояние до мероприятия
+        {tr("Расстояние до мероприятия")}
         <Select
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={!location.position}
         >
-          <option value="">Любое расстояние</option>
+          <option value="">{tr("Любое расстояние")}</option>
           {distanceRadii.map((radius) => (
             <option key={radius} value={radius}>
-              До {formatDistance(radius)}
+              {tr("До ")}
+              {formatDistance(radius)}
             </option>
           ))}
         </Select>
       </label>
       <p className="field-hint">
-        По прямой до точки встречи. Максимальный радиус — 5 км.
+        {tr("По прямой до точки встречи. Максимальный радиус — 5 км.")}
         {location.accuracy !== null &&
-          ` Точность геопозиции: ±${formatDistance(location.accuracy)}.`}
+          tr(" Точность геопозиции: ±{0}.", [
+            formatDistance(location.accuracy),
+          ])}
       </p>
       {location.error && (
         <p className="field-error" role="alert">
-          {location.error}
+          {tr(location.error)}
         </p>
       )}
       {value && !location.position && (
         <p className="field-hint" role="status">
-          Для выбранного радиуса нужна ваша геопозиция.
+          {tr("Для выбранного радиуса нужна ваша геопозиция.")}
         </p>
       )}
       {(value ||
@@ -72,8 +78,8 @@ export function DistanceFilter({
           }}
         >
           {location.status === "locating"
-            ? "Отменить определение"
-            : "Сбросить расстояние"}
+            ? tr("Отменить определение")
+            : tr("Сбросить расстояние")}
         </button>
       )}
     </fieldset>

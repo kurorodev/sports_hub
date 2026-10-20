@@ -1,3 +1,6 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
+import { InterfacePreferences } from "../../../features/interface-preferences/ui/InterfacePreferences";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useParams,
@@ -28,6 +31,7 @@ import { isUuid } from "../../../shared/lib/identifiers";
 import { errorMessage } from "../../../shared/api/client";
 
 export function ProfilePage({ own = false }: { own?: boolean }) {
+  useLocale();
   const { userId = "" } = useParams();
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -72,10 +76,12 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
     return (
       <section className="feedback page-state">
         <UserRound size={36} />
-        <h1>Твой спортивный профиль</h1>
-        <p>Войди, чтобы рассказать о себе и выбрать спортивные интересы.</p>
+        <h1>{tr("Твой спортивный профиль")}</h1>
+        <p>
+          {tr("Войди, чтобы рассказать о себе и выбрать спортивные интересы.")}
+        </p>
         <Link className="button primary" to="/login?next=profile">
-          Войти в профиль
+          {tr("Войти в профиль")}
         </Link>
       </section>
     );
@@ -90,7 +96,7 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
     ) : (
       <ErrorState
         error={query.error}
-        message={profileErrorMessage(query.error)}
+        message={tr(profileErrorMessage(query.error))}
         retry={() => void query.refetch()}
       />
     );
@@ -99,11 +105,11 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
     <section className="profile-page">
       <Link className="back-link" to="/#activities">
         <ArrowLeft size={18} />
-        Все активности
+        {tr("Все активности")}
       </Link>
       <div className="profile-toolbar">
         <span className="eyebrow muted">
-          {own ? "Мой профиль" : "Публичный профиль"}
+          {own ? tr("Мой профиль") : tr("Публичный профиль")}
         </span>
         {own ? (
           <div>
@@ -115,59 +121,60 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
                   setParams({ edit: "1" });
                 }}
               >
-                Редактировать профиль
+                {tr("Редактировать профиль")}
                 <Pencil size={18} />
               </button>
             )}
             <Link className="button secondary" to="/login">
-              Сменить аккаунт
+              {tr("Сменить аккаунт")}
             </Link>
             <button
               className="button secondary"
               disabled={logout.isPending}
               onClick={() => logout.mutate()}
             >
-              {logout.isPending ? "Выходим…" : "Выйти"}
+              {logout.isPending ? tr("Выходим…") : tr("Выйти")}
             </button>
             {logout.isError && (
               <p role="alert" className="field-error">
-                {errorMessage(logout.error)}
+                {tr(errorMessage(logout.error))}
               </p>
             )}
           </div>
         ) : (
           session.data?.user.id === profile.id && (
             <Link className="button primary" to="/profile?edit=1">
-              Редактировать свой профиль
+              {tr("Редактировать свой профиль")}
             </Link>
           )
         )}
       </div>
       {notice && (
         <p className="notice success" role="status">
-          {notice}
+          {tr(notice)}
         </p>
       )}
       {query.isError && (
         <div className="notice" role="alert">
           <p>
-            {profileErrorMessage(query.error)} Показаны последние данные;
-            введённый текст сохранён.
+            {tr(profileErrorMessage(query.error))}
+            {tr(" Показаны последние данные; введённый текст сохранён.")}
           </p>
           <button
             className="button secondary"
             onClick={() => void query.refetch()}
           >
-            Обновить профиль
+            {tr("Обновить профиль")}
           </button>
         </div>
       )}
+      {own && <InterfacePreferences />}
       {editing ? (
         <ProfileForm
           key={profile.id}
           profile={profile}
           onSaved={() => {
-            setNotice("Профиль сохранён");
+            setNotice(tr("Профиль сохранён"));
             closeEditor();
           }}
           onCancel={closeEditor}
@@ -189,7 +196,7 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
           {own && (
             <p className="profile-public-link">
               <Link to={`/users/${profile.id}`}>
-                Посмотреть публичный профиль
+                {tr("Посмотреть публичный профиль")}
               </Link>
             </p>
           )}

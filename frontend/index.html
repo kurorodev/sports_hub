@@ -3,6 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      try {
+        const settings = JSON.parse(localStorage.getItem("sport.interface.v1") || "{}");
+        const theme = settings?.theme === "dark" || (settings?.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        document.documentElement.lang = settings?.locale === "en" ? "en" : "ru";
+      } catch { /* Use the default appearance if browser storage is unavailable. */ }
+    </script>
     <meta name="theme-color" content="#151419" />
     <link
       rel="icon"

@@ -1,4 +1,6 @@
 import { AdminSports } from "../../../features/manage-sports";
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { AdminEvents, AdminComments } from "../../../features/moderate-content";
 import { useSearchParams } from "react-router-dom";
 import { AdminOrganizations } from "../../../features/review-organizations";
@@ -9,13 +11,14 @@ import { sessionQuery } from "../../../entities/session";
 import { ErrorState } from "../../../shared/ui/Feedback";
 
 export function WorkspacePage() {
+  useLocale();
   const query = useQuery(sessionQuery);
   const [params] = useSearchParams();
   const section = params.get("section");
   if (query.isPending)
     return (
       <p className="page-state" role="status">
-        Проверяем сессию…
+        {tr("Проверяем сессию…")}
       </p>
     );
   if (query.isError)
@@ -26,10 +29,10 @@ export function WorkspacePage() {
     return (
       <section className="feedback page-state">
         <LockKeyhole size={32} />
-        <h1>Нужен вход</h1>
-        <p>Войдите в аккаунт с доступом к этому разделу.</p>
+        <h1>{tr("Нужен вход")}</h1>
+        <p>{tr("Войдите в аккаунт с доступом к этому разделу.")}</p>
         <Link className="button primary" to="/login">
-          Выбрать аккаунт
+          {tr("Выбрать аккаунт")}
         </Link>
       </section>
     );
@@ -38,19 +41,19 @@ export function WorkspacePage() {
     return (
       <section className="feedback page-state">
         <LockKeyhole size={32} />
-        <h1>Нет доступа</h1>
-        <p>В текущей сессии нет прав для этого раздела.</p>
+        <h1>{tr("Нет доступа")}</h1>
+        <p>{tr("В текущей сессии нет прав для этого раздела.")}</p>
         <Link className="button secondary" to="/login">
-          Сменить аккаунт
+          {tr("Сменить аккаунт")}
         </Link>
       </section>
     );
   return (
     <section className="workspace-page admin-workspace">
-      <span className="eyebrow muted">Управление платформой</span>
-      <h1>Кабинет администратора</h1>
-      <nav className="admin-sections" aria-label="Разделы модерации">
-        <Link to="/support?view=queue">Поддержка</Link>
+      <span className="eyebrow muted">{tr("Управление платформой")}</span>
+      <h1>{tr("Кабинет администратора")}</h1>
+      <nav className="admin-sections" aria-label={tr("Разделы модерации")}>
+        <Link to="/support?view=queue">{tr("Поддержка")}</Link>
         <Link
           to="/admin"
           aria-current={
@@ -61,25 +64,25 @@ export function WorkspacePage() {
               : undefined
           }
         >
-          Организации
+          {tr("Организации")}
         </Link>
         <Link
           to="/admin?section=events"
           aria-current={section === "events" ? "page" : undefined}
         >
-          Мероприятия
+          {tr("Мероприятия")}
         </Link>
         <Link
           to="/admin?section=comments"
           aria-current={section === "comments" ? "page" : undefined}
         >
-          Комментарии
+          {tr("Комментарии")}
         </Link>
         <Link
           to="/admin?section=sports"
           aria-current={section === "sports" ? "page" : undefined}
         >
-          Виды спорта
+          {tr("Виды спорта")}
         </Link>
       </nav>
       {section === "sports" ? (

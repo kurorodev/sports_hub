@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -10,6 +12,7 @@ import {
 } from "../../../entities/organization";
 import { ErrorState } from "../../../shared/ui/Feedback";
 export function OrganizationsDirectory() {
+  useLocale();
   const repo = useOrganizationRepository();
   const session = useQuery(sessionQuery);
   const [params, setParams] = useSearchParams();
@@ -34,8 +37,10 @@ export function OrganizationsDirectory() {
       aria-labelledby="organization-directory-heading"
     >
       <div className="organization-section-heading">
-        <h2 id="organization-directory-heading">Найдите свою команду</h2>
-        <p>Клубы и сообщества с допуском к публикации встреч.</p>
+        <h2 id="organization-directory-heading">
+          {tr("Найдите свою команду")}
+        </h2>
+        <p>{tr("Клубы и сообщества с допуском к публикации встреч.")}</p>
       </div>
       <form
         className="organization-search"
@@ -45,38 +50,39 @@ export function OrganizationsDirectory() {
         }}
       >
         <label htmlFor="organization-search">
-          Название или описание организации
+          {tr("Название или описание организации")}
         </label>
         <div>
           <input
             id="organization-search"
-            placeholder="Например, беговой клуб"
+            placeholder={tr("Например, беговой клуб")}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
           />
           <button className="button secondary" type="submit">
-            Найти организации
+            {tr("Найти организации")}
           </button>
         </div>
       </form>
       {query.isPending ? (
         <p className="page-state" role="status">
-          Загружаем организации…
+          {tr("Загружаем организации…")}
         </p>
       ) : query.isError ? (
         <ErrorState
-          message={organizationErrorMessage(query.error)}
+          message={tr(organizationErrorMessage(query.error))}
           error={query.error}
           retry={() => void query.refetch()}
         />
       ) : (
         <>
           <p className="organization-count">
-            Найдено организаций: {query.data.totalCount}
+            {tr("Найдено организаций: ")}
+            {query.data.totalCount}
           </p>
           {query.data.organizations.length === 0 ? (
             <div className="notice">
-              <p>Организаций по этим условиям пока нет.</p>
+              <p>{tr("Организаций по этим условиям пока нет.")}</p>
               {q && (
                 <button
                   className="button secondary"
@@ -85,7 +91,7 @@ export function OrganizationsDirectory() {
                     change("", 0);
                   }}
                 >
-                  Сбросить поиск организаций
+                  {tr("Сбросить поиск организаций")}
                 </button>
               )}
             </div>
@@ -100,15 +106,18 @@ export function OrganizationsDirectory() {
             </div>
           )}
           {(query.data.totalCount > query.data.pageSize || page > 0) && (
-            <nav className="pagination" aria-label="Страницы организаций">
+            <nav className="pagination" aria-label={tr("Страницы организаций")}>
               <button
                 className="button secondary"
                 disabled={page === 0}
                 onClick={() => change(q, page - 1)}
               >
-                Назад
+                {tr("Назад")}
               </button>
-              <span>Страница {page + 1}</span>
+              <span>
+                {tr("Страница ")}
+                {page + 1}
+              </span>
               <button
                 className="button secondary"
                 disabled={
@@ -116,7 +125,7 @@ export function OrganizationsDirectory() {
                 }
                 onClick={() => change(q, page + 1)}
               >
-                Далее
+                {tr("Далее")}
               </button>
             </nav>
           )}

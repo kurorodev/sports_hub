@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import type { EventParticipation } from "../../../entities/event/model";
@@ -14,6 +16,7 @@ export function JoinAction({
   event: EventParticipation;
   publicationClosed?: boolean;
 }) {
+  useLocale();
   const location = useLocation();
   const { session, viewerId, own, mutation, join } = useJoinEvent(
     event.eventId,
@@ -22,18 +25,18 @@ export function JoinAction({
   if (session.isPending)
     return (
       <p className="join-note" role="status">
-        Проверяем сессию…
+        {tr("Проверяем сессию…")}
       </p>
     );
   if (session.isError)
     return (
       <div className="join-feedback" role="alert">
-        <p>Не удалось проверить аккаунт.</p>
+        <p>{tr("Не удалось проверить аккаунт.")}</p>
         <button
           className="button secondary full-width"
           onClick={() => void session.refetch()}
         >
-          Повторить проверку аккаунта
+          {tr("Повторить проверку аккаунта")}
         </button>
       </div>
     );
@@ -47,12 +50,14 @@ export function JoinAction({
     return (
       <div className="join-feedback">
         <p className="join-note">
-          Вы организатор.{" "}
+          {tr("Вы организатор.")}{" "}
           {publicationClosed
-            ? "Новая запись закрыта. Существующие регистрации доступны для просмотра."
+            ? tr(
+                "Новая запись закрыта. Существующие регистрации доступны для просмотра.",
+              )
             : event.joinMode === "OPEN"
-              ? "Участники появятся в списке ниже."
-              : "Решения по заявкам принимаете вы."}
+              ? tr("Участники появятся в списке ниже.")
+              : tr("Решения по заявкам принимаете вы.")}
         </p>
         {event.joinMode === "APPROVAL" &&
           (event.pendingParticipants > 0 ? (
@@ -60,7 +65,9 @@ export function JoinAction({
               className={`button ${publicationClosed ? "secondary" : "primary"} full-width`}
               href="#event-requests"
             >
-              {publicationClosed ? "Посмотреть заявки" : "Рассмотреть заявки"}
+              {publicationClosed
+                ? tr("Посмотреть заявки")
+                : tr("Рассмотреть заявки")}
             </a>
           ) : (
             <button
@@ -68,13 +75,13 @@ export function JoinAction({
               className="button requests-empty-action full-width"
               disabled
             >
-              Новых заявок нет
+              {tr("Новых заявок нет")}
             </button>
           ))}
       </div>
     );
   if (!viewerId && !event.openForRegistration)
-    return <p className="join-note">Запись на эту встречу закрыта.</p>;
+    return <p className="join-note">{tr("Запись на эту встречу закрыта.")}</p>;
   if (!viewerId)
     return (
       <div className="join-feedback">
@@ -83,29 +90,29 @@ export function JoinAction({
           to={`/login?next=join-event&eventId=${encodeURIComponent(event.eventId)}`}
           state={location.state}
         >
-          Войти для записи
+          {tr("Войти для записи")}
           <ArrowUpRight size={18} />
         </Link>
         <p className="join-note">
-          Войдите, чтобы проверить участие и присоединиться.
+          {tr("Войдите, чтобы проверить участие и присоединиться.")}
         </p>
       </div>
     );
   if (own.isPending)
     return (
       <p className="join-note" role="status">
-        Проверяем ваше участие…
+        {tr("Проверяем ваше участие…")}
       </p>
     );
   if (own.isError)
     return (
       <div className="join-feedback" role="alert">
-        <p>{registrationErrorMessage(own.error)}</p>
+        <p>{tr(registrationErrorMessage(own.error))}</p>
         <button
           className="button secondary full-width"
           onClick={() => void own.refetch()}
         >
-          Повторить проверку участия
+          {tr("Повторить проверку участия")}
         </button>
       </div>
     );
@@ -118,29 +125,35 @@ export function JoinAction({
           <strong>{label}</strong>
           <p>
             {publicationClosed
-              ? "Существующая запись сохранена. Мероприятие больше не опубликовано, новая запись закрыта."
+              ? tr(
+                  "Существующая запись сохранена. Мероприятие больше не опубликовано, новая запись закрыта.",
+                )
               : own.data.status === "CONFIRMED"
                 ? event.joinMode === "APPROVAL"
-                  ? "Заявка одобрена. До встречи!"
-                  : "Участие подтверждено. До встречи!"
+                  ? tr("Заявка одобрена. До встречи!")
+                  : tr("Участие подтверждено. До встречи!")
                 : own.data.status === "PENDING"
-                  ? "Организатор рассмотрит заявку. До одобрения место не занято."
+                  ? tr(
+                      "Организатор рассмотрит заявку. До одобрения место не занято.",
+                    )
                   : (own.data.decisionReason ??
-                    "Текущий статус получен от организатора.")}
+                    tr("Текущий статус получен от организатора."))}
           </p>
         </div>
       </div>
     );
   }
   if (!event.openForRegistration)
-    return <p className="join-note">Запись на эту встречу закрыта.</p>;
+    return <p className="join-note">{tr("Запись на эту встречу закрыта.")}</p>;
   if (
     event.joinMode === "OPEN" &&
     event.participantLimit != null &&
     event.confirmedParticipants >= event.participantLimit
   )
     return (
-      <p className="join-note">Все места заняты. Выберите другую встречу.</p>
+      <p className="join-note">
+        {tr("Все места заняты. Выберите другую встречу.")}
+      </p>
     );
   return (
     <div className="join-feedback">
@@ -151,23 +164,25 @@ export function JoinAction({
       >
         {mutation.isPending
           ? event.joinMode === "APPROVAL"
-            ? "Отправляем заявку…"
-            : "Записываем…"
+            ? tr("Отправляем заявку…")
+            : tr("Записываем…")
           : event.joinMode === "APPROVAL"
-            ? "Подать заявку"
-            : "Присоединиться"}
+            ? tr("Подать заявку")
+            : tr("Присоединиться")}
         <ArrowUpRight size={18} />
       </button>
       <p className="join-note">
         {mutation.isPending
-          ? "Ждём подтверждение записи…"
+          ? tr("Ждём подтверждение записи…")
           : event.joinMode === "APPROVAL"
-            ? "Участие после одобрения организатора. Заявка не резервирует место."
-            : "Свободная запись — без ожидания одобрения."}
+            ? tr(
+                "Участие после одобрения организатора. Заявка не резервирует место.",
+              )
+            : tr("Свободная запись — без ожидания одобрения.")}
       </p>
       {mutation.isError && (
         <p className="field-error" role="alert">
-          {registrationErrorMessage(mutation.error)}
+          {tr(registrationErrorMessage(mutation.error))}
         </p>
       )}
     </div>

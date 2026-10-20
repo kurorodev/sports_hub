@@ -1,4 +1,6 @@
 import { AdminListFilters } from "../../../shared/ui/AdminListFilters";
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,6 +12,7 @@ import type { EventStatus } from "../../../entities/moderation/model";
 import { ErrorState } from "../../../shared/ui/Feedback";
 import { ModerationEventCard } from "./ModerationEventCard";
 export function AdminEvents({ viewerId }: { viewerId: string }) {
+  useLocale();
   const repo = useModerationRepository();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<EventStatus | undefined>("PUBLISHED");
@@ -20,20 +23,20 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
   );
   return (
     <section aria-labelledby="moderation-events-heading">
-      <h2 id="moderation-events-heading">Модерация мероприятий</h2>
+      <h2 id="moderation-events-heading">{tr("Модерация мероприятий")}</h2>
       <AdminListFilters
-        statusLabel="Статус мероприятий"
-        title="Фильтры мероприятий"
-        label="Название или описание мероприятия"
-        placeholder="Поиск по названию или описанию"
+        statusLabel={tr("Статус мероприятий")}
+        title={tr("Фильтры мероприятий")}
+        label={tr("Название или описание мероприятия")}
+        placeholder={tr("Поиск по названию или описанию")}
         query={q}
         status={status ?? ""}
         options={[
-          { value: "", label: "Все статусы" },
-          { value: "PUBLISHED", label: "Опубликованные" },
-          { value: "UNPUBLISHED", label: "Снятые с публикации" },
-          { value: "DRAFT", label: "Черновики" },
-          { value: "DELETED", label: "Удалённые" },
+          { value: "", label: tr("Все статусы") },
+          { value: "PUBLISHED", label: tr("Опубликованные") },
+          { value: "UNPUBLISHED", label: tr("Снятые с публикации") },
+          { value: "DRAFT", label: tr("Черновики") },
+          { value: "DELETED", label: tr("Удалённые") },
         ]}
         refreshing={query.isFetching}
         onApply={(text, nextStatus) => {
@@ -45,25 +48,28 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
       />
       {notice && (
         <p className="notice success" role="status">
-          {notice}
+          {tr(notice)}
         </p>
       )}
       {query.isPending ? (
-        <p role="status">Загружаем мероприятия…</p>
+        <p role="status">{tr("Загружаем мероприятия…")}</p>
       ) : query.isError ? (
         <ErrorState
           error={query.error}
-          message={moderationErrorMessage(query.error)}
+          message={tr(moderationErrorMessage(query.error))}
           retry={() => void query.refetch()}
         />
       ) : (
         <>
           <p className="join-note">
-            Найдено мероприятий: {query.data.totalCount}
+            {tr("Найдено мероприятий: ")}
+            {query.data.totalCount}
           </p>
           {query.data.items.length === 0 ? (
             <p className="notice">
-              Нет мероприятий по этим условиям. Измените поиск или статус.
+              {tr(
+                "Нет мероприятий по этим условиям. Измените поиск или статус.",
+              )}
             </p>
           ) : (
             <div className="moderation-list">
@@ -74,7 +80,9 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
                   viewerId={viewerId}
                   onDone={() =>
                     setNotice(
-                      `«${event.title}»: снято с публикации. Решение сохранено.`,
+                      tr("«{0}»: снято с публикации. Решение сохранено.", [
+                        event.title,
+                      ]),
                     )
                   }
                 />
@@ -84,16 +92,19 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
           {(query.data.totalCount > query.data.pageSize || page > 0) && (
             <nav
               className="pagination"
-              aria-label="Страницы модерации мероприятий"
+              aria-label={tr("Страницы модерации мероприятий")}
             >
               <button
                 className="button secondary"
                 disabled={page === 0}
                 onClick={() => setPage((value) => value - 1)}
               >
-                Назад
+                {tr("Назад")}
               </button>
-              <span>Страница {page + 1}</span>
+              <span>
+                {tr("Страница ")}
+                {page + 1}
+              </span>
               <button
                 className="button secondary"
                 disabled={
@@ -101,7 +112,7 @@ export function AdminEvents({ viewerId }: { viewerId: string }) {
                 }
                 onClick={() => setPage((value) => value + 1)}
               >
-                Далее
+                {tr("Далее")}
               </button>
             </nav>
           )}

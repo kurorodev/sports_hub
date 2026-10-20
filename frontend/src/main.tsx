@@ -1,3 +1,6 @@
+import { InterfaceMetadata } from "./shared/i18n/InterfaceMetadata";
+import { tr } from "./shared/i18n/translate";
+import { initializePreferences } from "./shared/i18n/preferences";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ApplicationProviders } from "./app/providers";
@@ -6,6 +9,8 @@ import "@fontsource-variable/manrope";
 import "./shared/styles/index.css";
 import { apiConfig } from "./shared/api/client";
 import { router } from "./app/router";
+
+initializePreferences();
 
 async function start() {
   if (apiConfig.mode === "mock") {
@@ -19,6 +24,7 @@ async function start() {
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <ApplicationProviders>
+        <InterfaceMetadata />
         <RouterProvider router={router} />
       </ApplicationProviders>
     </React.StrictMode>,
@@ -26,6 +32,7 @@ async function start() {
 }
 start().catch(() => {
   const root = document.getElementById("root")!;
-  root.textContent =
-    "Не удалось запустить приложение. Проверьте конфигурацию API и обновите страницу.";
+  root.textContent = tr(
+    "Не удалось запустить приложение. Проверьте конфигурацию API и обновите страницу.",
+  );
 });

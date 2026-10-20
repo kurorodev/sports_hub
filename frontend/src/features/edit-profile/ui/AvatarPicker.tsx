@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Check } from "lucide-react";
 import { Avatar } from "../../../shared/ui/Avatar";
 import {
@@ -18,31 +20,32 @@ export function AvatarPicker({
   tone: AvatarTone;
   onChange: (url: string) => void;
 }) {
+  useLocale();
   const selected = avatarCharacter(value);
   return (
     <div className="avatar-picker">
       <div className="avatar-picker-preview">
         <Avatar id={viewerId} name="Аватар" url={value} tone={tone} size={88} />
         <div>
-          <h3>Твой персонаж</h3>
+          <h3>{tr("Твой персонаж")}</h3>
           <p>
-            Выбери один из 10 образов. Персонаж останется с тобой, а форма
-            меняется по роли: синяя — участник, красная — организатор, жёлтая —
-            администратор.
+            {tr(
+              "Выбери один из 10 образов. Персонаж останется с тобой, а форма меняется по роли: синяя — участник, красная — организатор, жёлтая — администратор.",
+            )}
           </p>
         </div>
       </div>
       <div
         className="avatar-picker-grid"
         role="group"
-        aria-label="Выбор аватара"
+        aria-label={tr("Выбор аватара")}
       >
         {avatarCharacters.map((character) => (
           <button
             type="button"
             key={character.id}
             className="avatar-choice"
-            aria-label={character.label}
+            aria-label={tr(character.label)}
             aria-pressed={selected === character.id}
             onClick={() => onChange(avatarPath(character.id, tone))}
           >
@@ -66,7 +69,7 @@ export function AvatarPicker({
         type="button"
         onClick={() => onChange("")}
       >
-        Сбросить аватар
+        {tr("Сбросить аватар")}
       </button>
     </div>
   );

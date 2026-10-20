@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -10,6 +12,7 @@ import {
 import { sessionQuery } from "../../../entities/session";
 import { ErrorState } from "../../../shared/ui/Feedback";
 export function MyOrganizations({ viewerId }: { viewerId: string }) {
+  useLocale();
   const repo = useOrganizationRepository();
   const client = useQueryClient();
   const session = useQuery(sessionQuery);
@@ -30,27 +33,28 @@ export function MyOrganizations({ viewerId }: { viewerId: string }) {
   return (
     <>
       <div className="organization-toolbar">
-        <h2>Мои организации</h2>
+        <h2>{tr("Мои организации")}</h2>
         <button
           className="button secondary"
           disabled={query.isFetching}
           onClick={() => void query.refetch()}
         >
-          Обновить мои организации
+          {tr("Обновить мои организации")}
         </button>
       </div>
       {query.isPending ? (
-        <p role="status">Загружаем ваши заявки…</p>
+        <p role="status">{tr("Загружаем ваши заявки…")}</p>
       ) : query.isError ? (
         <ErrorState
-          message={organizationErrorMessage(query.error)}
+          message={tr(organizationErrorMessage(query.error))}
           error={query.error}
           retry={() => void query.refetch()}
         />
       ) : query.data.length === 0 ? (
         <p className="notice">
-          У вас пока нет организаций. Нажмите «Добавить организацию», чтобы
-          подать первую заявку.
+          {tr(
+            "У вас пока нет организаций. Нажмите «Добавить организацию», чтобы подать первую заявку.",
+          )}
         </p>
       ) : (
         <div className="organization-list">
@@ -61,14 +65,14 @@ export function MyOrganizations({ viewerId }: { viewerId: string }) {
                   className="button primary"
                   to={`/events/new?organizationId=${organization.id}`}
                 >
-                  Создать встречу от организации
+                  {tr("Создать встречу от организации")}
                 </Link>
               ) : (
                 <p className="join-note">
-                  Публикация от организации недоступна{" "}
+                  {tr("Публикация от организации недоступна")}{" "}
                   {organization.status === "PENDING"
-                    ? "до одобрения заявки"
-                    : "после отказа"}
+                    ? tr("до одобрения заявки")
+                    : tr("после отказа")}
                   .
                 </p>
               )}

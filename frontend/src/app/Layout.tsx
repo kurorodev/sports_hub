@@ -1,3 +1,5 @@
+import { tr } from "../shared/i18n/translate";
+import { useLocale } from "../shared/i18n/use-preferences";
 import { NotificationBell } from "../features/notifications";
 import { QuestionnaireOnboarding } from "../features/user-questionnaire";
 import { useQuery } from "@tanstack/react-query";
@@ -9,42 +11,45 @@ import { apiConfig } from "../shared/api/client";
 import { sessionQuery } from "../entities/session";
 
 export function Layout() {
+  useLocale();
   const session = useQuery(sessionQuery);
   const location = useLocation();
   return (
     <>
       <a href="#main-content" className="skip-link">
-        Перейти к содержимому
+        {tr("Перейти к содержимому")}
       </a>
       {apiConfig.mode === "mock" && (
         <div className="demo-strip">
           <span className="live-dot" />
-          Демо на моках
-          <span className="demo-detail"> · Java API ещё не подключён</span>
+          {tr("Демо на моках")}
+          <span className="demo-detail">
+            {tr(" · Java API ещё не подключён")}
+          </span>
         </div>
       )}
       <header className="site-header">
         <div className="header-inner">
           <Brand onDark />
-          <nav className="main-nav" aria-label="Основная навигация">
+          <nav className="main-nav" aria-label={tr("Основная навигация")}>
             <NavLink to="/" end>
-              Активности
+              {tr("Активности")}
             </NavLink>
             {!session.data?.systemRoles.includes("ADMIN") && (
-              <NavLink to="/events/new">Создать</NavLink>
+              <NavLink to="/events/new">{tr("Создать")}</NavLink>
             )}
-            <NavLink to="/map">Карта</NavLink>
-            <NavLink to="/organizations">Организации</NavLink>
+            <NavLink to="/map">{tr("Карта")}</NavLink>
+            <NavLink to="/organizations">{tr("Организации")}</NavLink>
             {session.data?.systemRoles.includes("ADMIN") && (
-              <NavLink to="/admin">Модерация</NavLink>
+              <NavLink to="/admin">{tr("Модерация")}</NavLink>
             )}
           </nav>
           <div className="header-actions">
             <Link
               className="support-header-link"
               to="/support"
-              aria-label="Техническая поддержка"
-              title="Техническая поддержка"
+              aria-label={tr("Техническая поддержка")}
+              title={tr("Техническая поддержка")}
             >
               <Headset size={23} aria-hidden="true" />
             </Link>
@@ -77,8 +82,8 @@ export function Layout() {
               )}
               <span className="header-account-name">
                 {session.isPending
-                  ? "Сессия…"
-                  : (session.data?.user.displayName ?? "Войти")}
+                  ? tr("Сессия…")
+                  : (session.data?.user.displayName ?? tr("Войти"))}
               </span>
               <ArrowUpRight size={15} />
             </Link>
@@ -87,8 +92,10 @@ export function Layout() {
       </header>
       {session.isError && (
         <div className="session-warning" role="alert">
-          Не удалось восстановить сессию.{" "}
-          <button onClick={() => void session.refetch()}>Повторить</button>
+          {tr("Не удалось восстановить сессию.")}{" "}
+          <button onClick={() => void session.refetch()}>
+            {tr("Повторить")}
+          </button>
         </div>
       )}
       <main id="main-content" className="container" tabIndex={-1}>
@@ -99,17 +106,19 @@ export function Layout() {
       <footer className="site-footer">
         <div className="container footer-inner">
           <Brand />
-          <p>Спорт начинается с компании.</p>
-          <Link to="/support">Техническая поддержка</Link>
-          <span>Спортивные встречи · 2026</span>
+          <p>{tr("Спорт начинается с компании.")}</p>
+          <Link to="/support">{tr("Техническая поддержка")}</Link>
+          <span>{tr("Спортивные встречи · 2026")}</span>
         </div>
       </footer>
-      {session.data && !session.isError && !session.data.systemRoles.includes("ADMIN") && (
-        <QuestionnaireOnboarding
-          key={session.data.user.id}
-          userId={session.data.user.id}
-        />
-      )}
+      {session.data &&
+        !session.isError &&
+        !session.data.systemRoles.includes("ADMIN") && (
+          <QuestionnaireOnboarding
+            key={session.data.user.id}
+            userId={session.data.user.id}
+          />
+        )}
     </>
   );
 }

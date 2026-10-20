@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { EventDistance } from "../../../shared/ui/EventDistance";
 import {
   ArrowUpRight,
@@ -24,6 +26,7 @@ export function EventCard({
   event: EventCardDto;
   participation?: { label: string; tone: string };
 }) {
+  useLocale();
   const places = event.spotsLeft ?? Infinity;
   const OrganizerIcon =
     event.organizer.type === "ORGANIZATION" ? Building2 : UserRound;
@@ -41,15 +44,17 @@ export function EventCard({
       </div>
       <div className="event-card-body">
         <div className="event-meta-top">
-          <span>{skillLabels[event.skillLevel]}</span>
+          <span>{tr(skillLabels[event.skillLevel])}</span>
           <span className="tiny-dot" />
           <span>
-            {event.joinMode === "OPEN" ? "Свободная запись" : "По заявке"}
+            {event.joinMode === "OPEN"
+              ? tr("Свободная запись")
+              : tr("По заявке")}
           </span>
         </div>
         {participation && (
           <span className={`card-registration ${participation.tone}`}>
-            {participation.label}
+            {tr(participation.label)}
           </span>
         )}
         <h3>
@@ -84,7 +89,7 @@ export function EventCard({
           <Link
             className="card-link"
             to={`/events/${event.id}`}
-            aria-label={`Подробнее: ${event.title}`}
+            aria-label={tr("Подробнее: {0}", [event.title])}
           >
             <ArrowUpRight size={20} />
           </Link>

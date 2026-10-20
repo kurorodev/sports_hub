@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import type { VenueMapItem } from "../../../shared/api/types";
 import {
   currentOccupancy,
@@ -12,6 +14,7 @@ export function VenueSummary({
   venue: VenueMapItem;
   now: number;
 }) {
+  useLocale();
   const level = currentOccupancy(venue, now);
   return (
     <>
@@ -23,11 +26,12 @@ export function VenueSummary({
       <p
         className={`occupancy-status occupancy-${occupancyPresentation[level].tone}`}
       >
-        {occupancyPresentation[level].label}
+        {tr(occupancyPresentation[level].label)}
       </p>
       <p>{observationTime(venue, now)}</p>
       <p className="field-hint">
-        Свежих оценок: {level === "UNKNOWN" ? 0 : venue.occupancy.reportsCount}
+        {tr("Свежих оценок: ")}
+        {level === "UNKNOWN" ? 0 : venue.occupancy.reportsCount}
       </p>
     </>
   );

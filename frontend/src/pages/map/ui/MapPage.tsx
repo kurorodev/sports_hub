@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useCurrentLocation } from "../../../shared/lib/current-location-context";
 import { DistanceFilter } from "../../../shared/ui/DistanceFilter";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -40,6 +42,7 @@ import { MapMarkers, MapEventSummary } from "./MapMarkers";
 import { MapSearch } from "./MapSearch";
 
 export function MapPage() {
+  useLocale();
   const session = useQuery(sessionQuery);
   const isAdmin = session.data?.systemRoles.includes("ADMIN");
   const sports = useQuery(sportsQuery);
@@ -215,11 +218,12 @@ export function MapPage() {
     <section className="map-page">
       <div className="map-heading">
         <div>
-          <span className="eyebrow muted">Спорт рядом</span>
+          <span className="eyebrow muted">{tr("Спорт рядом")}</span>
           <h1>
-            Карта активностей<span className="brand-dot">.</span>
+            {tr("Карта активностей")}
+            <span className="brand-dot">.</span>
           </h1>
-          <p>Найдите компанию или площадку для своей игры.</p>
+          <p>{tr("Найдите компанию или площадку для своей игры.")}</p>
         </div>
         {!isAdmin && (
           <button
@@ -231,21 +235,24 @@ export function MapPage() {
               setNotice("");
             }}
           >
-            Добавить площадку
+            {tr("Добавить площадку")}
           </button>
         )}
       </div>
       <ActivityViewSwitch view="map" params={params} />
       {unsupported.length > 0 && (
         <p className="notice map-filter-notice">
-          На карте действуют вид спорта, даты, расстояние до мероприятий и
-          видимая область. Только в списке: {unsupported.join(", ")}. Эти
-          условия сохранены для возврата в список.
+          {tr(
+            "На карте действуют вид спорта, даты, расстояние до мероприятий и видимая область. Только в списке: ",
+          )}
+          {unsupported.join(", ")}
+          {tr(". Эти условия сохранены для возврата в список.")}
         </p>
       )}
       <p className="field-hint">
-        Начальная область: Самара · демо-регион. Для другого места найдите адрес
-        или переместите карту.
+        {tr(
+          "Начальная область: Самара · демо-регион. Для другого места найдите адрес или переместите карту.",
+        )}
       </p>
       <div className="map-toolbar">
         <DistanceFilter
@@ -254,12 +261,12 @@ export function MapPage() {
         />
         <MapSearch onSelect={setCenter} />
         <div className="form-field">
-          <label htmlFor="map-sport">Вид спорта на карте</label>
+          <label htmlFor="map-sport">{tr("Вид спорта на карте")}</label>
           <SearchableSelect
             id="map-sport"
             value={sportId}
             options={[
-              { id: "", name: "Все виды спорта" },
+              { id: "", name: tr("Все виды спорта") },
               ...(sports.data ?? []).map((sport) => ({
                 ...sport,
                 imageUrl: sport.imageUrl || sportIcon(sport.name),
@@ -289,7 +296,7 @@ export function MapPage() {
           }}
         >
           <summary>
-            Даты встреч (UTC)
+            {tr("Даты встреч (UTC)")}
             <ChevronDown size={17} aria-hidden="true" />
           </summary>
           <div>
@@ -301,14 +308,14 @@ export function MapPage() {
           </div>
         </details>
         <fieldset className="map-layers">
-          <legend>Слои карты</legend>
+          <legend>{tr("Слои карты")}</legend>
           <label>
             <input
               type="checkbox"
               checked={showEvents}
               onChange={(event) => setShowEvents(event.target.checked)}
             />
-            Мероприятия
+            {tr("Мероприятия")}
           </label>
           <label>
             <input
@@ -316,7 +323,7 @@ export function MapPage() {
               checked={showVenues}
               onChange={(event) => setShowVenues(event.target.checked)}
             />
-            Площадки
+            {tr("Площадки")}
           </label>
         </fieldset>
         <button
@@ -328,13 +335,13 @@ export function MapPage() {
             if (showVenues) void venues.refetch();
           }}
         >
-          Обновить
+          {tr("Обновить")}
         </button>
       </div>
       {sports.isError && (
         <ErrorState error={sports.error} retry={() => void sports.refetch()} />
       )}
-      <div className="map-legend" aria-label="Обозначения карты">
+      <div className="map-legend" aria-label={tr("Обозначения карты")}>
         {position && (
           <span>
             <Navigation2
@@ -342,11 +349,12 @@ export function MapPage() {
               size={18}
               aria-hidden="true"
             />{" "}
-            Вы здесь
+            {tr("Вы здесь")}
           </span>
         )}
         <span>
-          <MapPin size={16} /> Мероприятие
+          <MapPin size={16} />
+          {tr(" Мероприятие")}
         </span>
         {Object.entries(occupancyPresentation).map(([level, presentation]) => (
           <span key={level}>
@@ -354,13 +362,14 @@ export function MapPage() {
               aria-hidden="true"
               className={`legend-dot occupancy-${presentation.tone}`}
             />
-            {presentation.label}
+            {tr(presentation.label)}
           </span>
         ))}
       </div>
       <p className="field-hint">
-        Оценки оставляют пользователи, это не измерение в реальном времени.
-        Свежесть — 90 минут.
+        {tr(
+          "Оценки оставляют пользователи, это не измерение в реальном времени. Свежесть — 90 минут.",
+        )}
       </p>
       <div className="map-explorer">
         <GeoMap
@@ -382,15 +391,17 @@ export function MapPage() {
             className="map-selection"
             ref={selectionPanel}
             tabIndex={-1}
-            aria-label="Выбранный объект"
+            aria-label={tr("Выбранный объект")}
           >
             <div className="map-selection-heading">
               <span className="eyebrow muted">
-                {selectedEventId ? "Мероприятие" : "Спортивная площадка"}
+                {selectedEventId
+                  ? tr(" Мероприятие")
+                  : tr("Спортивная площадка")}
               </span>
               <button
                 className="map-selection-close"
-                aria-label="Закрыть карточку"
+                aria-label={tr("Закрыть карточку")}
                 onClick={closeSelection}
               >
                 <X size={20} />
@@ -415,10 +426,10 @@ export function MapPage() {
                         selectionPanel.current?.focus({ preventScroll: true });
                       }}
                     >
-                      Закрыть форму
+                      {tr("Закрыть форму")}
                     </button>
                     {session.isPending ? (
-                      <p role="status">Проверяем сессию…</p>
+                      <p role="status">{tr("Проверяем сессию…")}</p>
                     ) : session.isError ? (
                       <ErrorState
                         error={session.error}
@@ -426,7 +437,7 @@ export function MapPage() {
                       />
                     ) : !session.data ? (
                       <p>
-                        Войдите, чтобы оценить загруженность.{" "}
+                        {tr("Войдите, чтобы оценить загруженность.")}{" "}
                         <Link
                           className="button primary"
                           to="/login?next=map"
@@ -434,7 +445,7 @@ export function MapPage() {
                             mapReturn: `/map${params.size ? `?${params}` : ""}`,
                           }}
                         >
-                          Войти и вернуться к карте
+                          {tr("Войти и вернуться к карте")}
                         </Link>
                       </p>
                     ) : (
@@ -444,7 +455,7 @@ export function MapPage() {
                         session={session.data}
                         onSuccess={() => {
                           setReporting(null);
-                          setNotice("Оценка загруженности сохранена");
+                          setNotice(tr("Оценка загруженности сохранена"));
                           selectionPanel.current?.focus({
                             preventScroll: true,
                           });
@@ -458,18 +469,18 @@ export function MapPage() {
                       className="button primary"
                       onClick={() => report(selectedMapVenue.id)}
                     >
-                      Оценить загруженность
+                      {tr("Оценить загруженность")}
                     </button>
                   )
                 )}
               </>
             ) : events.isFetching || venues.isFetching || !bbox ? (
-              <p role="status">Ищем выбранный объект…</p>
+              <p role="status">{tr("Ищем выбранный объект…")}</p>
             ) : (
               <p>
-                Объект не найден в этой области с текущими фильтрами. Он мог
-                быть снят с публикации. Измените фильтры или выберите другой
-                объект.
+                {tr(
+                  "Объект не найден в этой области с текущими фильтрами. Он мог быть снят с публикации. Измените фильтры или выберите другой объект.",
+                )}
               </p>
             )}
           </aside>
@@ -478,14 +489,16 @@ export function MapPage() {
       <div aria-live="polite" className="map-feedback">
         {!showEvents && !showVenues && (
           <p className="notice">
-            Оба слоя выключены. Включите мероприятия или площадки, чтобы увидеть
-            объекты.
+            {tr(
+              "Оба слоя выключены. Включите мероприятия или площадки, чтобы увидеть объекты.",
+            )}
           </p>
         )}
         {showEvents && (
           <p>
-            На карте — будущие опубликованные встречи с указанной точкой.
-            Встречи без координат доступны в списке.
+            {tr(
+              "На карте — будущие опубликованные встречи с указанной точкой. Встречи без координат доступны в списке.",
+            )}
           </p>
         )}
         {session.isError && (
@@ -495,15 +508,15 @@ export function MapPage() {
           />
         )}
         {(events.isFetching || venues.isFetching) && (
-          <p>Обновляем объекты в этой области…</p>
+          <p>{tr("Обновляем объекты в этой области…")}</p>
         )}
         {((showEvents && events.data?.truncated) ||
           (showVenues && venues.data?.truncated)) && (
-          <p>Приблизьте карту, чтобы увидеть все объекты.</p>
+          <p>{tr("Приблизьте карту, чтобы увидеть все объекты.")}</p>
         )}
         {notice && (
           <p role="status" className="success-note">
-            {notice}
+            {tr(notice)}
           </p>
         )}
       </div>
@@ -517,10 +530,10 @@ export function MapPage() {
               setReporting(null);
             }}
           >
-            Закрыть форму
+            {tr("Закрыть форму")}
           </button>
           {session.isPending ? (
-            <p role="status">Проверяем сессию…</p>
+            <p role="status">{tr("Проверяем сессию…")}</p>
           ) : session.isError ? (
             <ErrorState
               error={session.error}
@@ -528,13 +541,13 @@ export function MapPage() {
             />
           ) : !session.data ? (
             <p>
-              Войдите, чтобы добавить площадку.{" "}
+              {tr("Войдите, чтобы добавить площадку.")}{" "}
               <Link
                 className="button primary"
                 to="/login?next=map"
                 state={{ mapReturn: `/map${params.size ? `?${params}` : ""}` }}
               >
-                Войти и вернуться к карте
+                {tr("Войти и вернуться к карте")}
               </Link>
             </p>
           ) : (
@@ -553,7 +566,9 @@ export function MapPage() {
                 });
                 setCreating(false);
                 setNotice(
-                  "Площадка добавлена. Теперь можно оценить её загруженность.",
+                  tr(
+                    "Площадка добавлена. Теперь можно оценить её загруженность.",
+                  ),
                 );
               }}
             />
@@ -562,14 +577,16 @@ export function MapPage() {
       )}
       <div className="map-results">
         {showEvents && (
-          <section aria-label="Мероприятия в этой области">
+          <section aria-label={tr("Мероприятия в этой области")}>
             <h2>
-              Мероприятия <span className="muted">{eventItems.length}</span>
+              {tr("Мероприятия ")}
+              <span className="muted">{eventItems.length}</span>
             </h2>
             {needsLocation ? (
               <p role="status">
-                Включите геолокацию, чтобы найти мероприятия в выбранном
-                радиусе.
+                {tr(
+                  "Включите геолокацию, чтобы найти мероприятия в выбранном радиусе.",
+                )}
               </p>
             ) : events.isError ? (
               <ErrorState
@@ -578,7 +595,9 @@ export function MapPage() {
               />
             ) : (
               !events.isPending &&
-              !eventItems.length && <p>В этой области пока нет мероприятий.</p>
+              !eventItems.length && (
+                <p>{tr("В этой области пока нет мероприятий.")}</p>
+              )
             )}
             {eventItems.map((event) => (
               <article className="map-result" key={event.id}>
@@ -596,16 +615,18 @@ export function MapPage() {
                       });
                   }}
                 >
-                  Показать на карте <ArrowUpRight size={16} />
+                  {tr("Показать на карте ")}
+                  <ArrowUpRight size={16} />
                 </button>
               </article>
             ))}
           </section>
         )}
         {showVenues && (
-          <section aria-label="Площадки в этой области">
+          <section aria-label={tr("Площадки в этой области")}>
             <h2>
-              Площадки <span className="muted">{venueItems.length}</span>
+              {tr("Площадки ")}
+              <span className="muted">{venueItems.length}</span>
             </h2>
             {venues.isError ? (
               <ErrorState
@@ -614,7 +635,9 @@ export function MapPage() {
               />
             ) : (
               !venues.isPending &&
-              !venueItems.length && <p>Здесь нет площадок; добавьте свою.</p>
+              !venueItems.length && (
+                <p>{tr("Здесь нет площадок; добавьте свою.")}</p>
+              )
             )}
             {venueItems.map((venue) => (
               <article className="map-result" key={venue.id}>
@@ -623,14 +646,15 @@ export function MapPage() {
                   className="button secondary"
                   onClick={() => select("venue", venue.id, venue.location)}
                 >
-                  Показать на карте <ArrowUpRight size={16} />
+                  {tr("Показать на карте ")}
+                  <ArrowUpRight size={16} />
                 </button>
                 <button
                   type="button"
                   className="button secondary"
                   onClick={() => report(venue.id)}
                 >
-                  Оценить загруженность
+                  {tr("Оценить загруженность")}
                 </button>
               </article>
             ))}

@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +15,7 @@ import type { AuthRegistrationRequest } from "../../../shared/api/types";
 import { FormField } from "../../../shared/ui/FormField";
 
 export function RegisterPage() {
+  useLocale();
   const location = useLocation();
   const [params] = useSearchParams();
   const complete = useSessionTransition(params, location.state, "/profile");
@@ -55,23 +58,27 @@ export function RegisterPage() {
   return (
     <section className="login-page register-page">
       <div className="login-intro">
-        <span className="eyebrow muted">Присоединяйся к сообществу</span>
+        <span className="eyebrow muted">
+          {tr("Присоединяйся к сообществу")}
+        </span>
         <h1>
-          Твоя встреча
+          {tr("Твоя встреча")}
           <br />
-          начинается здесь<span className="brand-dot">.</span>
+          {tr("начинается здесь")}
+          <span className="brand-dot">.</span>
         </h1>
-        <p>Создай профиль, найди компанию и занимайся вместе.</p>
+        <p>{tr("Создай профиль, найди компанию и занимайся вместе.")}</p>
         <div className="notice">
-          <strong>Твой никнейм — твоя отметка в чате</strong>
+          <strong>{tr("Твой никнейм — твоя отметка в чате")}</strong>
           <p>
-            Выбери никнейм и пароль. По @никнейму тебя смогут отметить в
-            обсуждении встречи.
+            {tr(
+              "Выбери никнейм и пароль. По @никнейму тебя смогут отметить в обсуждении встречи.",
+            )}
           </p>
         </div>
       </div>
       <div className="login-panel">
-        <h2>Создать аккаунт</h2>
+        <h2>{tr("Создать аккаунт")}</h2>
         <form
           noValidate
           onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
@@ -80,11 +87,11 @@ export function RegisterPage() {
             disabled={!form.formState.isReady || mutation.isPending}
             className="signup-fields"
           >
-            <legend className="sr-only">Данные нового аккаунта</legend>
+            <legend className="sr-only">{tr("Данные нового аккаунта")}</legend>
             <FormField
               id="signup-nickname"
-              label="Никнейм"
-              hint="@nickname: 3–40 латинских букв, цифр, _ или -."
+              label={tr("Никнейм")}
+              hint={tr("@nickname: 3–40 латинских букв, цифр, _ или -.")}
               error={errors.nickname?.message}
             >
               <input
@@ -102,13 +109,13 @@ export function RegisterPage() {
             </FormField>
             <FormField
               id="signup-name"
-              label="Имя в профиле"
-              hint="Так тебя увидят другие участники."
+              label={tr("Имя в профиле")}
+              hint={tr("Так тебя увидят другие участники.")}
               error={errors.displayName?.message}
             >
               <input
                 id="signup-name"
-                placeholder="Например, Алексей"
+                placeholder={tr("Например, Алексей")}
                 autoComplete="name"
                 required
                 maxLength={100}
@@ -119,13 +126,13 @@ export function RegisterPage() {
             </FormField>
             <FormField
               id="signup-password"
-              label="Пароль"
-              hint="От 8 до 128 символов. Пробелы по краям сохраняются."
+              label={tr("Пароль")}
+              hint={tr("От 8 до 128 символов. Пробелы по краям сохраняются.")}
               error={errors.password?.message}
             >
               <input
                 id="signup-password"
-                placeholder="Придумайте пароль"
+                placeholder={tr("Придумайте пароль")}
                 type="password"
                 autoComplete="new-password"
                 required
@@ -141,10 +148,10 @@ export function RegisterPage() {
             <p className="field-error" role="alert">
               {mutation.error instanceof ApiError &&
               mutation.error.status === 404
-                ? "Регистрация сейчас недоступна."
+                ? tr("Регистрация сейчас недоступна.")
                 : mutation.error instanceof ApiError &&
                     mutation.error.status === 409
-                  ? "Никнейм уже занят. Выберите другой."
+                  ? tr("Никнейм уже занят. Выберите другой.")
                   : errorMessage(mutation.error)}
             </p>
           )}
@@ -153,17 +160,19 @@ export function RegisterPage() {
             type="submit"
             disabled={!form.formState.isReady || mutation.isPending}
           >
-            {mutation.isPending ? "Создаём аккаунт…" : "Создать аккаунт"}
+            {mutation.isPending
+              ? tr("Создаём аккаунт…")
+              : tr("Создать аккаунт")}
             <ArrowUpRight size={19} />
           </button>
         </form>
         <p className="auth-switch">
-          Уже есть аккаунт?{" "}
+          {tr("Уже есть аккаунт?")}{" "}
           <Link
             to={{ pathname: "/login", search: location.search }}
             state={location.state}
           >
-            Войти
+            {tr("Войти")}
           </Link>
         </p>
       </div>

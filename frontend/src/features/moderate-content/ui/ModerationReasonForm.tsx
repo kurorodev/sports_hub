@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -27,6 +29,7 @@ export function ModerationReasonForm({
   error: unknown;
   onConfirm: (reason: string) => void;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const restore = useRef(false);
@@ -49,7 +52,7 @@ export function ModerationReasonForm({
           className="button secondary"
           onClick={() => setOpen(true)}
         >
-          {action}
+          {tr(action)}
         </button>
       ) : (
         <form
@@ -60,14 +63,16 @@ export function ModerationReasonForm({
           <p>{consequence}</p>
           <FormField
             id={`moderation-reason-${id}`}
-            label="Причина модерации"
-            hint="Обязательна: от 3 до 1000 символов."
+            label={tr("Причина модерации")}
+            hint={tr("Обязательна: от 3 до 1000 символов.")}
             error={form.formState.errors.reason?.message}
           >
             <Textarea
               id={`moderation-reason-${id}`}
               {...form.register("reason")}
-              placeholder="Укажите, какие правила нарушены и что нужно исправить"
+              placeholder={tr(
+                "Укажите, какие правила нарушены и что нужно исправить",
+              )}
               rows={3}
               maxLength={1000}
               disabled={pending}
@@ -81,7 +86,8 @@ export function ModerationReasonForm({
           </FormField>
           {Boolean(error) && (
             <p className="field-error" role="alert">
-              {moderationErrorMessage(error)} Причина сохранена.
+              {tr(moderationErrorMessage(error))}
+              {tr(" Причина сохранена.")}
             </p>
           )}
           <div className="request-actions">
@@ -91,8 +97,8 @@ export function ModerationReasonForm({
               disabled={pending}
             >
               {pending
-                ? "Сохраняем решение…"
-                : `Подтвердить: ${action.toLocaleLowerCase("ru")}`}
+                ? tr("Сохраняем решение…")
+                : tr("Подтвердить: {0}", [action.toLocaleLowerCase("ru")])}
             </button>
             <button
               className="button secondary"
@@ -103,7 +109,7 @@ export function ModerationReasonForm({
                 setOpen(false);
               }}
             >
-              Отмена
+              {tr("Отмена")}
             </button>
           </div>
         </form>

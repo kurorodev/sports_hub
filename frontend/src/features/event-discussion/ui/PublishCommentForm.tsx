@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +35,7 @@ export function PublishCommentForm({
   viewerId: string;
   onPublished: (comment: DiscussionComment) => void;
 }) {
+  useLocale();
   const repository = useCommentRepository();
   const client = useQueryClient();
   const form = useForm<Values>({
@@ -61,8 +64,10 @@ export function PublishCommentForm({
     >
       <FormField
         id="discussion-message"
-        label="Ваше сообщение"
-        hint="Вопрос или ответ по встрече. Напишите @никнейм, чтобы отметить пользователя. До 2000 символов."
+        label={tr("Ваше сообщение")}
+        hint={tr(
+          "Вопрос или ответ по встрече. Напишите @никнейм, чтобы отметить пользователя. До 2000 символов.",
+        )}
         error={form.formState.errors.text?.message}
       >
         <Controller
@@ -83,14 +88,14 @@ export function PublishCommentForm({
                   ? "discussion-message-error"
                   : "discussion-message-hint"
               }
-              placeholder="Например: @nickname, придёшь на встречу?"
+              placeholder={tr("Например: @nickname, придёшь на встречу?")}
             />
           )}
         />
       </FormField>
       <div className="discussion-submit">
         <p className="join-note">
-          Сообщение публичное. Запись на встречу не требуется.
+          {tr("Сообщение публичное. Запись на встречу не требуется.")}
         </p>
         <button
           className="button primary"
@@ -98,12 +103,15 @@ export function PublishCommentForm({
           disabled={mutation.isPending}
         >
           <Send size={18} />
-          {mutation.isPending ? "Отправляем сообщение…" : "Отправить сообщение"}
+          {mutation.isPending
+            ? tr("Отправляем сообщение…")
+            : tr("Отправить сообщение")}
         </button>
       </div>
       {mutation.isError && (
         <p className="field-error" role="alert">
-          {commentErrorMessage(mutation.error)} Текст сохранён.
+          {tr(commentErrorMessage(mutation.error))}
+          {tr(" Текст сохранён.")}
         </p>
       )}
     </form>

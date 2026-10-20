@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import { AlertCircle, ArrowLeft, SearchX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../api/client";
@@ -11,14 +13,15 @@ export function ErrorState({
   retry?: () => void;
   message?: string;
 }) {
+  useLocale();
   return (
     <div className="feedback" role="alert">
       <AlertCircle size={30} />
-      <h2>Не удалось загрузить данные</h2>
-      <p>{message ?? errorMessage(error)}</p>
+      <h2>{tr("Не удалось загрузить данные")}</h2>
+      <p>{tr(message ?? errorMessage(error))}</p>
       {retry && (
         <button className="button secondary" onClick={retry}>
-          Повторить
+          {tr("Повторить")}
         </button>
       )}
     </div>
@@ -31,39 +34,49 @@ export function EmptyState({
   reset: () => void;
   canCreate?: boolean;
 }) {
+  useLocale();
   return (
     <div className="feedback">
       <SearchX size={36} />
-      <h2>Пока без совпадений</h2>
+      <h2>{tr("Пока без совпадений")}</h2>
       <p>
-        Попробуйте другой спорт, город или дату. Ваша компания ещё найдётся.
+        {tr(
+          "Попробуйте другой спорт, город или дату. Ваша компания ещё найдётся.",
+        )}
       </p>
       <button className="button primary" onClick={reset}>
-        Сбросить фильтры
+        {tr("Сбросить фильтры")}
       </button>
       {canCreate && (
         <Link className="button secondary" to="/events/new">
-          Создать свою встречу
+          {tr("Создать свою встречу")}
         </Link>
       )}
     </div>
   );
 }
 export function NotFound() {
+  useLocale();
   return (
     <section className="feedback page-state">
-      <span className="eyebrow">404 · Здесь пока тихо</span>
-      <h1>Кажется, мы сбились с маршрута</h1>
-      <p>Такой страницы нет. Вернёмся к спортивным встречам?</p>
+      <span className="eyebrow">{tr("404 · Здесь пока тихо")}</span>
+      <h1>{tr("Кажется, мы сбились с маршрута")}</h1>
+      <p>{tr("Такой страницы нет. Вернёмся к спортивным встречам?")}</p>
       <Link className="button primary" to="/">
-        <ArrowLeft size={18} />К активностям
+        <ArrowLeft size={18} />
+        {tr("К активностям")}
       </Link>
     </section>
   );
 }
 export function Skeletons() {
+  useLocale();
   return (
-    <div className="event-grid" aria-label="Загружаем активности" role="status">
+    <div
+      className="event-grid"
+      aria-label={tr("Загружаем активности")}
+      role="status"
+    >
       {[1, 2, 3].map((id) => (
         <div className="skeleton-card" key={id}>
           <div className="skeleton skeleton-image" />

@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { localeTag } from "../i18n/preferences";
 import { hasPoint, type Point } from "./map";
 
 export const distanceRadii = [100, 200, 500, 1000, 2000, 3000, 5000] as const;
@@ -12,8 +14,12 @@ export function distanceMeters(a: Point, b: Point) {
 }
 export function formatDistance(meters: number) {
   return meters < 1000
-    ? `${Math.round(meters)} м`
-    : `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(meters / 1000)} км`;
+    ? tr("{0} м", [Math.round(meters)])
+    : tr("{0} км", [
+        new Intl.NumberFormat(localeTag(), { maximumFractionDigits: 1 }).format(
+          meters / 1000,
+        ),
+      ]);
 }
 export function distanceParams(params: URLSearchParams, origin?: Point | null) {
   const next = new URLSearchParams(params);

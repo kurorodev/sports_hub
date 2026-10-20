@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { localeTag } from "../../../shared/i18n/preferences";
 // Supplied illustrations; sport identifiers continue to come from the API catalog.
 export const sportArt: Record<string, string> = {
   running: "/art/sports/running.jpg",
@@ -12,7 +14,7 @@ export const sportArt: Record<string, string> = {
 export function eventDate(value: string) {
   // Preserve the event's supplied offset rather than silently converting to the viewer's zone.
   const day = new Date(`${value.slice(0, 10)}T12:00:00Z`);
-  const date = new Intl.DateTimeFormat("ru-RU", {
+  const date = new Intl.DateTimeFormat(localeTag(), {
     day: "numeric",
     month: "long",
     timeZone: "UTC",
@@ -29,8 +31,8 @@ export const skillLabels = {
 } as const;
 export function participantCount(count: number, limit?: number | null) {
   return limit == null
-    ? `Участников: ${count} · без лимита`
-    : `${count} из ${limit} участников`;
+    ? tr("Участников: {0} · без лимита", [count])
+    : tr("{0} из {1} участников", [count, limit]);
 }
 export function sportIcon(name: string) {
   const key: Record<string, string> = {

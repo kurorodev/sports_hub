@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Building2 } from "lucide-react";
@@ -12,11 +14,12 @@ export function OrganizationCard({
   children?: ReactNode;
   showTitle?: boolean;
 }) {
+  useLocale();
   const status = organizationStatuses[organization.status];
   return (
     <article
       className="organization-card"
-      aria-label={`Организация: ${organization.name}`}
+      aria-label={tr("Организация: {0}", [organization.name])}
     >
       {showTitle && (
         <div className="organization-title">
@@ -28,7 +31,9 @@ export function OrganizationCard({
           </h2>
         </div>
       )}
-      <span className={`card-registration ${status.tone}`}>{status.label}</span>
+      <span className={`card-registration ${status.tone}`}>
+        {tr(status.label)}
+      </span>
       <p className="organization-description">{organization.description}</p>
       {organization.sports.length > 0 && (
         <p className="join-note">
@@ -36,11 +41,12 @@ export function OrganizationCard({
         </p>
       )}
       <p className="join-note">
-        Представитель: {organization.representative.displayName}
+        {tr("Представитель: ")}
+        {organization.representative.displayName}
       </p>
       {organization.decisionReason && (
         <p className="organization-reason">
-          <strong>Причина решения: </strong>
+          <strong>{tr("Причина решения: ")}</strong>
           {organization.decisionReason}
         </p>
       )}

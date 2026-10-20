@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import {
   useEffect,
   useLayoutEffect,
@@ -53,6 +55,7 @@ export function GeoMap({
   tileErrorMessage?: string;
   location?: CurrentLocationState;
 }) {
+  useLocale();
   const container = useRef<HTMLDivElement>(null);
   const callbacks = useRef({ onPoint, onBounds, onView });
   const requested = useRef({ center: center ?? demoCenter, zoom });
@@ -88,9 +91,9 @@ export function GeoMap({
         renderWorldCopies: false,
         attributionControl: { compact: true },
         locale: {
-          "NavigationControl.ZoomIn": "Приблизить",
-          "NavigationControl.ZoomOut": "Отдалить",
-          "Popup.Close": "Закрыть",
+          "NavigationControl.ZoomIn": tr("Приблизить"),
+          "NavigationControl.ZoomOut": tr("Отдалить"),
+          "Popup.Close": tr("Закрыть"),
         },
       });
       const current = instance;
@@ -205,7 +208,7 @@ export function GeoMap({
       <div
         ref={container}
         className="map-canvas"
-        aria-label="Интерактивная карта"
+        aria-label={tr("Интерактивная карта")}
         hidden={failed}
       />
       {map && !failed && (
@@ -214,7 +217,7 @@ export function GeoMap({
           {point && (
             <GeoMarker
               point={point}
-              title="Выбранная точка"
+              title={tr("Выбранная точка")}
               draggable={Boolean(onPoint)}
               onDragEnd={onPoint}
             />
@@ -224,13 +227,17 @@ export function GeoMap({
       )}
       {failed && (
         <div className="map-unavailable" role="status">
-          <p>Не удалось открыть карту. Проверьте поддержку WebGL в браузере.</p>
+          <p>
+            {tr(
+              "Не удалось открыть карту. Проверьте поддержку WebGL в браузере.",
+            )}
+          </p>
           <button
             type="button"
             className="button secondary"
             onClick={() => setAttempt((value) => value + 1)}
           >
-            Повторить загрузку карты
+            {tr("Повторить загрузку карты")}
           </button>
         </div>
       )}
@@ -254,11 +261,11 @@ export function GeoMap({
               }
               if (!navigator.geolocation) {
                 setMessage(
-                  "Браузер не поддерживает определение местоположения",
+                  tr("Браузер не поддерживает определение местоположения"),
                 );
                 return;
               }
-              setMessage("Определяем местоположение…");
+              setMessage(tr("Определяем местоположение…"));
               const current = map;
               navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -280,7 +287,9 @@ export function GeoMap({
                   if (activeMap.current === current) {
                     setLocatedPosition(null);
                     setMessage(
-                      "Не удалось определить местоположение. Найдите адрес или переместите карту.",
+                      tr(
+                        "Не удалось определить местоположение. Найдите адрес или переместите карту.",
+                      ),
                     );
                   }
                 },
@@ -289,8 +298,8 @@ export function GeoMap({
             }}
           >
             {location?.status === "locating"
-              ? "Определяем местоположение…"
-              : "Моё местоположение"}
+              ? tr("Определяем местоположение…")
+              : tr("Моё местоположение")}
           </button>
           {(location?.error || message) && (
             <p role="status">{location?.error || message}</p>
@@ -301,8 +310,10 @@ export function GeoMap({
         <p className="map-tile-warning" role="status">
           {tileErrorMessage ??
             (compact
-              ? "Подложка карты недоступна. Адрес можно ввести вручную."
-              : "Подложка карты недоступна. Объекты доступны в списке под картой.")}
+              ? tr("Подложка карты недоступна. Адрес можно ввести вручную.")
+              : tr(
+                  "Подложка карты недоступна. Объекты доступны в списке под картой.",
+                ))}
         </p>
       )}
     </div>

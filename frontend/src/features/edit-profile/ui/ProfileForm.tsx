@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { Select } from "../../../shared/ui/Select";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -61,6 +63,7 @@ export function ProfileForm({
   onSaved: (profile: Profile) => void;
   onCancel: () => void;
 }) {
+  useLocale();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: profileDraft(profile),
@@ -95,13 +98,14 @@ export function ProfileForm({
         mutation.mutate({ viewerId: profile.id, draft }),
       )}
     >
-      <h1>Редактировать профиль</h1>
+      <h1>{tr("Редактировать профиль")}</h1>
       <p className="muted">
-        Эти данные видны в публичном профиле. Указывайте то, чем готовы
-        поделиться.
+        {tr(
+          "Эти данные видны в публичном профиле. Указывайте то, чем готовы поделиться.",
+        )}
       </p>
       <fieldset disabled={mutation.isPending}>
-        <legend>Аватар</legend>
+        <legend>{tr("Аватар")}</legend>
         <AvatarPicker
           viewerId={profile.id}
           value={avatarUrl}
@@ -114,12 +118,14 @@ export function ProfileForm({
           }
         />
         <details className="avatar-custom">
-          <summary>Использовать своё изображение по ссылке</summary>
+          <summary>{tr("Использовать своё изображение по ссылке")}</summary>
           <FormField
             id="profile-avatarUrl"
-            label="Ссылка на аватар"
+            label={tr("Ссылка на аватар")}
             error={errors.avatarUrl?.message}
-            hint="Ссылка http или https. Недоступное изображение заменим первой буквой имени."
+            hint={tr(
+              "Ссылка http или https. Недоступное изображение заменим первой буквой имени.",
+            )}
           >
             <input
               id="profile-avatarUrl"
@@ -138,7 +144,7 @@ export function ProfileForm({
         </details>
       </fieldset>
       <fieldset disabled={mutation.isPending}>
-        <legend>Знакомство</legend>
+        <legend>{tr("Знакомство")}</legend>
         <div className="profile-form-grid">
           {fields.map(([field, label, max, placeholder]) => (
             <FormField
@@ -148,7 +154,7 @@ export function ProfileForm({
               error={errors[field]?.message}
               hint={
                 field === "handle"
-                  ? "Можно с @ или без. 3–40 латинских букв, цифр, _ или -."
+                  ? tr("Можно с @ или без. 3–40 латинских букв, цифр, _ или -.")
                   : undefined
               }
             >
@@ -176,21 +182,21 @@ export function ProfileForm({
         </div>
         <FormField
           id="profile-about"
-          label="О себе"
-          hint={
+          label={tr("О себе")}
+          hint={tr(
             isAdmin
               ? "До 1000 символов. Кратко расскажите о себе."
-              : "До 1000 символов. Например, какой спорт любите и какую компанию ищете."
-          }
+              : "До 1000 символов. Например, какой спорт любите и какую компанию ищете.",
+          )}
           error={errors.about?.message}
         >
           <Textarea
             id="profile-about"
-            placeholder={
+            placeholder={tr(
               isAdmin
                 ? "Краткая информация о себе"
-                : "Расскажите, каким спортом занимаетесь и с кем хотите тренироваться"
-            }
+                : "Расскажите, каким спортом занимаетесь и с кем хотите тренироваться",
+            )}
             {...form.register("about")}
             rows={5}
             maxLength={1000}
@@ -201,12 +207,12 @@ export function ProfileForm({
           />
         </FormField>
         {!isAdmin && (
-          <FormField id="profile-time" label="Когда удобно заниматься">
+          <FormField id="profile-time" label={tr("Когда удобно заниматься")}>
             <Select id="profile-time" {...form.register("preferredTime")}>
-              <option value="">Не указано</option>
+              <option value="">{tr("Не указано")}</option>
               {preferredTimes.map((value) => (
                 <option value={value} key={value}>
-                  {timeLabels[value]}
+                  {tr(timeLabels[value])}
                 </option>
               ))}
             </Select>
@@ -216,10 +222,11 @@ export function ProfileForm({
       {!isAdmin && (
         <>
           <fieldset disabled={mutation.isPending}>
-            <legend>Спортивные роли</legend>
+            <legend>{tr("Спортивные роли")}</legend>
             <p className="field-hint">
-              Роли описывают ваш опыт. Они не дают административных прав или
-              доступа к чужим соревнованиям.
+              {tr(
+                "Роли описывают ваш опыт. Они не дают административных прав или доступа к чужим соревнованиям.",
+              )}
             </p>
             <div className="profile-role-options">
               {sportRoles.map((role) => (
@@ -229,18 +236,20 @@ export function ProfileForm({
                     value={role}
                     {...form.register("roles")}
                   />
-                  {sportRoleLabels[role]}
+                  {tr(sportRoleLabels[role])}
                 </label>
               ))}
             </div>
           </fieldset>
           <fieldset disabled={mutation.isPending}>
-            <legend>Любимые виды спорта</legend>
+            <legend>{tr("Любимые виды спорта")}</legend>
             <p className="field-hint">
-              Выберите интересы и свой уровень. Их можно изменить или убрать.
+              {tr(
+                "Выберите интересы и свой уровень. Их можно изменить или убрать.",
+              )}
             </p>
             {sports.isPending ? (
-              <p role="status">Загружаем виды спорта…</p>
+              <p role="status">{tr("Загружаем виды спорта…")}</p>
             ) : sports.isError ? (
               <ErrorState
                 error={sports.error}
@@ -276,7 +285,10 @@ export function ProfileForm({
               <div className="profile-preference-row" key={item.id}>
                 <FormField
                   id={`profile-level-${item.sportId}`}
-                  label={`Уровень: ${sports.data?.find((sport) => sport.id === item.sportId)?.name ?? "Вид спорта недоступен"}`}
+                  label={tr("Уровень: {0}", [
+                    sports.data?.find((sport) => sport.id === item.sportId)
+                      ?.name ?? tr("Вид спорта недоступен"),
+                  ])}
                   error={errors.preferences?.[index]?.level?.message}
                 >
                   <Select
@@ -285,7 +297,7 @@ export function ProfileForm({
                   >
                     {experienceLevels.map((level) => (
                       <option key={level} value={level}>
-                        {levelLabels[level]}
+                        {tr(levelLabels[level])}
                       </option>
                     ))}
                   </Select>
@@ -295,7 +307,7 @@ export function ProfileForm({
                   type="button"
                   onClick={() => preferences.remove(index)}
                 >
-                  Убрать интерес
+                  {tr("Убрать интерес")}
                 </button>
               </div>
             ))}
@@ -304,8 +316,8 @@ export function ProfileForm({
       )}
       {mutation.isError && (
         <p className="field-error" role="alert">
-          {profileErrorMessage(mutation.error)} Введённые данные сохранены,
-          можно повторить отправку.
+          {tr(profileErrorMessage(mutation.error))}
+          {tr(" Введённые данные сохранены, можно повторить отправку.")}
         </p>
       )}
       <div className="profile-form-actions">
@@ -314,7 +326,9 @@ export function ProfileForm({
           type="submit"
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? "Сохраняем профиль…" : "Сохранить профиль"}
+          {mutation.isPending
+            ? tr("Сохраняем профиль…")
+            : tr("Сохранить профиль")}
           <Save size={18} />
         </button>
         <button
@@ -323,7 +337,7 @@ export function ProfileForm({
           disabled={mutation.isPending}
           onClick={onCancel}
         >
-          Отменить изменения
+          {tr("Отменить изменения")}
         </button>
       </div>
     </form>

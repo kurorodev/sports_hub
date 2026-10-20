@@ -1,9 +1,12 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { suggestionsQuery } from "../../../shared/api/geo";
 import type { Point } from "../../../shared/lib/map";
 
 export function MapSearch({ onSelect }: { onSelect: (point: Point) => void }) {
+  useLocale();
   const [text, setText] = useState("");
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -18,10 +21,10 @@ export function MapSearch({ onSelect }: { onSelect: (point: Point) => void }) {
   return (
     <div className="map-search">
       <label className="form-field">
-        Найти город или адрес
+        {tr("Найти город или адрес")}
         <input
           type="search"
-          placeholder="Например, Самара или улица, дом"
+          placeholder={tr("Например, Самара или улица, дом")}
           maxLength={160}
           value={text}
           onChange={(event) => {
@@ -35,15 +38,16 @@ export function MapSearch({ onSelect }: { onSelect: (point: Point) => void }) {
       </label>
       {open && query === text.trim() && query.length >= 3 && (
         <div className="map-search-results">
-          {result.isFetching && <p role="status">Ищем адрес…</p>}
+          {result.isFetching && <p role="status">{tr("Ищем адрес…")}</p>}
           {result.isError && (
             <p role="status">
-              Поиск адресов недоступен. Переместите карту или используйте «Моё
-              местоположение».
+              {tr(
+                "Поиск адресов недоступен. Переместите карту или используйте «Моё местоположение».",
+              )}
             </p>
           )}
           {result.data?.items.length === 0 && (
-            <p role="status">Ничего не найдено</p>
+            <p role="status">{tr("Ничего не найдено")}</p>
           )}
           {result.data?.items.map((item) => (
             <button

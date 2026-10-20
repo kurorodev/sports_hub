@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import {
   useEffect,
   useImperativeHandle,
@@ -53,6 +55,7 @@ export function SearchableSelect({
   listLabel?: string;
   hint?: string;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [active, setActive] = useState(0);
@@ -179,7 +182,7 @@ export function SearchableSelect({
             height="28"
           />
         )}
-        <span>{selected?.name ?? placeholder}</span>
+        <span>{selected?.name ?? tr(placeholder)}</span>
         <ChevronDown size={17} aria-hidden="true" />
       </button>
       {open && (
@@ -190,14 +193,14 @@ export function SearchableSelect({
               <input
                 ref={input}
                 role="combobox"
-                aria-label={searchLabel}
+                aria-label={tr(searchLabel)}
                 aria-expanded="true"
                 aria-controls={`${id}-options`}
                 aria-autocomplete="list"
                 aria-activedescendant={
                   activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined
                 }
-                placeholder={searchPlaceholder}
+                placeholder={tr(searchPlaceholder)}
                 autoComplete="off"
                 value={search}
                 onChange={(event) => {
@@ -211,7 +214,7 @@ export function SearchableSelect({
             className="sport-select-options"
             id={`${id}-options`}
             role="listbox"
-            aria-label={listLabel}
+            aria-label={tr(listLabel)}
           >
             {filtered.map((option, index) => (
               <button
@@ -243,14 +246,14 @@ export function SearchableSelect({
           </div>
           {!filtered.length && (
             <p className="sport-select-empty" role="status">
-              Ничего не найдено. Попробуйте другое название.
+              {tr("Ничего не найдено. Попробуйте другое название.")}
             </p>
           )}
           {searchable && (
             <div className="sport-select-footer">
               {search && maxOptions === undefined
-                ? `Найдено: ${filtered.length}`
-                : hint}
+                ? tr("Найдено: {0}", [filtered.length])
+                : tr(hint)}
             </div>
           )}
         </div>

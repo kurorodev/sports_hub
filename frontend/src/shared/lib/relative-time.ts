@@ -1,7 +1,11 @@
-const relative = new Intl.RelativeTimeFormat("ru", { numeric: "auto" });
+import { tr } from "../i18n/translate";
+import { localeTag } from "../i18n/preferences";
 export function relativeTime(value: string, now = Date.now()) {
+  const relative = new Intl.RelativeTimeFormat(localeTag(), {
+    numeric: "auto",
+  });
   const seconds = Math.max(0, Math.floor((now - Date.parse(value)) / 1000));
-  if (seconds < 60) return "только что";
+  if (seconds < 60) return tr("только что");
   if (seconds < 3600)
     return relative.format(-Math.floor(seconds / 60), "minute");
   if (seconds < 86400)

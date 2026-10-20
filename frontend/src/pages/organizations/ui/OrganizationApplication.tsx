@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { sportsQuery } from "../../../entities/event";
 import { organizationKeys } from "../../../entities/organization";
@@ -12,9 +14,11 @@ export function OrganizationApplication({
   viewerId: string;
   onCreated: (organization: Organization) => void;
 }) {
+  useLocale();
   const sports = useQuery(sportsQuery);
   const client = useQueryClient();
-  if (sports.isPending) return <p role="status">Загружаем виды спорта…</p>;
+  if (sports.isPending)
+    return <p role="status">{tr("Загружаем виды спорта…")}</p>;
   if (sports.isError)
     return (
       <ErrorState error={sports.error} retry={() => void sports.refetch()} />

@@ -1,3 +1,4 @@
+import { tr } from "../../../shared/i18n/translate";
 import { CommentFailure, type CommentFailureCode } from "../model";
 const messages: Record<CommentFailureCode, string> = {
   network:
@@ -15,7 +16,7 @@ const messages: Record<CommentFailureCode, string> = {
   unknown: "Не удалось выполнить действие. Попробуйте ещё раз.",
 };
 export function commentErrorMessage(error: unknown) {
-  return error instanceof CommentFailure
-    ? messages[error.code]
-    : messages.unknown;
+  return tr(
+    error instanceof CommentFailure ? messages[error.code] : messages.unknown,
+  );
 }

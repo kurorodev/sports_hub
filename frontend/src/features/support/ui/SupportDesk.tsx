@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +51,7 @@ export function SupportDesk({
   viewerId: string;
   admin: boolean;
 }) {
+  useLocale();
   const now = useNow();
   const repo = useSupportRepository();
   const [params, setParams] = useSearchParams();
@@ -82,12 +85,14 @@ export function SupportDesk({
   return (
     <>
       <header className="support-hero">
-        <span className="eyebrow muted">Поддержка рядом</span>
-        <h1>Центр поддержки</h1>
+        <span className="eyebrow muted">{tr("Поддержка рядом")}</span>
+        <h1>{tr("Центр поддержки")}</h1>
         <p>
           {admin
-            ? "Рассматривайте обращения, отвечайте пользователям и управляйте статусами."
-            : "Поможем с вопросом, проверим жалобу и услышим вашу идею."}
+            ? tr(
+                "Рассматривайте обращения, отвечайте пользователям и управляйте статусами.",
+              )
+            : tr("Поможем с вопросом, проверим жалобу и услышим вашу идею.")}
         </p>
       </header>
       {!admin && (
@@ -99,8 +104,8 @@ export function SupportDesk({
               to={`/support/new?category=${category}`}
             >
               <Icon size={24} aria-hidden="true" />
-              <strong>{title}</strong>
-              <span>{text}</span>
+              <strong>{tr(title)}</strong>
+              <span>{tr(text)}</span>
             </Link>
           ))}
         </div>
@@ -112,7 +117,7 @@ export function SupportDesk({
         <div className="support-section-heading">
           <h2 id="support-list-title">
             <MessagesSquare size={24} aria-hidden="true" />{" "}
-            {queue ? "Очередь поддержки" : "Мои обращения"}
+            {queue ? tr("Очередь поддержки") : tr("Мои обращения")}
           </h2>
         </div>
         <form
@@ -123,44 +128,44 @@ export function SupportDesk({
           }}
         >
           <label className="form-field">
-            Поиск обращений
+            {tr("Поиск обращений")}
             <input
               maxLength={160}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Заголовок или подробности"
+              placeholder={tr("Заголовок или подробности")}
             />
           </label>
           <label className="form-field">
-            Статус обращения
+            {tr("Статус обращения")}
             <Select
               value={status ?? ""}
               onChange={(e) => change("status", e.target.value)}
             >
-              <option value="">Все статусы</option>
+              <option value="">{tr("Все статусы")}</option>
               {statuses.map((s) => (
                 <option key={s} value={s}>
-                  {statusLabels[s]}
+                  {tr(statusLabels[s])}
                 </option>
               ))}
             </Select>
           </label>
           <label className="form-field">
-            Категория
+            {tr("Категория")}
             <Select
               value={category ?? ""}
               onChange={(e) => change("category", e.target.value)}
             >
-              <option value="">Все категории</option>
+              <option value="">{tr("Все категории")}</option>
               {categories.map((c) => (
                 <option key={c} value={c}>
-                  {categoryLabels[c]}
+                  {tr(categoryLabels[c])}
                 </option>
               ))}
             </Select>
           </label>
           <button className="button secondary" type="submit">
-            Найти
+            {tr("Найти")}
           </button>
           <button
             className="button secondary"
@@ -168,24 +173,29 @@ export function SupportDesk({
             disabled={query.isFetching}
             onClick={() => void query.refetch()}
           >
-            Обновить
+            {tr("Обновить")}
           </button>
         </form>
         {query.isPending ? (
-          <p role="status">Загружаем обращения…</p>
+          <p role="status">{tr("Загружаем обращения…")}</p>
         ) : query.isError ? (
           <ErrorState error={query.error} retry={() => void query.refetch()} />
         ) : (
           <>
-            <p className="join-note">Найдено: {query.data.total}</p>
+            <p className="join-note">
+              {tr("Найдено: ")}
+              {query.data.total}
+            </p>
             {query.data.items.length === 0 ? (
               <div className="support-empty">
                 <Headset size={32} />
-                <h3>Здесь пока нет обращений</h3>
+                <h3>{tr("Здесь пока нет обращений")}</h3>
                 <p>
                   {admin
-                    ? "Новые обращения появятся здесь. Попробуйте изменить фильтры."
-                    : "Создайте обращение или измените фильтры."}
+                    ? tr(
+                        "Новые обращения появятся здесь. Попробуйте изменить фильтры.",
+                      )
+                    : tr("Создайте обращение или измените фильтры.")}
                 </p>
               </div>
             ) : (
@@ -198,12 +208,12 @@ export function SupportDesk({
                     >
                       <div className="support-section-heading">
                         <span className="eyebrow muted">
-                          {categoryLabels[t.category]} · №{t.id.slice(0, 8)}
+                          {tr(categoryLabels[t.category])} · №{t.id.slice(0, 8)}
                         </span>
                         <span
                           className={`support-status support-status-${t.status.toLowerCase()}`}
                         >
-                          {statusLabels[t.status]}
+                          {tr(statusLabels[t.status])}
                         </span>
                       </div>
                       <h3>{t.title}</h3>
@@ -213,12 +223,12 @@ export function SupportDesk({
                           {queue
                             ? `${t.author.displayName} · @${t.author.nickname}`
                             : t.assignedTo
-                              ? `С вами ${t.assignedTo.displayName}`
-                              : "Ожидает специалиста"}
+                              ? tr("С вами {0}", [t.assignedTo.displayName])
+                              : tr("Ожидает специалиста")}
                         </span>
                         <span>
                           {queue && t.priority !== "NORMAL"
-                            ? `${priorityLabels[t.priority]} · `
+                            ? `${tr(priorityLabels[t.priority])} · `
                             : ""}
                           {relativeTime(t.updatedAt, now)}
                         </span>
@@ -229,21 +239,24 @@ export function SupportDesk({
               </ol>
             )}
             {(query.data.totalPages > 1 || page > 0) && (
-              <nav className="pagination" aria-label="Страницы обращений">
+              <nav className="pagination" aria-label={tr("Страницы обращений")}>
                 <button
                   className="button secondary"
                   disabled={page === 0}
                   onClick={() => change("page", String(page - 1))}
                 >
-                  Назад
+                  {tr("Назад")}
                 </button>
-                <span>Страница {page + 1}</span>
+                <span>
+                  {tr("Страница ")}
+                  {page + 1}
+                </span>
                 <button
                   className="button secondary"
                   disabled={page + 1 >= query.data.totalPages}
                   onClick={() => change("page", String(page + 1))}
                 >
-                  Далее
+                  {tr("Далее")}
                 </button>
               </nav>
             )}
@@ -252,29 +265,29 @@ export function SupportDesk({
       </section>
       {!admin && (
         <section className="support-faq">
-          <h2>Быстрые ответы</h2>
+          <h2>{tr("Быстрые ответы")}</h2>
           <details>
-            <summary>Где следить за ответом?</summary>
+            <summary>{tr("Где следить за ответом?")}</summary>
             <p>
-              Все ответы остаются в обращении. При ответе специалиста придёт
-              уведомление в колокольчик. Пока вкладка открыта, переписка
-              обновляется автоматически.
+              {tr(
+                "Все ответы остаются в обращении. При ответе специалиста придёт уведомление в колокольчик. Пока вкладка открыта, переписка обновляется автоматически.",
+              )}
             </p>
           </details>
           <details>
-            <summary>Как пожаловаться на комментарий?</summary>
+            <summary>{tr("Как пожаловаться на комментарий?")}</summary>
             <p>
-              Откройте обсуждение встречи и нажмите «Пожаловаться» под
-              сообщением. Выберите причину и поясните ситуацию. Жалоба не
-              публикуется в обсуждении.
+              {tr(
+                "Откройте обсуждение встречи и нажмите «Пожаловаться» под сообщением. Выберите причину и поясните ситуацию. Жалоба не публикуется в обсуждении.",
+              )}
             </p>
           </details>
           <details>
-            <summary>Когда площадка появится на карте?</summary>
+            <summary>{tr("Когда площадка появится на карте?")}</summary>
             <p>
-              Передайте название, город и точный адрес. Администратор проверит
-              предложение и ответит в обращении. Отправка предложения не
-              публикует площадку автоматически.
+              {tr(
+                "Передайте название, город и точный адрес. Администратор проверит предложение и ответит в обращении. Отправка предложения не публикует площадку автоматически.",
+              )}
             </p>
           </details>
         </section>

@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
@@ -29,6 +31,7 @@ export function EventDiscussion({
   organizerUserId?: string;
   onReport?: (comment: DiscussionComment) => void;
 }) {
+  useLocale();
   const repository = useCommentRepository();
   const session = useQuery(sessionQuery);
   const client = useQueryClient();
@@ -76,9 +79,9 @@ export function EventDiscussion({
     >
       <div className="discussion-heading">
         <div>
-          <h2 id="discussion-heading">Обсуждение встречи</h2>
+          <h2 id="discussion-heading">{tr("Обсуждение встречи")}</h2>
           <p className="join-note">
-            Уточните условия или помогите другим подготовиться.
+            {tr("Уточните условия или помогите другим подготовиться.")}
           </p>
         </div>
         <button
@@ -87,27 +90,32 @@ export function EventDiscussion({
           onClick={() => void query.refetch()}
         >
           <RefreshCw size={18} />
-          {query.isFetching ? "Обновляем…" : "Обновить обсуждение"}
+          {query.isFetching ? tr("Обновляем…") : tr("Обновить обсуждение")}
         </button>
       </div>
       {query.isPending ? (
-        <p role="status">Загружаем обсуждение…</p>
+        <p role="status">{tr("Загружаем обсуждение…")}</p>
       ) : query.isError ? (
         <ErrorState
-          message={commentErrorMessage(query.error)}
+          message={tr(commentErrorMessage(query.error))}
           error={query.error}
           retry={() => void query.refetch()}
         />
       ) : (
         <>
-          <p className="discussion-count">Сообщений: {query.data.totalCount}</p>
+          <p className="discussion-count">
+            {tr("Сообщений: ")}
+            {query.data.totalCount}
+          </p>
           {query.data.comments.length === 0 ? (
             <div className="discussion-empty">
               <MessageCircle size={28} />
               <p>
                 {query.data.totalCount === 0
-                  ? "Пока нет сообщений. Задайте первый вопрос."
-                  : "На этой странице нет сообщений. Вернитесь к предыдущей странице."}
+                  ? tr("Пока нет сообщений. Задайте первый вопрос.")
+                  : tr(
+                      "На этой странице нет сообщений. Вернитесь к предыдущей странице.",
+                    )}
               </p>
             </div>
           ) : (
@@ -124,7 +132,7 @@ export function EventDiscussion({
                           onClick={() => onReport(comment)}
                           type="button"
                         >
-                          Пожаловаться
+                          {tr("Пожаловаться")}
                         </button>
                       ) : undefined
                     }
@@ -134,16 +142,18 @@ export function EventDiscussion({
             </ol>
           )}
           {(query.data.totalCount > query.data.pageSize || page > 0) && (
-            <nav className="pagination" aria-label="Страницы обсуждения">
+            <nav className="pagination" aria-label={tr("Страницы обсуждения")}>
               <button
                 className="button secondary"
                 disabled={page === 0}
                 onClick={() => setPage((value) => value - 1)}
               >
-                Назад
+                {tr("Назад")}
               </button>
               <span>
-                Страница {page + 1} из{" "}
+                {tr("Страница ")}
+                {page + 1}
+                {tr(" из")}{" "}
                 {Math.max(
                   1,
                   Math.ceil(query.data.totalCount / query.data.pageSize),
@@ -156,7 +166,7 @@ export function EventDiscussion({
                 }
                 onClick={() => setPage((value) => value + 1)}
               >
-                Далее
+                {tr("Далее")}
               </button>
             </nav>
           )}
@@ -165,24 +175,24 @@ export function EventDiscussion({
       {notice?.eventId === eventId && notice.author.id === viewerId && (
         <Toast
           key={notice.id}
-          message="Сообщение опубликовано."
+          message={tr("Сообщение опубликовано.")}
           onDismiss={dismissNotice}
         />
       )}
       {!published ? (
         <p className="notice">
-          Событие не опубликовано. Новые сообщения недоступны.
+          {tr("Событие не опубликовано. Новые сообщения недоступны.")}
         </p>
       ) : session.isPending ? (
-        <p role="status">Проверяем аккаунт для отправки…</p>
+        <p role="status">{tr("Проверяем аккаунт для отправки…")}</p>
       ) : session.isError ? (
         <div className="discussion-login" role="alert">
-          <p>Не удалось проверить аккаунт для отправки.</p>
+          <p>{tr("Не удалось проверить аккаунт для отправки.")}</p>
           <button
             className="button secondary"
             onClick={() => void session.refetch()}
           >
-            Повторить проверку аккаунта
+            {tr("Повторить проверку аккаунта")}
           </button>
         </div>
       ) : session.data?.systemRoles.includes("ADMIN") ? (
@@ -199,14 +209,16 @@ export function EventDiscussion({
       ) : (
         <div className="discussion-login">
           <p>
-            Читать обсуждение можно без входа. Чтобы написать, выберите аккаунт.
+            {tr(
+              "Читать обсуждение можно без входа. Чтобы написать, выберите аккаунт.",
+            )}
           </p>
           <Link
             className="button secondary"
             to={`/login?next=event-discussion&eventId=${encodeURIComponent(eventId)}`}
             state={location.state}
           >
-            Войти и написать
+            {tr("Войти и написать")}
           </Link>
         </div>
       )}

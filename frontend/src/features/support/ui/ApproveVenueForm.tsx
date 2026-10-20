@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,6 +24,7 @@ export function ApproveVenueForm({
   viewerId: string;
   onPublished: () => Promise<void>;
 }) {
+  useLocale();
   const repo = useSupportRepository();
   const client = useQueryClient();
   const sports = useQuery(sportsQuery);
@@ -61,28 +64,29 @@ export function ApproveVenueForm({
         });
       }}
     >
-      <h3>Добавить предложенную площадку</h3>
+      <h3>{tr("Добавить предложенную площадку")}</h3>
       <p>
-        Проверьте название, адрес и точку. После добавления площадка появится на
-        общей карте, а обращение получит статус «Решено».
+        {tr(
+          "Проверьте название, адрес и точку. После добавления площадка появится на общей карте, а обращение получит статус «Решено».",
+        )}
       </p>
       <fieldset className="support-location" disabled={mutation.isPending}>
-        <legend className="sr-only">Публикация площадки</legend>
+        <legend className="sr-only">{tr("Публикация площадки")}</legend>
         <label className="form-field">
-          Название для карты
+          {tr("Название для карты")}
           <input
             required
             minLength={3}
             maxLength={120}
             value={name}
-            placeholder="Например, футбольное поле в парке"
+            placeholder={tr("Например, футбольное поле в парке")}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
         <label className="form-field">
-          Вид спорта площадки
+          {tr("Вид спорта площадки")}
           <Select value={sportId} onChange={(e) => setSportId(e.target.value)}>
-            <option value="">Без привязки к виду спорта</option>
+            <option value="">{tr("Без привязки к виду спорта")}</option>
             {sports.data?.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -96,16 +100,17 @@ export function ApproveVenueForm({
             if (!mutation.isPending) setLocation(value);
           }}
           idPrefix="approve-venue"
-          cityLabel="Город площадки для карты"
-          addressLabel="Адрес площадки для карты"
+          cityLabel={tr("Город площадки для карты")}
+          addressLabel={tr("Адрес площадки для карты")}
           preserveAddressOnPoint
-          unmappedHint="Для добавления площадки выберите точку на карте."
+          unmappedHint={tr("Для добавления площадки выберите точку на карте.")}
         />
       </fieldset>
       {!hasPoint(location) && (
         <p className="field-hint">
-          В предложении нет координат. Нажмите «Указать на карте» и выберите
-          место.
+          {tr(
+            "В предложении нет координат. Нажмите «Указать на карте» и выберите место.",
+          )}
         </p>
       )}
       {mutation.isError && (
@@ -121,8 +126,8 @@ export function ApproveVenueForm({
         disabled={mutation.isPending || !hasPoint(location)}
       >
         {mutation.isPending
-          ? "Добавляем площадку…"
-          : "Добавить площадку и решить обращение"}
+          ? tr("Добавляем площадку…")
+          : tr("Добавить площадку и решить обращение")}
       </button>
     </form>
   );

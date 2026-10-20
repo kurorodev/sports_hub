@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import {
   useEffect,
   useId,
@@ -21,6 +23,7 @@ export function HoverCard({
   trigger: ReactNode;
   children: ReactNode;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
@@ -222,7 +225,7 @@ export function HoverCard({
             <button
               type="button"
               className="hover-card-close"
-              aria-label="Закрыть карточку организатора"
+              aria-label={tr("Закрыть карточку организатора")}
               onClick={() => close(true)}
             >
               <X size={18} aria-hidden="true" />

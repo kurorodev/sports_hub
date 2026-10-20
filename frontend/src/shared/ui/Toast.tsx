@@ -1,3 +1,5 @@
+import { tr } from "../i18n/translate";
+import { useLocale } from "../i18n/use-preferences";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { CircleCheck, X } from "lucide-react";
@@ -13,6 +15,7 @@ export function Toast({
   placement?: "bottom" | "top";
   tone?: "default" | "success";
 }) {
+  useLocale();
   useEffect(() => {
     const timer = window.setTimeout(onDismiss, 4000);
     return () => window.clearTimeout(timer);
@@ -26,10 +29,10 @@ export function Toast({
       aria-atomic="true"
     >
       <CircleCheck size={20} aria-hidden="true" />
-      <span>{message}</span>
+      <span>{tr(message)}</span>
       <button
         type="button"
-        aria-label="Закрыть уведомление"
+        aria-label={tr("Закрыть уведомление")}
         onClick={onDismiss}
       >
         <X size={18} aria-hidden="true" />

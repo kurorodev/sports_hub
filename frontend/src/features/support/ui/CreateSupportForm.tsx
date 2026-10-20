@@ -1,3 +1,5 @@
+import { tr } from "../../../shared/i18n/translate";
+import { useLocale } from "../../../shared/i18n/use-preferences";
 import { Textarea } from "../../../shared/ui/Textarea";
 import { Select } from "../../../shared/ui/Select";
 import { useState } from "react";
@@ -34,6 +36,7 @@ export function CreateSupportForm({
   comment?: ReportTarget;
   onCreated?: () => void;
 }) {
+  useLocale();
   const repo = useSupportRepository();
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -86,7 +89,7 @@ export function CreateSupportForm({
           <strong>{comment.author}</strong>
           <p>{comment.text}</p>
           <label className="form-field">
-            Причина жалобы
+            {tr("Причина жалобы")}
             <Select
               disabled={mutation.isPending}
               value={reason}
@@ -94,7 +97,7 @@ export function CreateSupportForm({
             >
               {reportReasons.map((r) => (
                 <option key={r} value={r}>
-                  {reasonLabels[r]}
+                  {tr(reasonLabels[r])}
                 </option>
               ))}
             </Select>
@@ -102,7 +105,7 @@ export function CreateSupportForm({
         </div>
       ) : (
         <label className="form-field">
-          Тема обращения
+          {tr("Тема обращения")}
           <Select
             disabled={mutation.isPending}
             value={category}
@@ -115,14 +118,16 @@ export function CreateSupportForm({
               .filter((c) => c !== "COMMENT_REPORT")
               .map((c) => (
                 <option key={c} value={c}>
-                  {categoryLabels[c]}
+                  {tr(categoryLabels[c])}
                 </option>
               ))}
           </Select>
         </label>
       )}
       <label className="form-field">
-        {category === "VENUE_SUGGESTION" ? "Название площадки" : "Заголовок"}
+        {category === "VENUE_SUGGESTION"
+          ? tr("Название площадки")
+          : tr("Заголовок")}
         <input
           disabled={mutation.isPending}
           required
@@ -132,29 +137,31 @@ export function CreateSupportForm({
           onChange={(e) => setTitle(e.target.value)}
           placeholder={
             category === "VENUE_SUGGESTION"
-              ? "Например, баскетбольная площадка в парке"
-              : "Кратко опишите вопрос"
+              ? tr("Например, баскетбольная площадка в парке")
+              : tr("Кратко опишите вопрос")
           }
         />
       </label>
       {category === "VENUE_SUGGESTION" && (
         <fieldset className="support-location" disabled={mutation.isPending}>
-          <legend className="sr-only">Место площадки</legend>
+          <legend className="sr-only">{tr("Место площадки")}</legend>
           <LocationPicker
             idPrefix="support-venue"
             preserveAddressOnPoint
-            cityLabel="Город площадки"
-            addressLabel="Адрес площадки"
+            cityLabel={tr("Город площадки")}
+            addressLabel={tr("Адрес площадки")}
             value={location}
             onChange={(value) => {
               if (!mutation.isPending) setLocation(value);
             }}
-            unmappedHint="Можно отправить город и адрес без точки или уточнить место на карте."
+            unmappedHint={tr(
+              "Можно отправить город и адрес без точки или уточнить место на карте.",
+            )}
           />
         </fieldset>
       )}
       <label className="form-field">
-        Подробности
+        {tr("Подробности")}
         <Textarea
           disabled={mutation.isPending}
           required
@@ -165,14 +172,18 @@ export function CreateSupportForm({
           onChange={(e) => setDescription(e.target.value)}
           placeholder={
             category === "BUG"
-              ? "Что вы делали, что произошло и чего ожидали? Укажите устройство и браузер."
+              ? tr(
+                  "Что вы делали, что произошло и чего ожидали? Укажите устройство и браузер.",
+                )
               : category === "VENUE_SUGGESTION"
-                ? "Какие виды спорта доступны? Как попасть на площадку, есть ли ограничения?"
-                : "Расскажите, что случилось или что вы предлагаете."
+                ? tr(
+                    "Какие виды спорта доступны? Как попасть на площадку, есть ли ограничения?",
+                  )
+                : tr("Расскажите, что случилось или что вы предлагаете.")
           }
         />
         <span className="field-hint">
-          Не отправляйте пароли и платёжные данные.
+          {tr("Не отправляйте пароли и платёжные данные.")}
         </span>
       </label>
       {mutation.isError && (
@@ -182,13 +193,14 @@ export function CreateSupportForm({
             : errorMessage(mutation.error)}{" "}
           {mutation.error instanceof ApiError &&
             mutation.error.status === 409 && (
-              <Link to="/support">Мои обращения</Link>
+              <Link to="/support">{tr("Мои обращения")}</Link>
             )}
         </p>
       )}
       <p className="join-note">
-        Обращение и ответы доступны вам и администраторам. Ответ появится здесь
-        и в уведомлениях.
+        {tr(
+          "Обращение и ответы доступны вам и администраторам. Ответ появится здесь и в уведомлениях.",
+        )}
       </p>
       <button
         className="button primary"
@@ -196,10 +208,10 @@ export function CreateSupportForm({
         type="submit"
       >
         {mutation.isPending
-          ? "Отправляем…"
+          ? tr("Отправляем…")
           : comment
-            ? "Отправить жалобу"
-            : "Отправить обращение"}
+            ? tr("Отправить жалобу")
+            : tr("Отправить обращение")}
       </button>
     </form>
   );
