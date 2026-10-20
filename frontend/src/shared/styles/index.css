@@ -3852,14 +3852,15 @@ select:focus:not([aria-invalid="true"]),
 .admin-image-field:has(input:disabled) { opacity: .6; cursor: wait; }
 @media(max-width:600px) { .admin-sport-create { grid-template-columns: minmax(0,1fr); } }
 
-.admin-sport-list { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
-.admin-sport-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 10px 14px; border: 1px solid var(--color-outline); border-radius: 12px; background: var(--color-surface); color: inherit; text-align: left; cursor: pointer; }
+.admin-sport-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+.admin-sport-list > li { min-width: 0; }
+.admin-sport-row { display: flex; align-items: center; gap: 14px; width: 100%; height: 100%; padding: 10px 14px; border: 1px solid var(--color-outline); border-radius: 12px; background: var(--color-surface); color: inherit; text-align: left; cursor: pointer; }
 .admin-sport-row:hover { background: var(--color-surface-alt); border-color: var(--color-brand); }
 .admin-sport-row > img { flex: 0 0 52px; width: 52px; height: 52px; object-fit: cover; border-radius: 8px; }
 .admin-sport-row-text { flex: 1; min-width: 0; display: grid; gap: 4px; overflow-wrap: anywhere; }
 .admin-sport-row-text strong { font-size: 15px; line-height: 1.4; }
 .admin-sport-row > svg { flex-shrink: 0; }
-.sport-editor-dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; overflow-y: auto; }
+.sport-editor-dialog { --sport-dialog-top: clamp(24px, 6dvh, 64px); position: fixed; top: var(--sport-dialog-top); bottom: auto; left: 0; right: 0; margin: 0 auto; width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - var(--sport-dialog-top) - 16px); padding: 0; overflow-y: auto; overscroll-behavior: contain; }
 .sport-editor-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--color-outline); }
 .sport-editor-header h2 { font-size: 20px; margin: 0; }
 .sport-editor-header .icon-button { flex-shrink: 0; }
@@ -3873,3 +3874,6 @@ select:focus:not([aria-invalid="true"]),
 .sport-editor-delete > [role=group] { display: grid; gap: 14px; }
 .sport-delete-trigger { color: var(--color-danger); border: 1px solid var(--color-danger); background: transparent; }
 @media(max-width:600px) { .sport-editor-header, .sport-editor-form, .sport-editor-delete { padding: 16px; } .sport-editor-actions .button { flex: 1 1 auto; } }
+
+@media(max-width:1000px) { .admin-sport-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media(max-width:600px) { .admin-sport-list { grid-template-columns: minmax(0, 1fr); } }
