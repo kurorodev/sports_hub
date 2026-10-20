@@ -1,3 +1,4 @@
+import { familiarVisitorState } from "./e2e/helpers/site-onboarding";
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -6,6 +7,7 @@ export default defineConfig({
   testIgnore: "**/api/**",
   fullyParallel: true,
   use: {
+    storageState: familiarVisitorState,
     baseURL: "http://127.0.0.1:5175",
     trace: "retain-on-failure",
     // MapLibre needs WebGL; headless CI uses Chromium's software renderer.
