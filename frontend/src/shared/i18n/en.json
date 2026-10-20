@@ -981,5 +981,19 @@
   "Женский аватар 2": "Female avatar 2",
   "Женский аватар 3": "Female avatar 3",
   "Женский аватар 4": "Female avatar 4",
-  "Женский аватар 5": "Female avatar 5"
+  "Женский аватар 5": "Female avatar 5",
+  "Загруженность на неделе": "Weekly occupancy",
+  "Демо": "Demo",
+  "Пример прогноза на текущую неделю": "Illustrative forecast for this week",
+  "Уровни загруженности": "Occupancy levels",
+  "Низкая": "Low",
+  "Средняя": "Medium",
+  "Высокая": "High",
+  "Понедельник": "Monday",
+  "Вторник": "Tuesday",
+  "Среда": "Wednesday",
+  "Четверг": "Thursday",
+  "Пятница": "Friday",
+  "Суббота": "Saturday",
+  "Воскресенье": "Sunday"
 }
