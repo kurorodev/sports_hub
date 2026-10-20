@@ -20,13 +20,14 @@ images = {
     'Минималистичная_эмблема_баскетбольного_вихря1': 'basketball',
     'Футбольный мяч в золотом вихре': 'football',
     'Минималистичная_спортивная_панорама': 'panorama',
+    'Динамичный спортивный коллаж с атлетами': 'hero-collage',
 }
 files = {unicodedata.normalize('NFC', p.stem): p for p in source.glob('*.png')}
 art = public / 'art/sports'
 art.mkdir(parents=True, exist_ok=True)
 for name, key in images.items():
     subprocess.run(['sips', '-s', 'format', 'jpeg', '-s', 'formatOptions', '85',
-                    '--resampleWidth', '1600' if key == 'panorama' else '960',
+                    '--resampleWidth', '1600' if key in {'panorama', 'hero-collage'} else '960',
                     str(files[name]), '--out', str(art / (key + '.jpg'))],
                    check=True, stdout=subprocess.DEVNULL)
 
@@ -70,4 +71,4 @@ with ZipFile(source / 'sport_avatars_10_svg_png.zip') as archive:
             target = public / 'avatars' / tone
             target.mkdir(parents=True, exist_ok=True)
             (target / Path(name).name.replace('_', '-')).write_bytes(ET.tostring(svg))
-print('Prepared 9 illustrations and 30 avatar variants.')
+print('Prepared 10 illustrations and 30 avatar variants.')

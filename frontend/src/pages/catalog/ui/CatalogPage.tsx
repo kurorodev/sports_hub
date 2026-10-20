@@ -160,10 +160,10 @@ export function CatalogPage() {
         </div>
         <div className="hero-visual" aria-hidden="true">
           <img
-            src="/art/sports/panorama.jpg"
+            src="/art/sports/hero-collage.jpg"
             alt=""
-            width="1672"
-            height="941"
+            width="1600"
+            height="900"
             fetchPriority="high"
           />
           <div className="hero-sticker">
